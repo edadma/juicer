@@ -10,7 +10,7 @@ case.
 
 1. **Documentation sites first.** Every Tier 1 item is something the
    docs-site for `markdown` / `squiggly` / juicer itself would actually use.
-2. **No scope creep into asset pipelines, themes, modules, or i18n.** The
+2. **No scope creep into asset pipelines or module registries.** The
    JS ecosystem already does asset bundling well; juicer's job is content
    to HTML, not webpack-replacement. See [Tier 3](#tier-3--explicitly-deferred)
    for the full skip list.
@@ -40,7 +40,8 @@ case.
 | Sitemap / 404 / RSS | none | sitemap + 404 (Tier 1); RSS (Tier 2) |
 | Sections with auto list pages | none | Tier 2 |
 | Themes (`themes/<name>/` overlay) | none | Tier 2 |
-| Modules, i18n, asset pipeline, page bundles, taxonomies | none | **deferred indefinitely** |
+| i18n (per-language directory tree) | none | Tier 2 |
+| Module registries, asset pipeline, page bundles, taxonomies | none | **deferred indefinitely** |
 
 ## Tier 1 — small wins, do these first
 
@@ -185,7 +186,66 @@ ordering; this just surfaces it.
 **Test.** Build a site with a section + 3 child pages; assert the
 section index renders all three.
 
-### 10. Themes
+### 10. i18n / multi-language sites
+
+**What.** A site can ship the same content in multiple languages, with
+language-aware URLs and a per-language navigation. Default Hugo-style
+layout:
+
+```
+content/
+├── en/
+│   ├── _index.md
+│   └── guide/installation.md
+└── fr/
+    ├── _index.md
+    └── guide/installation.md
+```
+
+Site config declares the language list:
+
+```toml
+defaultLanguage = "en"
+languages       = ["en", "fr"]
+```
+
+URLs prepend the language code (`/en/...`, `/fr/...`); the default
+language can optionally be served without a prefix (`languageInRootURL = false`).
+The page-rendering context exposes `.page.lang` and `.page.translations`
+(siblings in other languages, for a language-switcher widget). Plus a
+`.site.lang` for the current render pass. UI strings (button labels,
+"Read more", etc.) live in `i18n/<lang>.toml` and are looked up via a
+new `{{ i18n 'key' }}` template helper.
+
+**Why this matters here specifically.** Quebec's Charter of the French
+Language requires French versions of a lot of public-facing content.
+A juicer-hosted docs / blog / business site for a Quebec entity needs
+to be able to ship both EN and FR side-by-side without forcing every
+user globally into multi-language complexity (single-language sites
+stay zero-config).
+
+**Cost.** Bigger than the other Tier 2 items — ~250–350 LOC across
+`Process.scala` (a content-tree walk per language), `App.scala`
+(per-language render passes + cross-link generation in
+`.page.translations`), and URL handling (the URL math throughout
+needs to know about the language prefix). Plus a small `i18n.scala`
+for translation lookup, plus sitemap updates (language-prefixed URLs
++ `<xhtml:link rel="alternate" hreflang="...">` per page).
+
+**Where.** Process: detect language directories under `content/` if
+`languages` is configured; otherwise treat content as monolingual
+(no behavior change for existing sites). App: outer loop over
+languages, inner loops as today. URLs: a `LangPrefix` derived once
+from `Args` + `confdata` and threaded through everywhere paths are
+formed. Translation lookup: `i18nLookup: (String, String) => Option[String]`
+plus a registered template builtin.
+
+**Test.** Build a bilingual site (EN + FR, same `_index.md` in each);
+assert both `<dst>/en/index.html` and `<dst>/fr/index.html` exist;
+assert the FR page's `.page.translations` includes the EN sibling and
+vice versa; assert the sitemap has `<loc>` entries for both.
+
+### 11. Themes
 
 **What.** A theme is a juicer-shaped directory (`layouts/`, `partials/`,
 `shortcodes/`, `static/`, optionally `assets/`) that's layered *underneath*
@@ -241,8 +301,6 @@ them up unless a concrete consumer needs them.
   mechanism for shared themes (Hugo Modules style). Tier 2's plain
   `themes/<name>/` directory is enough to cover the share-a-theme
   use case for now. Revisit if multiple users start exchanging themes.
-- **i18n / multi-language sites** — significant complexity throughout
-  the URL / template layer. Defer until requested.
 
 ## Notes for whoever picks up Tier 1
 
