@@ -29,15 +29,30 @@
     });
   }
 
-  // ===== Mobile sidebar toggle =====
-  const sidebarBtn = document.getElementById("juicerdocs-sidebar-toggle");
-  const sidebar = document.getElementById("juicerdocs-sidebar");
-  if (sidebarBtn && sidebar) {
-    sidebarBtn.addEventListener("click", () => {
-      const parent = sidebar.closest("aside");
-      if (parent) parent.classList.toggle("hidden");
+  // ===== Mobile sidebar overlay =====
+  // Toggles `body[data-jd-sidebar="open"]`, which the CSS uses to slide
+  // the sidebar in from the left as a fixed overlay. Backdrop click and
+  // Esc key both close. Closing on link click is also useful since the
+  // user almost certainly wants the sidebar gone after navigating.
+  const sidebarBtn      = document.getElementById("juicerdocs-sidebar-toggle");
+  const sidebarBackdrop = document.querySelector(".jd-sidebar-backdrop");
+  const sidebarAside    = document.querySelector(".jd-sidebar-aside");
+  function setSidebar(open) {
+    if (open) document.body.setAttribute("data-jd-sidebar", "open");
+    else      document.body.removeAttribute("data-jd-sidebar");
+  }
+  if (sidebarBtn) {
+    sidebarBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setSidebar(document.body.getAttribute("data-jd-sidebar") !== "open");
     });
   }
+  if (sidebarBackdrop) sidebarBackdrop.addEventListener("click", () => setSidebar(false));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") setSidebar(false); });
+  if (sidebarAside)
+    sidebarAside.addEventListener("click", (e) => {
+      if (e.target.closest("a")) setSidebar(false);
+    });
 
   // ===== Code block copy buttons + language badge =====
   document.querySelectorAll("pre > code").forEach((code) => {

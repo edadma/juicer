@@ -7,9 +7,10 @@
   {{ partial 'topbar' . }}
 
   <div class="mx-auto max-w-screen-2xl flex">
-    <aside class="hidden lg:block w-64 shrink-0 border-r jd-border px-4 py-8 sticky top-14 self-start max-h-[calc(100vh-3.5rem)] overflow-y-auto">
+    <aside class="jd-sidebar-aside hidden lg:block w-64 shrink-0 border-r jd-border px-4 py-8 sticky top-14 self-start max-h-[calc(100vh-3.5rem)] overflow-y-auto">
       {{ partial 'sidebar' . }}
     </aside>
+    <div class="jd-sidebar-backdrop" aria-hidden="true"></div>
 
     <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-10 py-8">
       <div class="max-w-3xl mx-auto">

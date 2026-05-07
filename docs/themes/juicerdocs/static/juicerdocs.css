@@ -31,10 +31,10 @@
   --jd-accent:       #6f1f9e;        /* deep purple plum */
   --jd-leaf:         #65a30d;        /* leaf green for accents/badges */
 
-  /* Code blocks */
-  --jd-code-bg:      #1f1f23;
-  --jd-code-fg:      #e4e4e7;
-  --jd-code-border:  #2c2c33;
+  /* Code blocks — light surface in light mode (matches GitHub / Stripe). */
+  --jd-code-bg:      #f6f6f7;
+  --jd-code-fg:      #1f1f23;
+  --jd-code-border:  #e4e4e7;
 
   /* Layout */
   --jd-radius:       0.625rem;
@@ -105,6 +105,45 @@ body {
 .jd-brand-soft    { background: var(--jd-brand-soft); color: var(--jd-brand); }
 .jd-accent        { color: var(--jd-accent); }
 .jd-leaf          { color: var(--jd-leaf); }
+
+/* ===== Mobile sidebar overlay =====
+ * On narrow viewports (< lg), the side rail is hidden by default. The
+ * topbar's hamburger toggles `data-jd-sidebar="open"` on <html>, which
+ * slides the rail in from the left as a fixed overlay with a backdrop. */
+
+@media (max-width: 1023.98px) {
+  body[data-jd-sidebar="open"] .jd-sidebar-aside {
+    display: block !important;
+    position: fixed;
+    inset: 3.5rem 0 0 0;
+    z-index: 40;
+    width: min(20rem, 80vw);
+    max-width: none;
+    max-height: calc(100vh - 3.5rem);
+    overflow-y: auto;
+    background: var(--jd-bg);
+    border-right: 1px solid var(--jd-border);
+    box-shadow: var(--jd-shadow-lg);
+    animation: jdSlideInLeft .18s ease-out;
+  }
+  body[data-jd-sidebar="open"] .jd-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 3.5rem 0 0 0;
+    z-index: 39;
+    background: rgb(0 0 0 / .35);
+    animation: jdFadeIn .18s ease-out;
+  }
+}
+.jd-sidebar-backdrop { display: none; }
+@keyframes jdSlideInLeft {
+  from { transform: translateX(-12px); opacity: 0; }
+  to   { transform: none;              opacity: 1; }
+}
+@keyframes jdFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
 
 /* ===== Top-bar / sticky header ===== */
 
@@ -313,15 +352,52 @@ body {
   font-weight: 400;
 }
 
+/* Tables — Tailwind Typography's defaults are too subtle to read as a
+ * table at a glance. Give them a real border, a tinted header, zebra
+ * striping, and tight padding. */
+.prose table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 0.875em;
+  margin: 1.25em 0;
+  border: 1px solid var(--jd-border);
+  border-radius: var(--jd-radius);
+  overflow: hidden;
+}
+.prose thead { background: var(--jd-surface); }
+.prose th {
+  font-weight: 600;
+  text-align: left;
+  padding: 0.625rem 0.875rem;
+  color: var(--jd-fg);
+  border-bottom: 1px solid var(--jd-border);
+}
+.prose td {
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--jd-border-soft);
+  vertical-align: top;
+}
+.prose tbody tr:last-child td { border-bottom: none; }
+.prose tbody tr:nth-child(even) td { background: var(--jd-bg-soft); }
+.prose tbody tr:hover td { background: var(--jd-brand-soft); }
+.prose th:first-child, .prose td:first-child { padding-left: 1rem; }
+.prose th:last-child,  .prose td:last-child  { padding-right: 1rem; }
+
 /* ===== Code block — language badge + copy button ===== */
 
 .prose pre {
   position: relative;
   padding-top: 2.25rem;
   background: var(--jd-code-bg);
+  color: var(--jd-code-fg);
   border: 1px solid var(--jd-code-border);
   border-radius: var(--jd-radius);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.6;
 }
+.prose pre code { color: inherit; }
 .prose pre::before {
   content: attr(data-language);
   position: absolute;
@@ -331,7 +407,8 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.075em;
   color: var(--jd-muted);
-  font-family: ui-monospace, monospace;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-weight: 500;
 }
 .juicerdocs-copy {
   position: absolute;
@@ -339,17 +416,18 @@ body {
   right: 0.5rem;
   padding: 0.1875rem 0.5rem;
   font-size: 0.75rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: color-mix(in oklab, var(--jd-fg) 6%, transparent);
+  border: 1px solid color-mix(in oklab, var(--jd-fg) 12%, transparent);
   border-radius: 0.25rem;
-  color: rgb(228 228 231);
+  color: var(--jd-muted);
   cursor: pointer;
   opacity: 0;
+  font-family: inherit;
   transition: opacity 0.15s, color 0.15s, background .15s;
 }
 .prose pre:hover .juicerdocs-copy { opacity: 1; }
-.juicerdocs-copy:hover { background: rgba(255, 255, 255, 0.12); }
-.juicerdocs-copy.copied { color: rgb(34 197 94); opacity: 1; }
+.juicerdocs-copy:hover { background: color-mix(in oklab, var(--jd-fg) 12%, transparent); color: var(--jd-fg); }
+.juicerdocs-copy.copied { color: var(--jd-leaf); opacity: 1; }
 
 /* ===== Callout shortcodes (note/tip/warning/danger) ===== */
 
@@ -586,6 +664,9 @@ body {
   background: var(--jd-brand-soft);
 }
 
-/* Show light/dark icons based on theme. */
-[data-theme="dark"] .jd-icon-light { display: none; }
-:not([data-theme="dark"]) .jd-icon-dark { display: none; }
+/* Show light/dark icons based on theme. The pre-paint script always sets
+ * data-theme to either "dark" or "light" on <html>, so we can target both
+ * explicitly. The previous `:not([data-theme="dark"])` form matched every
+ * non-dark ancestor (including <body>), which always-hid the dark icon. */
+[data-theme="dark"]  .jd-icon-light { display: none; }
+[data-theme="light"] .jd-icon-dark  { display: none; }
