@@ -849,14 +849,23 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     out("html/docs/api/spec/index.html") should include("> Home > Docs > API")
   }
 
-  it should "expose .page.next and .page.prev within a section" in {
+  it should "walk .page.prev / .page.next across section boundaries (DFS reading order)" in {
+    // Reading order (DFS over the section tree) is:
+    //   Home → A → A/p1 → A/p2 → B → B/q1 → B/q2
+    // So the last page in A points "next" to B's _index, and the first
+    // page in B points "prev" back to A's last page.
     writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
-    writeAt("content/_index.md", "---\ntitle: H\n---\n\n.\n")
-    writeAt("content/docs/_index.md", "---\ntitle: D\n---\n\n.\n")
-    writeAt("content/docs/a.md", "---\ntitle: A\nweight: 10\n---\n\n.\n")
-    writeAt("content/docs/b.md", "---\ntitle: B\nweight: 20\n---\n\n.\n")
-    writeAt("content/docs/c.md", "---\ntitle: C\nweight: 30\n---\n\n.\n")
-    writeAt("layouts/_default/folder.html", "x")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n.\n")
+    writeAt("content/a/_index.md", "---\ntitle: A\nweight: 10\n---\n\n.\n")
+    writeAt("content/a/p1.md", "---\ntitle: P1\nweight: 10\n---\n\n.\n")
+    writeAt("content/a/p2.md", "---\ntitle: P2\nweight: 20\n---\n\n.\n")
+    writeAt("content/b/_index.md", "---\ntitle: B\nweight: 20\n---\n\n.\n")
+    writeAt("content/b/q1.md", "---\ntitle: Q1\nweight: 10\n---\n\n.\n")
+    writeAt("content/b/q2.md", "---\ntitle: Q2\nweight: 20\n---\n\n.\n")
+    writeAt(
+      "layouts/_default/folder.html",
+      """{{ if .page.prev }}prev={{ .page.prev.title }} {{ end }}{{ if .page.next }}next={{ .page.next.title }}{{ end }}""".stripMargin,
+    )
     writeAt(
       "layouts/_default/file.html",
       """{{ if .page.prev }}prev={{ .page.prev.title }} {{ end }}{{ if .page.next }}next={{ .page.next.title }}{{ end }}""".stripMargin,
@@ -864,10 +873,20 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
 
     build()
 
-    out("html/docs/a/index.html") should include("next=B")
-    out("html/docs/a/index.html") should not include "prev="
-    out("html/docs/b/index.html") should (include("prev=A") and include("next=C"))
-    out("html/docs/c/index.html") should (include("prev=B") and not include "next=")
+    // Home — first page in reading order.
+    out("index.html") should (include("next=A") and not include "prev=")
+
+    // First page of A: prev=A (the section _index above it).
+    out("html/a/p1/index.html") should (include("prev=A") and include("next=P2"))
+
+    // Last page of A: next=B (cross-section into the next _index).
+    out("html/a/p2/index.html") should (include("prev=P1") and include("next=B"))
+
+    // Section B's _index: prev=last page of A, next=first page of B.
+    out("html/b/index.html") should (include("prev=P2") and include("next=Q1"))
+
+    // Last page everywhere — no `next`.
+    out("html/b/q2/index.html") should (include("prev=Q1") and not include "next=")
   }
 
   it should "expose isSection on every page record" in {

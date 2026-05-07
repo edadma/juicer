@@ -413,18 +413,44 @@ object App {
       out.toList
     }
 
-    /** Previous / next siblings within the page's section, by `pageOrder`.
-      * `_index` pages don't get prev/next (they sit above their siblings
-      * in the hierarchy, not beside them). */
-    def prevNextOf(c: ContentFile): (Option[ContentFile], Option[ContentFile]) =
-      if (c.name == folderContent) (None, None)
+    /** Flat depth-first reading order across the whole content tree. Each
+      * section contributes its `_index` first, then its non-`_index` pages
+      * (`pageOrder`), then recurses into each subsection. Drives prev/next
+      * navigation that walks across section boundaries — so the last page
+      * in section A points "next" to section B's `_index`, and the first
+      * page in section B points "prev" back to A's last page.
+      *
+      * Falls back to a weight-sorted flat list when the site has no root
+      * `_index` to start from (rare for docs sites; possible for blogs). */
+    val readingOrder: List[ContentFile] = {
+      def flatten(c: ContentFile): List[ContentFile] = {
+        if (c.name != folderContent) List(c)
+        else {
+          val info = sectionInfoByOutdir.getOrElse(
+            c.outdir, SectionInfo(Some(c), Nil, Nil),
+          )
+          c :: info.pages ::: info.subsections.flatMap(flatten)
+        }
+      }
+      sectionIndex.get(dst1) match {
+        case Some(root) => flatten(root)
+        case None       => pageOrder(contentFiles)
+      }
+    }
+
+    /** Previous / next pages in `readingOrder`. Applies to every page
+      * including section `_index` pages — so navigating sequentially walks
+      * Home → first section's `_index` → that section's pages → next
+      * section's `_index` → its pages → … */
+    def prevNextOf(c: ContentFile): (Option[ContentFile], Option[ContentFile]) = {
+      val idx = readingOrder.indexWhere(_ eq c)
+      if (idx < 0) (None, None)
       else {
-        val sibs = sectionInfoByOutdir.get(c.outdir).map(_.pages).getOrElse(Nil)
-        val idx  = sibs.indexWhere(_ eq c)
-        val prv  = if (idx > 0) Some(sibs(idx - 1)) else None
-        val nxt  = if (idx >= 0 && idx < sibs.length - 1) Some(sibs(idx + 1)) else None
+        val prv = if (idx > 0)                       Some(readingOrder(idx - 1)) else None
+        val nxt = if (idx < readingOrder.length - 1) Some(readingOrder(idx + 1)) else None
         (prv, nxt)
       }
+    }
 
     /** Second-pass enriched record. Adds navigation cross-references whose
       * targets are basic records (one level only — `.page.parent.parent`

@@ -107,9 +107,18 @@ body {
 .jd-leaf          { color: var(--jd-leaf); }
 
 /* ===== Mobile sidebar overlay =====
- * On narrow viewports (< lg), the side rail is hidden by default. The
- * topbar's hamburger toggles `data-jd-sidebar="open"` on <html>, which
- * slides the rail in from the left as a fixed overlay with a backdrop. */
+ * On narrow viewports (< 1024px), the side rail is hidden by default. The
+ * topbar's hamburger toggles `data-jd-sidebar="open"` on <body>, which
+ * slides the rail in from the left as a fixed overlay with a backdrop.
+ *
+ * We deliberately handle the button-visibility rules in *our own* CSS
+ * (not Tailwind's `lg:hidden`) so that the JIT-compiled Tailwind variant
+ * can't get out of sync with our breakpoints. */
+
+#juicerdocs-sidebar-toggle { display: inline-flex; }
+@media (min-width: 1024px) {
+  #juicerdocs-sidebar-toggle { display: none; }
+}
 
 @media (max-width: 1023.98px) {
   body[data-jd-sidebar="open"] .jd-sidebar-aside {
