@@ -48,6 +48,23 @@ case.
 Estimated total: ~150–200 LOC of source plus matching tests. About a
 half-day of focused work.
 
+**Status: complete (commits `1b291da`, `32252fd`, `96f82b9`, `b354d1c`
+on `dev`).** All five items shipped with 12 new `JuicerBuildSpec`
+cases (11 → 23 tests); JVM, JS, and Native all compile. Implementation
+notes worth carrying into Tier 2:
+
+- The render loop now drives from a `List[(ContentFile, Map[String, Any])]`
+  pair list rather than `Map[ContentFile, Map]`. Case-class equality on
+  a `var` field is a footgun even when it doesn't bite immediately.
+- `htmlDir` (when set) is *stripped* from URLs; it's a filesystem-only
+  convenience for keeping static assets alongside rendered content.
+- `<!--more-->` is parsed against the source pre-preprocess; the
+  preprocessor only touches `[= ... =]` shortcodes, so the marker
+  passes through unaffected.
+- Auto-summary skips leading headings via
+  `doc.children.collectFirst { case p: Paragraph => p }`. This is the
+  shape Hugo authors are used to (h1 page title above the lead).
+
 ### 1. `site.pages` page list and map
 
 **What.** Add `pages: List[Page]` and `pagesByPath: Map[String, Page]` to
