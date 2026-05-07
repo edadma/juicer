@@ -1,19 +1,18 @@
 package io.github.edadma.juicer
 
-import java.nio.file.{Files, Path, Paths}
-import scala.collection.immutable.VectorMap
-import scala.jdk.CollectionConverters._
-import scala.language.postfixOps
-import io.github.edadma.cross_platform.readFile
+import io.github.edadma.markdown.{Document, Inline, Heading => MdHeading, Link, Paragraph}
+import io.github.edadma.path.Path
 import io.github.edadma.squiggly.{TemplateAST, TemplateLoader, TemplateRenderer}
-import io.github.edadma.commonmark
-import io.github.edadma.commonmark.Heading
-import org.ekrich.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax, ConfigValueFactory}
+import io.github.edadma.toml.{TomlDocument, TomlValue}
 
-import java.io.{FileOutputStream, OutputStream}
 import scala.annotation.tailrec
+import scala.collection.immutable.VectorMap
 import scala.collection.mutable.ListBuffer
 
+/** Top-level driver for the `build` and `config` commands. The `Args` →
+  * unit dispatcher lives at [[App.run]]; the actual rendering pipeline is in
+  * [[App.build]].
+  */
 object App {
 
   val run: PartialFunction[Args, Unit] = {
@@ -22,14 +21,14 @@ object App {
     case Args(baseConfig, _, baseurl, Some(ConfigCommand(src))) =>
       println("Site config:")
 
-      val c = config(src, baseConfig)
-      val c1 =
-        baseurl match {
-          case None    => c
-          case Some(b) => c.withValue("baseURL", ConfigValueFactory.fromAnyRef(b))
-        }
+      val c    = config(src, baseConfig)
+      val data = tomlObject(c)
+      val data1 = baseurl match {
+        case None    => data
+        case Some(b) => data + ("baseURL" -> b)
+      }
 
-      for ((k, v) <- configObject(c1.root))
+      for ((k, v) <- data1)
         println(s"  $k = ${renderValue(v)}")
   }
 
@@ -42,25 +41,18 @@ object App {
 
     if (!isDir(src1)) problem(s"not a readable directory: $src1")
 
-    val (dst1, siteconf) = {
-      val c = config(src1, baseConfig)
-      val c1 =
-        baseurl match {
-          case None    => c
-          case Some(b) => c.withValue("baseURL", ConfigValueFactory.fromAnyRef(b))
-        }
-
-      dst match {
-        case null =>
-          val p = (src1 resolve "public").normalize.toAbsolutePath
-
-          (p, c1.withValue("publicDir", ConfigValueFactory.fromAnyRef(p.toString)))
-        case d =>
-          val p = d.normalize.toAbsolutePath
-
-          (p, c1.withValue("publicDir", ConfigValueFactory.fromAnyRef(p.toString)))
-      }
+    val confdoc      = config(src1, baseConfig)
+    val baseURLstr   = baseurl.orElse(confdoc.getString("baseURL")).getOrElse("http://localhost:8080")
+    val confdata: VectorMap[String, Any] = {
+      val base = tomlObject(confdoc)
+      base + ("baseURL" -> baseURLstr)
     }
+
+    // ConfigWrapper takes a TomlDocument; for fields we bake into the
+    // wrapper by overlaying the explicit baseURL on top of the parsed doc.
+    val conf = new ConfigWrapper(confdoc.copy(root = confdoc.root + ("baseURL" -> TomlValue.Str(baseURLstr))))
+
+    val dst1 = if (dst eq null) (src1 / conf.publicDir).normalize.toAbsolutePath else dst.normalize.toAbsolutePath
 
     show(s"destination path = $dst1")
 
@@ -68,19 +60,21 @@ object App {
 
     if (!isDir(dst1)) {
       show(s"create destination path $dst1")
-      Files.createDirectory(dst1)
+      dst1.createDirectory()
     }
 
-    val confdata = configObject(siteconf.root)
-    val conf = new ConfigWrapper(siteconf)
-    val baseURL = parseURL(conf.baseURL) getOrElse problem(s"invalid base URL: ${conf.baseURL}")
+    val baseURL = parseURL(baseURLstr).getOrElse(problem(s"invalid base URL: $baseURLstr"))
     val linkCallback = (url: String) =>
       if (absoluteURL(url)) url
-      else Paths.get(baseURL.path) resolve url toString
+      else {
+        val basePath = if (baseURL.path.endsWith("/")) baseURL.path.dropRight(1) else baseURL.path
+        val tail     = if (url.startsWith("/")) url else "/" + url
+        basePath + tail
+      }
     val rendererData =
       Map(
         "baseURL" -> baseURL,
-        "link" -> linkCallback
+        "link"    -> linkCallback,
       )
 
     show(s"base URL = ${baseURL.base}${baseURL.path}")
@@ -88,72 +82,43 @@ object App {
     val site = Process(src1, dst1, conf)
     val partialsLoader: TemplateLoader =
       (name: String) =>
-        site.partialTemplates get name map { t =>
+        site.partialTemplates.get(name).map { t =>
           if (t.template eq null)
-            t.template = templateParser.parse(readFile(t.path.toString))
+            t.template = templateParser.parse(t.path.readText())
 
           t.template
-        } orElse problem(s"partial '$name' not found")
+        }.orElse(problem(s"partial '$name' not found"))
     val templateRenderer: TemplateRenderer = new TemplateRenderer(partials = partialsLoader, data = rendererData)
     val shortcodesLoader: TemplateLoader =
       (name: String) =>
-        site.shortcodeTemplates get name map { t =>
+        site.shortcodeTemplates.get(name).map { t =>
           if (t.template eq null)
-            t.template = templateParser.parse(readFile(t.path.toString))
+            t.template = templateParser.parse(t.path.readText())
 
           t.template
-        } orElse problem(s"shortcode '$name' not found")
+        }.orElse(problem(s"shortcode '$name' not found"))
     val preprocessor = new Preprocessor(shortcodes = shortcodesLoader, renderer = templateRenderer)
 
-    for (c @ ContentFile(_, name, _, _, _, _) <- site.content) {
+    // Markdown render pass: parse each content file's source, build the TOC,
+    // and produce the rendered HTML body. Heading levels and link
+    // destinations are pre-transformed at the AST level so the output blends
+    // into a layout that already provides an outer `<h1>` for the page title.
+    for (case c @ ContentFile(_, name, _, _, _, _) <- site.content) {
       show(s"parse markdown file $name")
 
-      val doc = markdownParser.parse(preprocessor.process(c.source))
+      val raw  = parseMarkdown(preprocessor.process(c.source))
+      val doc  = transformLinks(shiftHeadings(raw, by = 2), linkCallback)
 
-      c.toc = commonmark.Util.toc(doc)
-      c.content = commonmark.Util.html(doc, 2, link = linkCallback).trim
+      c.toc = buildToc(doc)
+      c.content = io.github.edadma.markdown.renderToHTML(doc, markdownConfig).trim
     }
 
-//    @tailrec
-//    def put(map: mutable.LinkedHashMap[String, Any], parent: List[String], content: ContentFile): Unit =
-//      parent match {
-//        case Nil => map(content.name) = content
-//        case h :: t =>
-//          map get h match {
-//            case Some(m: mutable.LinkedHashMap[_, _]) =>
-//              put(m.asInstanceOf[mutable.LinkedHashMap[String, Any]], t, content)
-//            case Some(_: ContentFile) =>
-//              problem(s"unexpected content file in place of directory in contents data structure: $h")
-//            case Some(_) => problem("problem")
-//            case None =>
-//              val m = new mutable.LinkedHashMap[String, Any]
-//
-//              map(h) = m
-//              put(m, t, content)
-//          }
-//      }
-//
-//    val contents = new mutable.LinkedHashMap[String, Any]
-
     trait TOCItem
-    case class TOCLabel(label: String) extends TOCItem
+    case class TOCLabel(label: String)                extends TOCItem
     case class TOCLink(html: String, href: String)
-    case class TOCList(headings: List[TOCLink]) extends TOCItem
+    case class TOCList(headings: List[TOCLink])       extends TOCItem
 
     val sitetoc = new ListBuffer[TOCItem]
-
-    //    val html = conf.htmlDir
-//
-//    site.content foreach {
-//      case page @ ContentFile(outdir, _, _, _, _, toc) =>
-////        val rel = (if (html == "") dst1 else dst1 resolve html) relativize outdir
-////
-////        put(contents, rel.iterator.asScala.toList map (_.toString), page)
-//        sitetoc += TOCItem("file", commonmark.Util.html(toc.headings.head.heading.contents, 2).trim)
-//      case ContentFolder(outdir) => sitetoc += TOCItem("folder", outdir.getFileName.toString)
-//    }
-//
-//    val sitedata = confdata + /*("contents" -> contents) + */ ("toc" -> sitetoc)
 
     @tailrec
     def mktocFromContent(l: List[ContentItem], start: String = null): String =
@@ -163,36 +128,36 @@ object App {
           sitetoc += TOCLabel(label)
           mktocFromContent(t, start)
         case ContentFolder(outdir) :: t =>
-          sitetoc += TOCLabel(outdir.getFileName.toString)
+          sitetoc += TOCLabel(outdir.filename)
           mktocFromContent(t, start)
         case (c: ContentFile) :: _ =>
-          val (headings: List[ContentFile], rest) = l span (_.isInstanceOf[ContentFile])
+          val (headings: List[ContentItem], rest) = l.span(_.isInstanceOf[ContentFile])
+          val files                               = headings.collect { case f: ContentFile => f }
 
           sitetoc += TOCList(
-            headings map (
-                h =>
-                  TOCLink(
-                    commonmark.Util.html(h.toc.headings.head.heading.contents, 2).trim,
-                    s"${dst1 relativize h.outdir}/${h.name}"
-                  )))
-          mktocFromContent(rest, if (start eq null) s"${dst1 relativize c.outdir}/${c.name}/" else start)
+            files.map(h =>
+              TOCLink(
+                renderInlinesHtml(h.toc.headings.head.contents),
+                s"${h.outdir.relativeTo(dst1)}/${h.name}",
+              )),
+          )
+          mktocFromContent(rest, if (start eq null) s"${c.outdir.relativeTo(dst1)}/${c.name}/" else start)
       }
 
     def mktocFromConfig: String = {
       val buf = new ListBuffer[ContentItem]
 
       confdata("nav") match {
-        case l: List[_] =>
+        case l: List[?] =>
           l foreach {
             case label: String =>
-              if (markdownExtensions exists (label endsWith _))
+              if (markdownExtensions.exists(label.endsWith))
                 buf += site.map.getOrElse(label, problem(s"content file not found $label"))
               else
                 buf += ContentLabel(label)
-            case file: Map[_, _]
+            case file: Map[?, ?]
                 if file.size == 1 && file.head._1.isInstanceOf[String] && file.head._2.isInstanceOf[String] =>
-              val (_: String, path: String) = file.head
-
+              val (_: String, path: String) = file.head: @unchecked
               buf += site.map.getOrElse(path, problem(s"content file not found $path"))
             case e => problem(s"invalid nav element: $e")
           }
@@ -203,91 +168,96 @@ object App {
     }
 
     val start =
-      if (confdata contains "nav") mktocFromConfig
+      if (confdata.contains("nav")) mktocFromConfig
       else if (site.content.nonEmpty) mktocFromContent(site.content.tail)
-    val sitedata = confdata + ("toc" -> sitetoc.toList) + ("start" -> start)
+      else null
+    val sitedata      = confdata + ("toc" -> sitetoc.toList) + ("start" -> start)
     val defaultLayout = conf.defaultLayout
-    val baseofLayout = conf.baseofLayout
-    val fileLayout = conf.fileLayout
-    val folderLayout = conf.folderLayout
+    val baseofLayout  = conf.baseofLayout
+    val fileLayout    = conf.fileLayout
+    val folderLayout  = conf.folderLayout
     val folderContent = conf.folderContent
-    val html = conf.htmlDir
+    val html          = conf.htmlDir
 
     def findLayout(folders: List[String], name: String): Option[TemplateFile] =
-      site.layoutTemplates get (folders, name) orElse (if (folders.isEmpty)
-                                                         site.layoutTemplates get (List(defaultLayout), name)
-                                                       else findLayout(folders.init, name)) map { t =>
-        if (t.template eq null)
-          t.template = templateParser.parse(readFile(t.path.toString))
-
-        t
-      }
+      site.layoutTemplates
+        .get((folders, name))
+        .orElse(
+          if (folders.isEmpty) site.layoutTemplates.get((List(defaultLayout), name))
+          else findLayout(folders.init, name),
+        )
+        .map { t =>
+          if (t.template eq null)
+            t.template = templateParser.parse(t.path.readText())
+          t
+        }
 
     case class SubHeading(heading: String, id: String, sub: List[SubHeading])
 
-    def subheadings(l: List[Heading]): List[SubHeading] =
-      l map (h =>
-        SubHeading(commonmark.Util.html(h.heading.contents, 2).trim, h.heading.id.get, subheadings(h.sub.headings)))
+    def subheadings(l: List[TocEntry]): List[SubHeading] =
+      l.map(h => SubHeading(renderInlinesHtml(h.contents), h.id, subheadings(h.sub.headings)))
 
-    for (ContentFile(outdir, name, data, _, content, toc) <- site.content) {
+    for (case ContentFile(outdir, name, data, _, content, toc) <- site.content) {
       templateRenderer.blocks.clear()
 
       val outfile =
-        if (name == folderContent) outdir resolve "index.html" toString
+        if (name == folderContent) (outdir / "index.html").toString
         else {
-          val pagedir = outdir resolve name
+          val pagedir = outdir / name
 
           show(s"content: create directory $pagedir")
-          Files.createDirectories(pagedir)
-          pagedir resolve "index.html" toString
+          pagedir.createDirectories()
+          (pagedir / "index.html").toString
         }
-      val sub = {
-        toc.headings.headOption match {
-          case Some(h) => subheadings(h.sub.headings)
-          case None    => Nil
-        }
+      val sub = toc.headings.headOption match {
+        case Some(h) => subheadings(h.sub.headings)
+        case None    => Nil
       }
-      val pagedata =
-        Map("site" -> sitedata, "page" -> data, "content" -> content, "toc" -> toc, "sub" -> sub)
+      val pagedata = Map(
+        "site"    -> sitedata,
+        "page"    -> data,
+        "content" -> content,
+        "toc"     -> toc,
+        "sub"     -> sub,
+      )
       val folders = {
-        val rel = dst1 relativize outdir
+        val rel = outdir.relativeTo(dst1)
 
         if (dst1 == outdir) Nil
-        else (if (html != "") rel.subpath(1, rel.getNameCount) else rel).iterator.asScala.toList map (_.toString)
+        else {
+          val all = rel.segments.toList
+          if (html != "") all.drop(1) else all
+        }
       }
       val layout = if (name == folderContent) folderLayout else fileLayout
-      val particularTemplate =
-        findLayout(folders, layout) match {
-          case Some(TemplateFile(templatePath, _, template)) =>
-            show(s"render $name using ${src1 relativize templatePath}")
-            Some(template)
-          case None =>
-            show(s"layout '$layout' not found for rendering '$name'")
-            None
-        }
-      val baseofTemplate =
-        findLayout(folders, baseofLayout) match {
-          case Some(TemplateFile(templatePath, _, template)) =>
-            show(s"render $name using ${src1 relativize templatePath}")
-            Some(template)
-          case None =>
-            show(s"layout '$baseofLayout' not found for rendering '$name'")
-            None
-        }
+      val particularTemplate = findLayout(folders, layout) match {
+        case Some(TemplateFile(templatePath, _, template)) =>
+          show(s"render $name using ${templatePath.relativeTo(src1)}")
+          Some(template)
+        case None =>
+          show(s"layout '$layout' not found for rendering '$name'")
+          None
+      }
+      val baseofTemplate = findLayout(folders, baseofLayout) match {
+        case Some(TemplateFile(templatePath, _, template)) =>
+          show(s"render $name using ${templatePath.relativeTo(src1)}")
+          Some(template)
+        case None =>
+          show(s"layout '$baseofLayout' not found for rendering '$name'")
+          None
+      }
 
       def render(template: TemplateAST): Unit = {
         show(s"content: write file $outfile")
-
-        val out = new FileOutputStream(outfile)
-
-        templateRenderer.render(pagedata, template, out)
-        out.close()
+        val rendered = renderToString(templateRenderer, pagedata, template)
+        Path(outfile).writeText(rendered)
       }
 
       (particularTemplate, baseofTemplate) match {
-        case (None, None) => problem(s"no template was found for rendering $name")
+        case (None, None)       => problem(s"no template was found for rendering $name")
         case (Some(p), Some(b)) =>
-          templateRenderer.render(pagedata, p, OutputStream.nullOutputStream)
+          // First pass populates `define` blocks; rendered output is discarded.
+          renderToString(templateRenderer, pagedata, p)
           render(b)
         case (Some(p), None) => render(p)
         case (None, Some(b)) => render(b)
@@ -296,57 +266,98 @@ object App {
 
     for (TemplateFile(path, _, template) <- site.otherTemplates) {
       show(s"template: write file $path")
-
-      val out = new FileOutputStream(path.toString)
-
-      templateRenderer.render(Map("site" -> sitedata), template, out)
-      out.close()
+      val rendered = renderToString(templateRenderer, Map("site" -> sitedata), template)
+      path.writeText(rendered)
     }
   }
 
-  def renderValue(v: Any): String =
-    v match {
-      case s: String          => s"${'"'}$s${'"'}"
-      case n: Int             => n.toString
-      case n: Double          => n.toString
-      case b: Boolean         => b.toString
-      case l: List[_]         => l map renderValue mkString ("[", ", ", "]")
-      case m: VectorMap[_, _] => m map { case (k, v) => s"$k: ${renderValue(v)}" } mkString ("{", ", ", "}")
+  // ===== AST transforms applied to each content document before rendering =====
+
+  /** Shift every heading's level by `by` (clamped to [1, 6]). */
+  private def shiftHeadings(doc: Document, by: Int): Document = {
+    def shiftBlock(b: io.github.edadma.markdown.Block): io.github.edadma.markdown.Block = b match {
+      case h: MdHeading                            => h.copy(level = math.min(6, math.max(1, h.level + by)))
+      case io.github.edadma.markdown.BlockQuote(c) => io.github.edadma.markdown.BlockQuote(c.map(shiftBlock))
+      case other                                   => other
     }
+    Document(doc.children.map(shiftBlock))
+  }
+
+  /** Apply `f` to every link / image destination in the document. */
+  private def transformLinks(doc: Document, f: String => String): Document = {
+    def goInline(i: Inline): Inline = i match {
+      case Link(dest, title, children)              => Link(f(dest), title, children.map(goInline))
+      case io.github.edadma.markdown.Image(dest, title, alt, attrs) =>
+        io.github.edadma.markdown.Image(f(dest), title, alt.map(goInline), attrs)
+      case io.github.edadma.markdown.Emphasis(c)    => io.github.edadma.markdown.Emphasis(c.map(goInline))
+      case io.github.edadma.markdown.Strong(c)      => io.github.edadma.markdown.Strong(c.map(goInline))
+      case io.github.edadma.markdown.Strikethrough(c) =>
+        io.github.edadma.markdown.Strikethrough(c.map(goInline))
+      case other => other
+    }
+    def goBlock(b: io.github.edadma.markdown.Block): io.github.edadma.markdown.Block = b match {
+      case Paragraph(inlines)                       => Paragraph(inlines.map(goInline))
+      case h: MdHeading                             => h.copy(inlines = h.inlines.map(goInline))
+      case io.github.edadma.markdown.BlockQuote(c)  => io.github.edadma.markdown.BlockQuote(c.map(goBlock))
+      case other                                    => other
+    }
+    Document(doc.children.map(goBlock))
+  }
+
+  // ===== Squiggly rendering helper =====
+
+  /** Render a template against `data` and return the result as a `String`,
+    * since juicer ultimately writes the bytes through `path.writeText` rather
+    * than streaming directly to a file handle.
+    */
+  private def renderToString(renderer: TemplateRenderer, data: Any, template: TemplateAST): String = {
+    val buf = new java.io.ByteArrayOutputStream
+    val out = new java.io.PrintStream(buf)
+    renderer.render(data, template, out)
+    buf.toString
+  }
+
+  // ===== Config display (`juicer config`) =====
+
+  def renderValue(v: Any): String = v match {
+    case s: String          => s"\"$s\""
+    case n: Long            => n.toString
+    case n: Int             => n.toString
+    case n: Double          => n.toString
+    case b: Boolean         => b.toString
+    case l: List[?]         => l.map(renderValue).mkString("[", ", ", "]")
+    case m: Map[?, ?]       => m.map { case (k, v) => s"$k: ${renderValue(v)}" }.mkString("{", ", ", "}")
+    case other              => other.toString
+  }
 
   def extension(filename: String): String =
-    filename lastIndexOf '.' match {
+    filename.lastIndexOf('.') match {
       case -1  => ""
-      case dot => filename substring (dot + 1)
+      case dot => filename.substring(dot + 1)
     }
 
-  def readConfig(path: Path): Config = {
-    val file = path.toString
-    val ext = extension(file)
-    val conf = readFile(file)
+  def readConfig(path: Path): TomlDocument = {
+    import io.github.edadma.toml.TomlParser
 
-    ext match {
-      case "yaml" | "yml" => YamlConfig(conf)
-      case _ =>
-        val syntax =
-          ext match {
-            case "json"                 => ConfigParseOptions.defaults.setSyntax(ConfigSyntax.JSON)
-            case "conf" | "hocon"       => ConfigParseOptions.defaults.setSyntax(ConfigSyntax.CONF)
-            case "props" | "properties" => ConfigParseOptions.defaults.setSyntax(ConfigSyntax.PROPERTIES)
-          }
-
-        ConfigFactory.parseString(conf, syntax)
+    TomlParser.parse(path.readText()) match {
+      case Right(doc) => doc
+      case Left(err)  => problem(s"could not parse config $path: $err")
     }
   }
 
-  def config(src: Path, base: String): Config = {
+  /** Load the site config: start with the named baseline (`simple` /
+    * `standard` / `norme`) and overlay every `*.toml` file found at the top
+    * of the site directory in name order.
+    */
+  def config(src: Path, base: String): TomlDocument = {
     BaseConfigs(base) match {
-      case Some(b) =>
-        filesIncludingExtensions(list(src), "json", "conf", "properties", "props", "hocon", "yaml", "yml").foldLeft(b) {
-          case (c, p) => readConfig(p) withFallback c
+      case Some(baseDoc) =>
+        filesIncludingExtensions(list(src), "toml").foldLeft(baseDoc) { (accum, p) =>
+          val overlay = readConfig(p)
+          // Per-key overlay: keys in the overlay win, others fall back to the baseline.
+          TomlDocument(accum.root ++ overlay.root)
         }
       case None => problem(s"unknown base configuration: $base")
     }
   }
-
 }

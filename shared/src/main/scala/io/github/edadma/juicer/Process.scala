@@ -1,36 +1,37 @@
 package io.github.edadma.juicer
 
-import io.github.edadma.commonmark.TOC
-import io.github.edadma.cross_platform.readFile
+import io.github.edadma.path.Path
 import io.github.edadma.squiggly.TemplateAST
-import io.github.edadma.squiggly.platformSpecific.yaml
 
-import java.io.File
-import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.postfixOps
 
+/** First pass over the source tree: walks the directories under `src`,
+  * classifies each file (content / data / layout / partial / shortcode /
+  * static / other-template), and returns a [[Site]] manifest the rendering
+  * pass consumes.
+  */
 object Process {
 
   def apply(src: Path, dst: Path, conf: ConfigWrapper): Site = {
-    val content = src resolve conf.path.contentDir.normalize
-    val html = conf.htmlDir
-    val stripPrefix = conf.boolean.stripPrefix
-    val static = src resolve conf.path.staticDir.normalize
-    val layouts = src resolve conf.path.layoutDir.normalize
-    val partials = src resolve conf.path.partialDir.normalize
-    val shortcodes = src resolve conf.path.shortcodeDir.normalize
+    val content       = (src / conf.path.contentDir).normalize
+    val html          = conf.htmlDir
+    val stripPrefix   = conf.boolean.stripPrefix
+    val static        = (src / conf.path.staticDir).normalize
+    val layouts       = (src / conf.path.layoutDir).normalize
+    val partials      = (src / conf.path.partialDir).normalize
+    val shortcodes    = (src / conf.path.shortcodeDir).normalize
     val folderContent = conf.folderContent
-    val contentItems = new ListBuffer[ContentItem]
-    val contentMap = new mutable.HashMap[String, ContentFile]
-    val dataFiles = new ListBuffer[DataFile]
-    val layoutTemplates = new mutable.HashMap[(List[String], String), TemplateFile]
-    val partialTemplates = new mutable.HashMap[String, TemplateFile]
+
+    val contentItems       = new ListBuffer[ContentItem]
+    val contentMap         = new mutable.HashMap[String, ContentFile]
+    val dataFiles          = new ListBuffer[DataFile]
+    val layoutTemplates    = new mutable.HashMap[(List[String], String), TemplateFile]
+    val partialTemplates   = new mutable.HashMap[String, TemplateFile]
     val shortcodeTemplates = new mutable.HashMap[String, TemplateFile]
-    val otherTemplates = new ListBuffer[TemplateFile]
+    val otherTemplates     = new ListBuffer[TemplateFile]
 
     if (!isDir(content)) problem(s"can't read content directory: $content")
 
@@ -39,25 +40,25 @@ object Process {
 
       val listing = list(dir)
 
-      if (dir startsWith content) {
-        val files = filesIncludingExtensions(listing, markdownExtensions: _*)
+      if (dir.startsWith(content)) {
+        val files = filesIncludingExtensions(listing, markdownExtensions*)
         val outdir = {
-          val uncleaned = dst resolve (content relativize dir)
+          val uncleaned = dst / dir.relativeTo(content)
 
           if (contentItems.isEmpty) {
             if (uncleaned == dst) dst
             else
-              (if (html == "") dst else dst resolve html) resolve
-                cleanName(uncleaned.getFileName.toString, stripPrefix = true)
+              (if (html == "") dst else dst / html) /
+                cleanName(uncleaned.filename, stripPrefix = true)
           } else {
             val prev = contentItems.last.outdir
 
-            if (prev.getNameCount >= uncleaned.getNameCount)
-              Paths.get(File.separator) resolve prev.subpath(0, uncleaned.getNameCount - (if (html == "") 1 else 0)) resolve
-                cleanName(uncleaned.getFileName.toString, stripPrefix = true)
+            if (prev.segments.length >= uncleaned.segments.length)
+              Path("/") / prev.subpath(0, uncleaned.segments.length - (if (html == "") 1 else 0)) /
+                cleanName(uncleaned.filename, stripPrefix = true)
             else
-              (if (html == "") prev else prev resolve html) resolve
-                cleanName(uncleaned.getFileName.toString, stripPrefix = true)
+              (if (html == "") prev else prev / html) /
+                cleanName(uncleaned.filename, stripPrefix = true)
           }
         }
 
@@ -66,13 +67,13 @@ object Process {
           contentItems += ContentFolder(outdir)
         }
 
-        show(s"content file(s): ${files map (_.getFileName) mkString ", "}", files.nonEmpty)
+        show(s"content file(s): ${files.map(_.filename).mkString(", ")}", files.nonEmpty)
         show("no content files", files.isEmpty)
 
         files foreach { p =>
-          val s = readFile(p.toString)
+          val s     = p.readText()
           val lines = scala.io.Source.fromString(s).getLines()
-          val (first, data) = {
+          val (first, frontmatter) = {
             val first = lines.next()
 
             first match {
@@ -99,115 +100,106 @@ object Process {
           }
 
           val name =
-            withoutExtension(p.getFileName.toString) match {
+            withoutExtension(p.filename) match {
               case `folderContent` => folderContent
               case n               => cleanName(n, stripPrefix)
             }
           val contentFile = ContentFile(
             outdir,
             name,
-            yaml(data),
+            parseYamlData(frontmatter),
             ((if (first == "---") ""
-              else first :+ '\n') ++ (lines map (_ :+ '\n') mkString)).trim,
+              else first :+ '\n') ++ lines.map(_ :+ '\n').mkString).trim,
             null,
-            null
+            null,
           )
 
-          contentMap(content relativize p toString) = contentFile
+          contentMap(p.relativeTo(content).toString) = contentFile
           contentItems += contentFile
         }
       }
 
-      val data =
-        filesIncludingExtensions(listing, "YML", "YAML", "yml", "yaml")
+      val data = filesIncludingExtensions(listing, "YML", "YAML", "yml", "yaml")
 
-      show(s"data files: ${data map (_.getFileName) mkString ", "}", data.nonEmpty)
+      show(s"data files: ${data.map(_.filename).mkString(", ")}", data.nonEmpty)
       data foreach (p =>
-        dataFiles += DataFile(dir, withoutExtension(p.getFileName.toString), yaml(readFile(p.toString))))
+        dataFiles += DataFile(dir, withoutExtension(p.filename), parseYamlData(p.readText())),
+      )
 
-      if (dir startsWith layouts) {
-        val folder = (layouts relativize dir).iterator.asScala.toList map (_.toString)
-        val files = filesIncludingExtensions(listing, "html", "sq")
+      if (dir.startsWith(layouts)) {
+        val folder = dir.relativeTo(layouts).segments.toList
+        val files  = filesIncludingExtensions(listing, "html", "sq")
 
-        show(s"layouts: ${files map (_.getFileName) mkString ", "}", files.nonEmpty)
+        show(s"layouts: ${files.map(_.filename).mkString(", ")}", files.nonEmpty)
 
         files foreach { p =>
-          val name = withoutExtension(p.getFileName.toString)
-
+          val name = withoutExtension(p.filename)
           layoutTemplates((folder, name)) = TemplateFile(p, name, null)
         }
       }
 
-      if (dir startsWith partials) {
+      if (dir.startsWith(partials)) {
         val files = filesIncludingExtensions(listing, "html", "sq")
 
-        show(s"partials: ${files map (_.getFileName) mkString ", "}", files.nonEmpty)
+        show(s"partials: ${files.map(_.filename).mkString(", ")}", files.nonEmpty)
 
         files foreach { p =>
-          val name = withoutExtension(p.getFileName.toString)
-
+          val name = withoutExtension(p.filename)
           partialTemplates(name) = TemplateFile(p, name, null)
         }
       }
 
-      if (dir startsWith shortcodes) {
+      if (dir.startsWith(shortcodes)) {
         val files = filesIncludingExtensions(listing, "html", "sq")
 
-        show(s"shortcodes: ${files map (_.getFileName) mkString ", "}", files.nonEmpty)
+        show(s"shortcodes: ${files.map(_.filename).mkString(", ")}", files.nonEmpty)
 
         files foreach { p =>
-          val name = withoutExtension(p.getFileName.toString)
-
+          val name = withoutExtension(p.filename)
           shortcodeTemplates(name) = TemplateFile(p, name, null)
         }
       }
 
-      if (dir startsWith static) {
-        val subdir = dst resolve (static relativize dir)
+      if (dir.startsWith(static)) {
+        val subdir = dst / dir.relativeTo(static)
 
         show(s"static: create directory $subdir")
-        Files.createDirectories(subdir)
+        subdir.createDirectories()
 
-        (if (static == src)
-           filesExcludingExtensions(listing,
-                                    "html",
-                                    "sq",
-                                    "css",
-                                    "scss",
-                                    "sass",
-                                    "YML",
-                                    "YAML",
-                                    "yml",
-                                    "yaml",
-                                    "mkd",
-                                    "mkdn",
-                                    "mdown",
-                                    "md",
-                                    "markdown",
-                                    "props",
-                                    "properties",
-                                    "conf",
-                                    "hocon")
-         else listing filter isFile) foreach { p =>
-          val dp = dst resolve (static relativize p)
+        val toCopy =
+          if (static == src)
+            filesExcludingExtensions(
+              listing,
+              "html", "sq", "css", "scss", "sass",
+              "YML", "YAML", "yml", "yaml",
+              "mkd", "mkdn", "mdown", "md", "markdown",
+              "props", "properties", "conf", "hocon", "toml",
+            )
+          else listing.filter(isFile)
+
+        toCopy foreach { p =>
+          val dp = dst / p.relativeTo(static)
 
           show(s"static: copy $p => $dp")
-          Files.copy(p, dp, StandardCopyOption.REPLACE_EXISTING)
+          if (dp.exists) dp.delete()
+          p.copyTo(dp)
         }
       }
 
-      if (!(layouts != src && dir.startsWith(layouts)) &&
-          !(partials != src && dir.startsWith(partials)) &&
-          !(shortcodes != src && dir.startsWith(shortcodes)) &&
-          !(static != src && dir.startsWith(static))) {
+      if (
+        !(layouts != src && dir.startsWith(layouts)) &&
+        !(partials != src && dir.startsWith(partials)) &&
+        !(shortcodes != src && dir.startsWith(shortcodes)) &&
+        !(static != src && dir.startsWith(static))
+      ) {
         val l = filesIncludingExtensions(listing, "html", "css", "scss", "sass")
 
-        show(s"other templates: ${l map (_.getFileName) mkString ", "}", l.nonEmpty)
+        show(s"other templates: ${l.map(_.filename).mkString(", ")}", l.nonEmpty)
         l foreach { p =>
-          val outfile = dst resolve (src relativize p)
+          val outfile = dst / p.relativeTo(src)
 
           show(s"parse template $p")
-          otherTemplates += TemplateFile(outfile, null, templateParser.parse(readFile(p.toString)))
+          otherTemplates += TemplateFile(outfile, null, templateParser.parse(p.readText()))
         }
       }
 
@@ -215,19 +207,21 @@ object Process {
     }
 
     processDir(src)
-    Site(contentItems.toList,
-         contentMap.toMap,
-         dataFiles.toList,
-         layoutTemplates.toMap,
-         partialTemplates.toMap,
-         shortcodeTemplates.toMap,
-         otherTemplates.toList)
+    Site(
+      contentItems.toList,
+      contentMap.toMap,
+      dataFiles.toList,
+      layoutTemplates.toMap,
+      partialTemplates.toMap,
+      shortcodeTemplates.toMap,
+      otherTemplates.toList,
+    )
   }
 
   def withoutExtension(filename: String): String =
-    filename lastIndexOf '.' match {
+    filename.lastIndexOf('.') match {
       case -1  => filename
-      case dot => filename substring (0, dot)
+      case dot => filename.substring(0, dot)
     }
 
   def cleanName(s: String, stripPrefix: Boolean): String = {
@@ -258,23 +252,44 @@ object Process {
     if (buf.isEmpty) "-"
     else buf.toString
   }
-
 }
 
 case class DataFile(parent: Path, name: String, data: Any)
 
-trait ContentItem { val outdir: Path }
-case class ContentFile(outdir: Path, name: String, page: Any, source: String, var content: String, var toc: TOC)
-    extends ContentItem
+sealed trait ContentItem { val outdir: Path }
+case class ContentFile(
+    outdir: Path,
+    name: String,
+    page: Any,
+    source: String,
+    var content: String,
+    var toc: TOC,
+) extends ContentItem
 case class ContentFolder(outdir: Path) extends ContentItem
 case class ContentLabel(label: String) extends ContentItem { val outdir: Path = null }
 
 case class TemplateFile(path: Path, name: String, var template: TemplateAST)
 
-case class Site(content: List[ContentItem],
-                map: Map[String, ContentFile],
-                data: List[DataFile],
-                layoutTemplates: Map[(List[String], String), TemplateFile],
-                partialTemplates: Map[String, TemplateFile],
-                shortcodeTemplates: Map[String, TemplateFile],
-                otherTemplates: List[TemplateFile])
+case class Site(
+    content: List[ContentItem],
+    map: Map[String, ContentFile],
+    data: List[DataFile],
+    layoutTemplates: Map[(List[String], String), TemplateFile],
+    partialTemplates: Map[String, TemplateFile],
+    shortcodeTemplates: Map[String, TemplateFile],
+    otherTemplates: List[TemplateFile],
+)
+
+/** Tree-shaped table of contents for a single content file: each [[TocEntry]]
+  * carries the heading level, the original inlines (so we can render the
+  * label as HTML or text on demand), an auto-generated id (slug), and any
+  * nested headings whose level is deeper.
+  */
+case class TocEntry(
+    level: Int,
+    contents: List[io.github.edadma.markdown.Inline],
+    id: String,
+    sub: TOC,
+)
+
+case class TOC(headings: List[TocEntry])

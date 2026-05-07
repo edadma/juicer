@@ -1,72 +1,134 @@
-<img align="right" src="logo/juicer-200.png">juice logo</img>
+<img align="right" src="logo/juicer-200.png" alt="Juicer logo" width="200">
 
-# module-name  
+# juicer
 
-**Badges** 
+![Maven Central](https://img.shields.io/maven-central/v/io.github.edadma/juicer_3)
+![GitHub last commit](https://img.shields.io/github/last-commit/edadma/juicer)
+![GitHub](https://img.shields.io/github/license/edadma/juicer)
+![Scala Version](https://img.shields.io/badge/Scala-3.8.3-blue.svg)
+![Scala.js Version](https://img.shields.io/badge/Scala.js-1.21.0-blue.svg)
+![Scala Native Version](https://img.shields.io/badge/Scala_Native-0.5.11-blue.svg)
 
-Optional badges such as npm version, test and build coverage, and so on.
+A small, cross-platform static site generator for Scala 3 — Hugo-style, built
+on a stack of small libraries:
 
-**Summary** 
+- [**markdown**](https://github.com/edadma/markdown) — CommonMark 0.31.2 parser
+- [**squiggly**](https://github.com/edadma/squiggly) — Hugo/Liquid-style template engine
+- [**toml**](https://github.com/edadma/toml) — site config (`site.toml`)
+- [**scala-yaml**](https://github.com/VirtusLab/scala-yaml) — YAML frontmatter
+- [**path**](https://github.com/edadma/path) + [**cross_platform**](https://github.com/edadma/cross_platform) — file I/O across JVM / Scala.js / Scala Native
 
-One- or two-sentence description of what the module does.
+> A more thorough docs site, built with juicer itself, is in progress.
+> This README is the short version.
 
-## Overview
+## Status
 
-Optionally, include a section of one or two paragraphs with more high-level 
-information on what the module does, what problems it solves, why one would 
-use it and how.  Don't just repeat what's in the summary.
+`v0.1.0`. The cross-platform port is just landing; the JVM build is well-shaken
+through `examples/`. Scala.js and Scala Native compile from the same sources
+but are less battle-tested.
 
-## Installation
+## Install
+
+```scala
+libraryDependencies += "io.github.edadma" %%% "juicer" % "0.1.0"
+```
+
+Or as a published binary, run via sbt:
+
+```bash
+sbt 'juicerJVM/run build -s ./mysite'
+```
+
+## Project layout
 
 ```
-$ npm install module-name
+mysite/
+├── site.toml                 # site config (overlays a built-in baseline)
+├── content/                  # markdown sources, with YAML frontmatter
+│   ├── _index.md
+│   └── posts/
+│       └── hello-world.md
+├── layouts/                  # squiggly templates that wrap content
+│   ├── _default/
+│   │   ├── baseof.html
+│   │   ├── file.html
+│   │   └── folder.html
+├── partials/                 # reusable squiggly fragments
+├── shortcodes/               # `[= name … =]` template fragments
+└── static/                   # copied as-is into the output
 ```
 
-## Basic use
+A markdown file looks like:
 
-General description of how to use the module with basic example.
+```markdown
+---
+title: Hello, World
+date: 2026-05-07
+tags:
+  - intro
+---
 
-## API 
+This is the body.
+```
 
-Full API documentation.
+YAML frontmatter (between `---` lines) is parsed by **scala-yaml**; the body
+goes through **markdown** and the result is rendered into the page's layout
+via **squiggly**.
 
-## Examples
+## CLI
 
-Additional examples here.
+```
+Juicer Site Generator v0.1.0
+Usage: juicer [options] [command]
 
-## Tests
+  -b, --baseurl <URL>     base site URL
+  -c, --config <name>     base site configuration (default 'standard';
+                          others: 'simple', 'norme')
+  -h, --help              prints this usage text
+  -v, --verbose           verbose output
+      --version           prints the version
 
-What tests are included and how to run them. 
+Commands:
+  build  -s <path> -d <path>     build the site (defaults: ./, ./public)
+  config -s <path>               show the resolved build configuration
+  serve  -s <path> -d <path>     build and serve (not yet wired)
+```
 
-## Contributing
+## Site config
 
-This project welcomes contributions from the community. Contributions are
-accepted using GitHub pull requests; for more information, see 
-[GitHub documentation - Creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
+`site.toml` overlays a built-in baseline (`standard` by default). The
+baselines live in [`BaseConfigs.scala`](shared/src/main/scala/io/github/edadma/juicer/BaseConfigs.scala);
+the `standard` baseline expects the layout shown above.
 
-For a good pull request, we ask you provide the following:
+```toml
+title    = "My Site"
+author   = "Ed"
+baseURL  = "https://example.com"
+```
 
-1. Include a clear description of your pull request in the description
-   with the basic "what" and "why"s for the request.
-2. The tests should pass as best as you can. GitHub will automatically run
-   the tests as well, to act as a safety net.
-3. The pull request should include tests for the change. A new feature should
-   have tests for the new feature and bug fixes should include a test that fails
-   without the corresponding code change and passes after they are applied.
-   The command `npm run test-cov` will generate a `coverage/` folder that
-   contains HTML pages of the code coverage, to better understand if everything
-   you're adding is being tested.
-4. If the pull request is a new feature, please include appropriate documentation 
-   in the `README.md` file as well.
-5. To help ensure that your code is similar in style to the existing code,
-   run the command `npm run lint` and fix any displayed issues.
+## Templates
 
-## Contributors
+Layouts and partials use **squiggly** syntax: `{{ .field }}`, `{{ for x <- .items }}`,
+`{{ if cond }}`, etc. Pages can override blocks defined in a `baseof.html`
+layout via `{{ define name }}`.
 
-Names of module "owners" (lead developers) and other developers who 
-have contributed.
+The page-rendering context exposes:
+
+| key       | what                                                       |
+|-----------|------------------------------------------------------------|
+| `site`    | the resolved site config + nav data                        |
+| `page`    | the page's YAML frontmatter (any-data shape)               |
+| `content` | the rendered markdown body (HTML)                          |
+| `toc`     | the page's heading tree (auto-generated anchors)           |
+| `sub`     | flattened sub-headings (for sidebars)                      |
+
+## Cross-platform
+
+`build.sbt` cross-builds for JVM, Scala.js, and Scala Native. JVM is the
+primary target right now; the JS build runs under Node and the Native build
+produces a standalone executable. All three exercise the same shared code
+through the `path` and `cross_platform` libraries.
 
 ## License
 
-Link to the license, with a short description of what it is, 
-e.g. "MIT" or whatever.
+[ISC](https://opensource.org/licenses/ISC)

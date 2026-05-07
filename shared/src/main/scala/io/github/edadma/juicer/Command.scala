@@ -1,11 +1,11 @@
 package io.github.edadma.juicer
 
-import java.nio.file.{Path, Paths}
+import io.github.edadma.path.Path
 
 trait Command
 
-case class BuildCommand(src: Path = Paths.get("."), dst: Path = null) extends Command
+case class BuildCommand(src: Path = Path("."), dst: Path = null) extends Command
 
-case class ServeCommand(src: Path = Paths.get("."), dst: Path = null) extends Command
+case class ServeCommand(src: Path = Path("."), dst: Path = null) extends Command
 
-case class ConfigCommand(src: Path = Paths.get(".")) extends Command
+case class ConfigCommand(src: Path = Path(".")) extends Command

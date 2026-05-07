@@ -1,7 +1,7 @@
 package io.github.edadma.juicer
 
 import io.github.edadma.char_reader._
-import io.github.edadma.squiggly._
+import io.github.edadma.squiggly.{TemplateLoader, TemplateRenderer}
 
 import java.io.{ByteArrayOutputStream, PrintStream}
 import scala.annotation.tailrec

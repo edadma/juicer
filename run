@@ -1,1 +1,0 @@
-juicerJVM/run build -v -b /juicer/examples/docsrc/public -s examples/docsrc
