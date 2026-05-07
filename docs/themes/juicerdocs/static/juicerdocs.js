@@ -69,6 +69,35 @@
     pre.appendChild(btn);
   });
 
+  // ===== Tabs widget — see {= tabs / tab =} shortcodes =====
+  // Each .juicerdocs-tabs container holds N .juicerdocs-tab-panel children
+  // (one per `[= tab "Label" =]` block). We synthesize a button bar from the
+  // panels' `data-tab-label` attributes, hide all but the first panel, and
+  // wire click handlers.
+  document.querySelectorAll(".juicerdocs-tabs[data-juicerdocs-tabs]").forEach((root) => {
+    const panels = Array.from(root.querySelectorAll(":scope > .juicerdocs-tab-panel"));
+    if (panels.length === 0) return;
+    const bar = document.createElement("div");
+    bar.className = "juicerdocs-tabs-buttons";
+    panels.forEach((panel, i) => {
+      const label = panel.dataset.tabLabel || `Tab ${i + 1}`;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "juicerdocs-tabs-button" + (i === 0 ? " active" : "");
+      btn.textContent = label;
+      btn.addEventListener("click", () => {
+        bar.querySelectorAll(".juicerdocs-tabs-button").forEach((b) => b.classList.remove("active"));
+        panels.forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        panel.classList.add("active");
+      });
+      bar.appendChild(btn);
+      if (i === 0) panel.classList.add("active");
+    });
+    root.insertBefore(bar, root.firstChild);
+    root.removeAttribute("data-juicerdocs-tabs");
+  });
+
   // ===== Sidebar active-link highlight =====
   // Matches by URL path (ignoring query/fragment) and adds a class.
   const here = location.pathname.replace(/\/+$/, "/") || "/";

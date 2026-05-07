@@ -908,6 +908,29 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     out("about/index.html") shouldBe "ok"
   }
 
+  it should "treat \\[= as a literal start-delimiter (preprocessor escape)" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: T
+        |---
+        |
+        |Use `\[= name =]` to call a shortcode.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "{{ .content }}")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    // The literal `[= name =]` survives through the preprocessor.
+    html should include("[= name =]")
+    // No leading backslash leaks through into the rendered HTML.
+    html should not include "\\[="
+  }
+
   it should "respect headingShift = 0 (no level shift)" in {
     writeAt(
       "site.toml",

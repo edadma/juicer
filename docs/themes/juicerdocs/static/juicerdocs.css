@@ -56,6 +56,117 @@ html { scroll-behavior: smooth; }
   color: rgb(251 146 60);
 }
 
+/*
+ * Step list — used by the {= steps =} shortcode. The shortcode body is
+ * arbitrary markdown; every <h2> becomes a numbered step via CSS counter,
+ * so authors don't need a special-purpose syntax.
+ */
+.juicerdocs-steps {
+  counter-reset: juicerdocs-step;
+}
+.juicerdocs-steps > :is(h2, h3, h4):first-child { margin-top: 0; }
+.juicerdocs-steps h2 {
+  counter-increment: juicerdocs-step;
+  position: relative;
+  padding-left: 2.5rem;
+  scroll-margin-top: 5rem;
+}
+.juicerdocs-steps h2::before {
+  content: counter(juicerdocs-step);
+  position: absolute;
+  left: 0;
+  top: 0.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background: rgb(234 88 12);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+/* Tabs widget — see the {= tabs =} / {= tab =} shortcodes. */
+.juicerdocs-tabs {
+  margin: 1.5rem 0;
+  border: 1px solid rgb(228 228 231);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.dark .juicerdocs-tabs { border-color: rgb(63 63 70); }
+.juicerdocs-tabs-buttons {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 0.5rem 0;
+  background: rgb(250 250 250);
+  border-bottom: 1px solid rgb(228 228 231);
+}
+.dark .juicerdocs-tabs-buttons {
+  background: rgb(24 24 27);
+  border-bottom-color: rgb(63 63 70);
+}
+.juicerdocs-tabs-button {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(82 82 91);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+}
+.juicerdocs-tabs-button:hover { color: rgb(24 24 27); }
+.dark .juicerdocs-tabs-button { color: rgb(161 161 170); }
+.dark .juicerdocs-tabs-button:hover { color: rgb(244 244 245); }
+.juicerdocs-tabs-button.active {
+  color: rgb(234 88 12);
+  border-bottom-color: rgb(234 88 12);
+}
+.dark .juicerdocs-tabs-button.active { color: rgb(251 146 60); border-bottom-color: rgb(251 146 60); }
+.juicerdocs-tab-panel { padding: 1rem; }
+.juicerdocs-tab-panel:not(.active) { display: none; }
+
+/* Filetree — monospace listing with subtle indent guides. */
+.juicerdocs-filetree {
+  font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  background: rgb(250 250 250);
+  border: 1px solid rgb(228 228 231);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  white-space: pre;
+  overflow-x: auto;
+  color: rgb(63 63 70);
+}
+.dark .juicerdocs-filetree {
+  background: rgb(24 24 27);
+  border-color: rgb(63 63 70);
+  color: rgb(212 212 216);
+}
+
+/* GitHub repo card. */
+.juicerdocs-github {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgb(228 228 231);
+  border-radius: 0.5rem;
+  background: rgb(250 250 250);
+  text-decoration: none;
+  color: inherit;
+  margin: 1rem 0;
+}
+.dark .juicerdocs-github {
+  background: rgb(24 24 27);
+  border-color: rgb(63 63 70);
+}
+.juicerdocs-github:hover { border-color: rgb(234 88 12); }
+
 /* Search results dropdown — a simple list. */
 #juicerdocs-search-results .juicerdocs-result {
   display: block;
