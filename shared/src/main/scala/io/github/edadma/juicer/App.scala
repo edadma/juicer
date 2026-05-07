@@ -115,17 +115,19 @@ object App {
     val preprocessor = new Preprocessor(shortcodes = shortcodesLoader, renderer = templateRenderer)
 
     // Markdown render pass: parse each content file's source, build the TOC,
-    // and produce the rendered HTML body. Heading levels and link
-    // destinations are pre-transformed at the AST level so the output blends
-    // into a layout that already provides an outer `<h1>` for the page title.
-    for (case c @ ContentFile(_, name, _, _, _, _) <- site.content) {
+    // produce the rendered HTML body, and compute a summary. Heading levels
+    // and link destinations are pre-transformed at the AST level so the
+    // output blends into a layout that already provides an outer `<h1>` for
+    // the page title.
+    for (case c @ ContentFile(_, name, _, _, _, _, _) <- site.content) {
       show(s"parse markdown file $name")
 
-      val raw  = parseMarkdown(preprocessor.process(c.source))
-      val doc  = transformLinks(shiftHeadings(raw, by = 2), linkCallback)
+      val raw = parseMarkdown(preprocessor.process(c.source))
+      val doc = transformLinks(shiftHeadings(raw, by = 2), linkCallback)
 
       c.toc = buildToc(doc)
       c.content = io.github.edadma.markdown.renderToHTML(doc, markdownConfig).trim
+      c.summary = computeSummary(c, doc, preprocessor, linkCallback)
     }
 
     trait TOCItem
@@ -236,8 +238,9 @@ object App {
 
     /** The page record exposed to templates as `.page` and as each entry of
       * `site.pages`. Frontmatter wins on key collisions only for fields we
-      * don't own; the URL fields (`permalink`, `relPermalink`, `url`) are
-      * always overwritten so authors can't accidentally shadow them.
+      * don't own; the URL fields (`permalink`, `relPermalink`, `url`) and
+      * the computed `summary` are always overwritten so authors can't
+      * accidentally shadow them.
       */
     def enrichPage(c: ContentFile): Map[String, Any] = {
       val rel = relPermalinkFor(c)
@@ -246,13 +249,17 @@ object App {
         "permalink"    -> abs,
         "relPermalink" -> rel,
         "url"          -> rel,
+        "summary"      -> (if (c.summary eq null) "" else c.summary),
       )
     }
 
-    val contentFiles: List[ContentFile] = site.content.collect { case c: ContentFile => c }
-    val enrichedByFile: Map[ContentFile, Map[String, Any]] =
-      contentFiles.map(c => c -> enrichPage(c)).toMap
-    val pages: List[Map[String, Any]]            = contentFiles.map(enrichedByFile)
+    val contentFiles: List[ContentFile]          = site.content.collect { case c: ContentFile => c }
+    // Parallel list to contentFiles. Driving the render loop from this
+    // avoids using `ContentFile` as a Map key (case-class equality on var
+    // fields would make pre/post-render keys non-equal).
+    val pageEntries: List[(ContentFile, Map[String, Any])] =
+      contentFiles.map(c => c -> enrichPage(c))
+    val pages: List[Map[String, Any]]            = pageEntries.map(_._2)
     val pagesByPath: Map[String, Map[String, Any]] =
       pages.map(p => p("relPermalink").asInstanceOf[String] -> p).toMap
 
@@ -280,7 +287,12 @@ object App {
     def subheadings(l: List[TocEntry]): List[SubHeading] =
       l.map(h => SubHeading(renderInlinesHtml(h.contents), h.id, subheadings(h.sub.headings)))
 
-    for (case c @ ContentFile(outdir, name, _, _, content, toc) <- site.content) {
+    for ((c, pageMap) <- pageEntries) {
+      val outdir  = c.outdir
+      val name    = c.name
+      val content = c.content
+      val toc     = c.toc
+
       templateRenderer.blocks.clear()
 
       val outfile =
@@ -298,7 +310,7 @@ object App {
       }
       val pagedata = Map(
         "site"    -> sitedata,
-        "page"    -> enrichedByFile(c),
+        "page"    -> pageMap,
         "content" -> content,
         "toc"     -> toc,
         "sub"     -> sub,
@@ -463,6 +475,61 @@ object App {
         { case (con, Seq(s: String)) => io.github.edadma.emoji.Emoji(s) },
       ),
     )
+  }
+
+  // ===== Summary computation =====
+
+  /** Word cap applied to the auto-derived (option 3) summary path. Hugo
+    * defaults to 70; juicer's docs/blog use case favours short list-page
+    * blurbs, so 30 reads better in compact UIs. Easy to expose as a
+    * config key later if the use cases diverge.
+    */
+  private val summaryWordLimit = 30
+
+  /** Resolve `.page.summary` using a three-tier waterfall:
+    *
+    *   1. Explicit frontmatter `summary` field — taken verbatim.
+    *   2. `<!--more-->` HTML comment in source — render the prefix (up
+    *      to but not including the marker) as HTML.
+    *   3. Fallback — first paragraph's plain text, capped at
+    *      [[summaryWordLimit]] words and ellipsised when truncated.
+    */
+  private def computeSummary(
+      c:            ContentFile,
+      doc:          Document,
+      preprocessor: Preprocessor,
+      linkCallback: String => String,
+  ): String = {
+    val frontmatter = c.page match {
+      case m: Map[?, ?] => m.asInstanceOf[Map[Any, Any]]
+      case _            => Map.empty[Any, Any]
+    }
+    frontmatter.get("summary").collect { case s: String => s } match {
+      case Some(s) => s
+      case None =>
+        val src     = c.source
+        val moreIdx = src.indexOf("<!--more-->")
+        if (moreIdx >= 0) {
+          val before = src.substring(0, moreIdx)
+          val parsed = transformLinks(parseMarkdown(preprocessor.process(before)), linkCallback)
+          io.github.edadma.markdown.renderToHTML(parsed, markdownConfig).trim
+        } else {
+          // Walk the AST for the first paragraph (skip leading headings,
+          // thematic breaks, etc.). plainText strips inline formatting
+          // (emphasis, code spans, link wrapping) and we then collapse runs
+          // of whitespace before splitting on word boundaries.
+          doc.children.collectFirst {
+            case p: io.github.edadma.markdown.Paragraph => p
+          } match {
+            case Some(io.github.edadma.markdown.Paragraph(inlines)) =>
+              val text  = io.github.edadma.markdown.plainText(inlines)
+              val words = text.split("\\s+").filter(_.nonEmpty).toList
+              if (words.length <= summaryWordLimit) text
+              else words.take(summaryWordLimit).mkString(" ") + "…"
+            case None => ""
+          }
+        }
+    }
   }
 
   // ===== AST transforms applied to each content document before rendering =====

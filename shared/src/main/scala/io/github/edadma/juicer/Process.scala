@@ -275,12 +275,13 @@ case class DataFile(parent: Path, name: String, data: Any)
 
 sealed trait ContentItem { val outdir: Path }
 case class ContentFile(
-    outdir: Path,
-    name: String,
-    page: Any,
-    source: String,
+    outdir:      Path,
+    name:        String,
+    page:        Any,
+    source:      String,
     var content: String,
-    var toc: TOC,
+    var toc:     TOC,
+    var summary: String = null,
 ) extends ContentItem
 case class ContentFolder(outdir: Path) extends ContentItem
 case class ContentLabel(label: String) extends ContentItem { val outdir: Path = null }

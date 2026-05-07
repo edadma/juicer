@@ -495,6 +495,94 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     (dst / "404.html").exists shouldBe false
   }
 
+  it should "expose .page.summary from explicit frontmatter when set" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: T
+        |summary: A custom summary string.
+        |---
+        |
+        |This first paragraph is *not* what we want.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "summary={{ .page.summary }}")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    out("index.html") shouldBe "summary=A custom summary string."
+  }
+
+  it should "compute .page.summary from the prefix before <!--more-->" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: T
+        |---
+        |
+        |The lead paragraph stops *here*.
+        |
+        |<!--more-->
+        |
+        |Stuff that should not appear in the summary.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "summary={{ .page.summary }}")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    html should include("summary=<p>The lead paragraph stops <em>here</em>.</p>")
+    html should not include "Stuff that should not appear"
+  }
+
+  it should "fall back to first-paragraph plain text capped at 30 words" in {
+    val long = (1 to 60).map(i => s"w$i").mkString(" ")
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      s"""---
+         |title: T
+         |---
+         |
+         |# A heading should be skipped
+         |
+         |$long
+         |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "summary={{ .page.summary }}")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    val expected =
+      "summary=" + (1 to 30).map(i => s"w$i").mkString(" ") + "…"
+    html shouldBe expected
+  }
+
+  it should "expose .page.summary on each entry of site.pages" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\nsummary: Home blurb.\n---\n\n# H\n")
+    writeAt("content/about.md", "---\ntitle: About\nsummary: About blurb.\n---\n\n# A\n")
+    writeAt(
+      "layouts/_default/folder.html",
+      """{{ for p <- .site.pages }}{{ p.title }}: {{ p.summary }}
+        |{{ end }}""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    html should include("Home: Home blurb.")
+    html should include("About: About blurb.")
+  }
+
   it should "copy static/ files into the output tree as-is" in {
     writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
     writeAt("content/_index.md", "---\ntitle: T\n---\n\n# A\n")
