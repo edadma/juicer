@@ -1,6 +1,6 @@
 package io.github.edadma
 
-import io.github.edadma.markdown.{Document, Heading, Inline, Paragraph}
+import io.github.edadma.markdown.{Document, Heading, Inline}
 import io.github.edadma.path.Path
 import io.github.edadma.squiggly.{BaseURL, TemplateParser}
 import io.github.edadma.toml.{TomlDocument, TomlValue}
@@ -91,83 +91,32 @@ package object juicer {
 
   // ===== Markdown parser + helpers =====
 
-  /** Eagerly-cached `markdown.MarkdownConfig`. Currently we use the default
-    * (pure CommonMark, no extensions); change here to enable tables, math, etc.
+  /** Cached `markdown.MarkdownConfig`. We turn on `autoHeadingIds` so the
+    * parser populates each heading's `attrs.id` directly (which our TOC
+    * builder then reads instead of re-slugifying). Change here to enable
+    * tables, math, etc.
     */
   lazy val markdownConfig: io.github.edadma.markdown.MarkdownConfig =
-    io.github.edadma.markdown.MarkdownConfig.default
+    io.github.edadma.markdown.MarkdownConfig.default.copy(autoHeadingIds = true)
 
   /** Parse markdown text into a [[Document]] AST. */
   def parseMarkdown(s: String): Document =
     io.github.edadma.markdown.parseDocumentContent(s, markdownConfig)
 
-  /** Render a list of inline nodes to HTML (for heading-text rendering in TOC
-    * entries). The library only exposes whole-block / whole-document renderers,
-    * so we wrap the inlines in a one-off `Paragraph`, render, and strip the
-    * surrounding `<p>` tag.
+  /** Render a list of inline nodes to HTML (delegates to markdown 0.4.2's
+    * public `renderInlines`).
     */
-  def renderInlinesHtml(inlines: List[Inline]): String = {
-    val html = io.github.edadma.markdown.renderBlockToHTML(Paragraph(inlines), markdownConfig).trim
-    if (html.startsWith("<p>") && html.endsWith("</p>"))
-      html.substring(3, html.length - 4)
-    else html
-  }
-
-  /** Walk a [[Document]] and return its top-level headings in source order. */
-  def collectHeadings(doc: Document): List[Heading] =
-    doc.children.collect { case h: Heading => h }
-
-  /** Concatenate the textual content of an inline list, stripping all
-    * formatting. Used as input to [[slugify]] when generating heading IDs and
-    * to display TOC labels in plain-text form when needed.
-    */
-  def inlineText(inlines: List[Inline]): String = {
-    import io.github.edadma.markdown.*
-    val buf = new StringBuilder
-    def go(node: Inline): Unit = node match {
-      case Text(s)              => buf ++= s
-      case CodeSpan(s)          => buf ++= s
-      case Emphasis(children)   => children.foreach(go)
-      case Strong(children)     => children.foreach(go)
-      case Link(_, _, children) => children.foreach(go)
-      case Image(_, _, alt, _)  => buf ++= renderAltText(alt)
-      case AutoLink(href, _)       => buf ++= href
-      case RawHTML(_)              => () // skip
-      case SoftLineBreak()         => buf += ' '
-      case HardLineBreak()         => buf += ' '
-      case Strikethrough(children) => children.foreach(go)
-      case other                   => buf ++= other.toString
-    }
-    inlines.foreach(go)
-    buf.toString.trim.replaceAll("\\s+", " ")
-  }
-
-  private def renderAltText(inlines: List[Inline]): String = inlineText(inlines)
-
-  /** Convert a heading's text to a URL-safe anchor slug
-    * (`Hello, World!` → `hello-world`).
-    */
-  def slugify(text: String): String = {
-    val lower = text.toLowerCase
-    val sb    = new StringBuilder
-    var dash  = false
-    lower.foreach { ch =>
-      if (ch.isLetterOrDigit) {
-        sb += ch
-        dash = false
-      } else if (!dash && sb.nonEmpty) {
-        sb += '-'
-        dash = true
-      }
-    }
-    val s = sb.toString
-    if (s.endsWith("-")) s.dropRight(1) else s
-  }
+  def renderInlinesHtml(inlines: List[Inline]): String =
+    io.github.edadma.markdown.renderInlines(inlines)
 
   /** Build a tree-shaped table of contents from a flat heading list. The
     * tree is grouped by heading level: a heading's `sub` contains the
     * subsequent headings whose levels are strictly deeper, up to the next
     * heading at the same (or shallower) level.
+    *
+    * Each entry's `id` is read from `Heading.attrs.id` — populated by the
+    * parser when `MarkdownConfig.autoHeadingIds` is true (see
+    * [[markdownConfig]]).
     */
   def buildToc(headings: List[Heading]): TOC = {
     if (headings.isEmpty) TOC(Nil)
@@ -185,7 +134,7 @@ package object juicer {
           out += TocEntry(
             h.level,
             h.inlines,
-            slugify(inlineText(h.inlines)),
+            h.attrs.flatMap(_.id).getOrElse(""),
             buildToc(arr.slice(i + 1, j).toList),
           )
           i = j
@@ -199,7 +148,7 @@ package object juicer {
   }
 
   /** Convenience: build a TOC directly from a [[Document]]. */
-  def buildToc(doc: Document): TOC = buildToc(collectHeadings(doc))
+  def buildToc(doc: Document): TOC = buildToc(doc.headings)
 
   // ===== YAML frontmatter parsing (scala-yaml) =====
 
