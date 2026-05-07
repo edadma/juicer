@@ -353,8 +353,53 @@ object App {
       path.writeText(rendered)
     }
 
+    // ----- sitemap.xml -----
+    //
+    // Standard sitemaps protocol — one <url><loc>…</loc></url> per page.
+    // No <lastmod> until i18n / dated frontmatter lands; <priority> /
+    // <changefreq> are out-of-spec for most modern crawlers anyway.
+    {
+      val sb = new StringBuilder
+      sb.append("""<?xml version="1.0" encoding="UTF-8"?>""").append('\n')
+      sb.append("""<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">""").append('\n')
+      for (p <- pages) {
+        val abs = p("permalink").asInstanceOf[String]
+        sb.append("  <url><loc>").append(escapeXml(abs)).append("</loc></url>\n")
+      }
+      sb.append("</urlset>\n")
+      val path = dst1 / "sitemap.xml"
+      show(s"write $path")
+      path.writeText(sb.toString)
+    }
+
+    // ----- 404.html (optional) -----
+    //
+    // If a layout named `404` exists under the default layout folder, render
+    // it with site context only (no `page`) and write it to the site root.
+    // This is what nginx / GitHub Pages / Netlify pick up as the not-found
+    // page. Skipping silently when no such layout exists keeps it opt-in.
+    findLayout(Nil, "404") match {
+      case Some(TemplateFile(templatePath, _, template)) =>
+        show(s"render 404.html using ${templatePath.relativeTo(src1)}")
+        val rendered = renderToString(templateRenderer, Map("site" -> sitedata), template)
+        (dst1 / "404.html").writeText(rendered)
+      case None =>
+        show("no 404 layout found; skipping 404.html")
+    }
+
     dst1
   }
+
+  /** Minimal XML escaping for sitemap URLs — covers the five entities the
+    * sitemap protocol cares about. No need for full HTML entity coverage
+    * since URLs already restrict the character set.
+    */
+  private def escapeXml(s: String): String =
+    s.replace("&", "&amp;")
+      .replace("<", "&lt;")
+      .replace(">", "&gt;")
+      .replace("\"", "&quot;")
+      .replace("'", "&apos;")
 
   // ===== juicer-side URL template builtins =====
   //

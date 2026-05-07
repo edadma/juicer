@@ -440,6 +440,61 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     out("wip/index.html") should include("<title>Work in Progress</title>")
   }
 
+  it should "emit sitemap.xml with one entry per page" in {
+    writeAt(
+      "site.toml",
+      """title   = "S"
+        |baseURL = "https://example.com"
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n# H\n")
+    writeAt("content/about.md", "---\ntitle: About\n---\n\n# A\n")
+    writeAt("content/contact.md", "---\ntitle: Contact\n---\n\n# C\n")
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val sitemap = out("sitemap.xml")
+    sitemap should include("""<?xml version="1.0" encoding="UTF-8"?>""")
+    sitemap should include("""<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">""")
+    sitemap should include("<loc>https://example.com/</loc>")
+    sitemap should include("<loc>https://example.com/about/</loc>")
+    sitemap should include("<loc>https://example.com/contact/</loc>")
+    sitemap should include("</urlset>")
+  }
+
+  it should "render 404.html from the default 404 layout when present" in {
+    writeAt("site.toml", "title = \"Sitey\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n# H\n")
+    writeAt("layouts/_default/folder.html", "{{ .content }}")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/404.html",
+      """<!doctype html>
+        |<title>404 — {{ .site.title }}</title>
+        |<h1>Page not found</h1>
+        |""".stripMargin,
+    )
+
+    build()
+
+    val nf = out("404.html")
+    nf should include("<title>404 — Sitey</title>")
+    nf should include("<h1>Page not found</h1>")
+  }
+
+  it should "skip 404.html when no 404 layout exists" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n# H\n")
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    (dst / "404.html").exists shouldBe false
+  }
+
   it should "copy static/ files into the output tree as-is" in {
     writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
     writeAt("content/_index.md", "---\ntitle: T\n---\n\n# A\n")
