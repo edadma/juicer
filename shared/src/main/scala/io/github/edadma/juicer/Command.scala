@@ -11,11 +11,12 @@ case class BuildCommand(
 ) extends Command
 
 case class ServeCommand(
-    src:    Path    = Path("."),
-    dst:    Path    = null,
-    host:   String  = "localhost",
-    port:   Int     = 8080,
-    drafts: Boolean = false,
+    src:        Path    = Path("."),
+    dst:        Path    = null,
+    host:       String  = "localhost",
+    port:       Int     = 8080,
+    drafts:     Boolean = false,
+    liveReload: Boolean = false,
 ) extends Command
 
 case class ConfigCommand(src: Path = Path(".")) extends Command

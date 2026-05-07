@@ -18,9 +18,17 @@ object App {
   val run: PartialFunction[Args, Unit] = {
     case Args(baseConfig, verbose, baseurl, Some(BuildCommand(src, dst, drafts))) =>
       build(baseConfig, verbose, baseurl, src, dst, drafts)
-    case Args(baseConfig, verbose, baseurl, Some(ServeCommand(src, dst, host, port, drafts))) =>
+    case Args(baseConfig, verbose, baseurl, Some(ServeCommand(src, dst, host, port, drafts, liveReload))) =>
       val outDir = build(baseConfig, verbose, baseurl, src, dst, drafts)
-      serve(outDir, host, port)
+      // Rebuild callback for live-reload — re-runs the build pipeline against
+      // the same args. Held by the watcher thread; called when the source
+      // tree changes. Returns false silently on rebuild failure so the
+      // server stays up and shows the last good site (problems still print
+      // to stderr from inside `build`).
+      val rebuild: () => Boolean = () =>
+        try { build(baseConfig, verbose, baseurl, src, dst, drafts); true }
+        catch { case t: Throwable => Console.err.println(s"rebuild failed: ${t.getMessage}"); false }
+      serve(outDir, host, port, liveReload = liveReload, watchRoot = if (liveReload) src else null, rebuild = rebuild)
     case Args(baseConfig, _, baseurl, Some(ConfigCommand(src))) =>
       println("Site config:")
 

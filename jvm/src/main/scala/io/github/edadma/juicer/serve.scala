@@ -3,35 +3,205 @@ package io.github.edadma.juicer
 import com.sun.net.httpserver.{HttpExchange, HttpHandler, HttpServer}
 import io.github.edadma.path.Path
 
+import java.io.OutputStream
 import java.net.InetSocketAddress
+import java.nio.file.{FileSystems, Files, Paths, StandardWatchEventKinds, WatchEvent, WatchKey}
+import java.util.concurrent.{ConcurrentHashMap, Executors}
+import scala.jdk.CollectionConverters.*
 
 /** Minimal single-threaded static-file server backed by `com.sun.net.httpserver`.
   *
   * Intended for `juicer serve` — a local dev preview while authoring. Not a
-  * production web server. Cross-platform support belongs in a separate
-  * `microserve`-style library; the JS / Native variants of this file are
-  * intentional stubs that print a "not implemented" message.
+  * production web server.
+  *
+  * With `liveReload = true`:
+  *   - A `WatchService` registers every directory under `watchRoot` and
+  *     triggers a rebuild on change (debounced ~150 ms).
+  *   - HTML responses get a `<script>` injected before `</body>` that opens
+  *     an `EventSource` to `/__juicer/live` and reloads on the `reload` event.
+  *   - The server's executor is switched to a cached thread pool so SSE
+  *     connections don't starve normal requests.
   */
-def serve(root: Path, host: String = "localhost", port: Int = 8080): Unit = {
+def serve(
+    root:       Path,
+    host:       String        = "localhost",
+    port:       Int           = 8080,
+    liveReload: Boolean       = false,
+    watchRoot:  Path          = null,
+    rebuild:    () => Boolean = () => false,
+): Unit = {
   val server = HttpServer.create(new InetSocketAddress(host, port), 0)
-  server.createContext("/", StaticFileHandler(root))
-  server.setExecutor(null) // single-threaded — fine for dev
+
+  if (liveReload) {
+    val sse = new SseChannel
+    server.createContext("/__juicer/live", sse)
+    server.createContext("/", new StaticFileHandler(root, injectLiveReload = true))
+    server.setExecutor(Executors.newCachedThreadPool())
+
+    if (watchRoot != null)
+      startWatcher(watchRoot, rebuild, sse)
+  } else {
+    server.createContext("/", new StaticFileHandler(root, injectLiveReload = false))
+    server.setExecutor(null) // single-threaded — fine for dev
+  }
+
   server.start()
 
   println(s"juicer serve: http://$host:$port/")
   println(s"  root: $root")
+  if (liveReload) println("  live reload: enabled")
   println("Press Ctrl+C to stop.")
 
-  // Block forever; the http server runs on its own thread.
   try Thread.currentThread().join()
   catch case _: InterruptedException => server.stop(0)
 }
 
-/** Resolve incoming paths to files under `root`. Directory requests fall
-  * through to `index.html`. Returns `404 Not Found` if the resolved file
-  * doesn't exist or isn't readable.
-  */
-private final class StaticFileHandler(root: Path) extends HttpHandler {
+// ===== SSE channel =====
+//
+// Tracks a set of currently-open OutputStream sinks. `notifyReload` writes
+// the SSE `reload` event to each; failed sinks are pruned. Keep-alive
+// comments fire on a daemon timer so reverse proxies don't kill idle
+// connections.
+
+private final class SseChannel extends HttpHandler {
+  private val sinks = ConcurrentHashMap.newKeySet[OutputStream]()
+
+  // One ka thread for the lifetime of the JVM is fine for a dev tool;
+  // daemon = true so Ctrl+C exits cleanly.
+  private val keepalive = Executors.newSingleThreadScheduledExecutor(r => {
+    val t = new Thread(r, "juicer-sse-keepalive"); t.setDaemon(true); t
+  })
+  keepalive.scheduleAtFixedRate(() => writeAll(": keepalive\n\n"), 30, 30, java.util.concurrent.TimeUnit.SECONDS)
+
+  def handle(ex: HttpExchange): Unit = {
+    val h = ex.getResponseHeaders
+    h.set("Content-Type", "text/event-stream")
+    h.set("Cache-Control", "no-cache")
+    h.set("Connection", "keep-alive")
+    // 0 = unknown / chunked. The exchange stays open until we close it.
+    ex.sendResponseHeaders(200, 0L)
+    val out = ex.getResponseBody
+    sinks.add(out)
+    try out.write("retry: 1000\n\n".getBytes("UTF-8"))
+    catch case _: Throwable => sinks.remove(out)
+    out.flush()
+    // Block this handler thread to keep the connection open. The
+    // notifyReload / writeAll paths write directly to `out`. If the client
+    // disconnects, the next write throws and the sink is pruned.
+    while (sinks.contains(out)) {
+      try Thread.sleep(1000)
+      catch case _: InterruptedException => sinks.remove(out)
+    }
+    try out.close() catch case _: Throwable => ()
+  }
+
+  /** Tell every connected client to reload. */
+  def notifyReload(): Unit = writeAll("event: reload\ndata: 1\n\n")
+
+  private def writeAll(payload: String): Unit = {
+    val bytes = payload.getBytes("UTF-8")
+    val it    = sinks.iterator()
+    while (it.hasNext) {
+      val out = it.next()
+      try { out.write(bytes); out.flush() }
+      catch case _: Throwable => sinks.remove(out)
+    }
+  }
+}
+
+// ===== File watcher + rebuild loop =====
+
+/** SSE client script — injected into HTML responses when live-reload is on.
+  * Idempotent (the `__juicerLive` guard) so duplicate injection is harmless. */
+private[juicer] val LiveReloadScript: String =
+  """<script>
+    |(function() {
+    |  if (window.__juicerLive) return;
+    |  window.__juicerLive = true;
+    |  var es = new EventSource('/__juicer/live');
+    |  es.addEventListener('reload', function() { location.reload(); });
+    |  es.onerror = function() { /* keep retrying — EventSource auto-reconnects */ };
+    |})();
+    |</script>""".stripMargin
+
+/** Insert the live-reload script just before the closing `</body>` tag. If
+  * the document has no `</body>` (a stripped-down or hand-written HTML), the
+  * script is appended at the end. Exposed for tests. */
+private[juicer] def injectLiveReloadHtml(html: String): String =
+  if (html.contains("</body>")) html.replace("</body>", LiveReloadScript + "\n</body>")
+  else html + LiveReloadScript
+
+private def startWatcher(src: Path, rebuild: () => Boolean, sse: SseChannel): Unit = {
+  val watchService = FileSystems.getDefault.newWatchService()
+
+  /** Register `dir` and every subdirectory underneath. Re-registers on
+    * directory creation in the event loop, so newly-added dirs join the
+    * watch set without restarting `serve`. */
+  def registerAll(dir: java.nio.file.Path): Unit = {
+    Files.walk(dir).iterator().asScala.filter(Files.isDirectory(_)).foreach { d =>
+      d.register(
+        watchService,
+        StandardWatchEventKinds.ENTRY_CREATE,
+        StandardWatchEventKinds.ENTRY_DELETE,
+        StandardWatchEventKinds.ENTRY_MODIFY,
+      )
+    }
+  }
+
+  val srcPath = Paths.get(src.toString).toAbsolutePath
+  registerAll(srcPath)
+
+  val thread = new Thread(
+    () => {
+      var running = true
+      while (running && !Thread.currentThread().isInterrupted) {
+        val keyOpt: Option[WatchKey] =
+          try Some(watchService.take())
+          catch case _: InterruptedException => running = false; None
+
+        keyOpt.foreach { key =>
+          var anyEvent = false
+          for (ev <- key.pollEvents().asScala) {
+            val k = ev.kind()
+            if (k != StandardWatchEventKinds.OVERFLOW) {
+              anyEvent = true
+              // Newly-created directories join the watch set so deeper edits
+              // also fire.
+              if (k == StandardWatchEventKinds.ENTRY_CREATE) {
+                val ctx = ev.context().asInstanceOf[java.nio.file.Path]
+                val p = key.watchable().asInstanceOf[java.nio.file.Path].resolve(ctx)
+                if (Files.isDirectory(p)) registerAll(p)
+              }
+            }
+          }
+
+          // Drain further events that arrive within the debounce window —
+          // typical editors save → trigger N events; one rebuild covers all.
+          if (anyEvent) {
+            Thread.sleep(150)
+            var k = watchService.poll()
+            while (k != null) {
+              k.pollEvents() // discard
+              k.reset()
+              k = watchService.poll()
+            }
+            println("[juicer] source changed; rebuilding…")
+            if (rebuild()) sse.notifyReload()
+          }
+          key.reset()
+        }
+      }
+    },
+    "juicer-watcher",
+  )
+  thread.setDaemon(true)
+  thread.start()
+}
+
+// ===== Static-file handler =====
+
+private final class StaticFileHandler(root: Path, injectLiveReload: Boolean) extends HttpHandler {
+
   def handle(ex: HttpExchange): Unit = {
     val raw     = ex.getRequestURI.getPath
     val rel     = if (raw == "/") "/index.html" else raw
@@ -40,8 +210,12 @@ private final class StaticFileHandler(root: Path) extends HttpHandler {
     val target  = if (located.exists && located.isDirectory) located / "index.html" else located
 
     if (target.exists && target.isFile && target.isReadable) {
-      val bytes = target.readBytes
-      ex.getResponseHeaders.set("Content-Type", contentType(target.filename))
+      val mime  = contentType(target.filename)
+      val bytes =
+        if (injectLiveReload && mime.startsWith("text/html"))
+          injectLiveReloadHtml(target.readText()).getBytes("UTF-8")
+        else target.readBytes
+      ex.getResponseHeaders.set("Content-Type", mime)
       ex.sendResponseHeaders(200, bytes.length.toLong)
       val out = ex.getResponseBody
       try out.write(bytes)
@@ -77,6 +251,7 @@ private final class StaticFileHandler(root: Path) extends HttpHandler {
           case "woff2"               => "font/woff2"
           case "ttf"                 => "font/ttf"
           case "otf"                 => "font/otf"
+          case "xml"                 => "application/xml; charset=utf-8"
           case _                     => "application/octet-stream"
         }
     }

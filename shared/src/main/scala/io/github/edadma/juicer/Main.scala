@@ -101,6 +101,9 @@ import scopt.OParser
           opt[Unit]('D', "drafts")
             .action((_, c) => updateServe(c, _.copy(drafts = true)))
             .text("include draft pages (frontmatter `draft: true`)"),
+          opt[Unit]('L', "live-reload")
+            .action((_, c) => updateServe(c, _.copy(liveReload = true)))
+            .text("rebuild on source changes and reload browser tabs"),
         ),
     )
 
