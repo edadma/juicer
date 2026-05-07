@@ -559,6 +559,40 @@ object App {
       path.writeText(sb.toString)
     }
 
+    // ----- search.json -----
+    //
+    // Per-page index for client-side full-text search. Each entry has title,
+    // url, summary, plain-text content (HTML-stripped), and the section path.
+    // Themes can fetch /search.json and run substring / fuzzy match in the
+    // browser. Always emitted; small enough that an unused index is no
+    // burden. Strips HTML rather than re-walking the AST since the AST is
+    // already gone by this point — the regex is intentionally crude
+    // (replaces tags + the five named entities) but enough for matching
+    // text in a search box.
+    {
+      val sb = new StringBuilder
+      sb.append('[')
+      var first = true
+      for ((c, pageMap) <- pageEntries) {
+        val title    = pageMap.get("title").collect { case s: String => s }.getOrElse("")
+        val url      = pageMap("relPermalink").asInstanceOf[String]
+        val summary  = pageMap("summary").asInstanceOf[String]
+        val plain    = stripHtmlForSearch(if (c.content eq null) "" else c.content)
+        if (!first) sb.append(',')
+        first = false
+        sb.append('{')
+        sb.append("\"title\":").append(jsonString(title)).append(',')
+        sb.append("\"url\":").append(jsonString(url)).append(',')
+        sb.append("\"summary\":").append(jsonString(stripHtmlForSearch(summary))).append(',')
+        sb.append("\"content\":").append(jsonString(plain))
+        sb.append('}')
+      }
+      sb.append(']')
+      val path = dst1 / "search.json"
+      show(s"write $path")
+      path.writeText(sb.toString)
+    }
+
     // ----- 404.html (optional) -----
     //
     // If a layout named `404` exists under the default layout folder, render
@@ -587,6 +621,47 @@ object App {
       .replace(">", "&gt;")
       .replace("\"", "&quot;")
       .replace("'", "&apos;")
+
+  /** Crude HTML→text stripper for the search index. Drops every tag, decodes
+    * the five named entities, collapses whitespace. Not a full HTML parser —
+    * fine for matching prose in a search box, not fine for displaying
+    * attacker-controlled content (don't pipe this back into HTML). */
+  private def stripHtmlForSearch(html: String): String = {
+    val noTags = html.replaceAll("<[^>]+>", " ")
+    val decoded = noTags
+      .replace("&nbsp;", " ")
+      .replace("&amp;", "&")
+      .replace("&lt;", "<")
+      .replace("&gt;", ">")
+      .replace("&quot;", "\"")
+      .replace("&apos;", "'")
+    decoded.replaceAll("\\s+", " ").trim
+  }
+
+  /** JSON-string encoder. Quotes the value, escapes the standard six
+    * characters (`"`, `\`, `\n`, `\r`, `\t`, plus DEL+control chars via
+    * `\uXXXX`). Avoids the overhead of pulling in a full JSON library just
+    * for this one emitter. */
+  private def jsonString(s: String): String = {
+    val sb = new StringBuilder
+    sb += '"'
+    var i = 0
+    while (i < s.length) {
+      val ch = s.charAt(i)
+      ch match {
+        case '"'                  => sb.append("\\\"")
+        case '\\'                 => sb.append("\\\\")
+        case '\n'                 => sb.append("\\n")
+        case '\r'                 => sb.append("\\r")
+        case '\t'                 => sb.append("\\t")
+        case c if c < ' '         => sb.append(f"\\u${c.toInt}%04x")
+        case c                    => sb += c
+      }
+      i += 1
+    }
+    sb += '"'
+    sb.toString
+  }
 
   // ===== juicer-side URL template builtins =====
   //

@@ -908,6 +908,75 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     out("about/index.html") shouldBe "ok"
   }
 
+  // ===== search.json emitter =====
+
+  it should "emit search.json with one entry per page" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n# Home\n\nWelcome here.\n")
+    writeAt("content/about.md", "---\ntitle: About\n---\n\n# About\n\nOur story.\n")
+    writeAt("layouts/_default/folder.html", "{{ .content }}")
+    writeAt("layouts/_default/file.html", "{{ .content }}")
+
+    build()
+
+    val json = out("search.json")
+    json should startWith("[")
+    json should endWith("]")
+    json should include(""""title":"Home"""")
+    json should include(""""title":"About"""")
+    // URL fields are present and stripped of htmlDir
+    json should include(""""url":"/"""")
+    json should include(""""url":"/about/"""")
+  }
+
+  it should "strip HTML tags from search.json content" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: T
+        |---
+        |
+        |# Heading
+        |
+        |Some **bold** and *emphasised* text.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "{{ .content }}")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val json = out("search.json")
+    json should include("Some bold and emphasised text.")
+    // No HTML tags leaked through
+    json should not include "<strong>"
+    json should not include "<em>"
+    json should not include "<h"
+  }
+
+  it should "escape special JSON characters in search.json" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: 'Quote: "hi" \backslash'
+        |---
+        |
+        |Line one.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "{{ .content }}")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val json = out("search.json")
+    // Embedded `"` becomes `\"`; backslash becomes `\\`.
+    json should include("""\"hi\"""")
+    json should include("""\\backslash""")
+  }
+
   // Bug: nested section indexes (`content/docs/_index.md`) used to fail with
   // NoSuchFileException because the section directory (`html/docs/`) was
   // never created on disk. Now `outdir.createDirectories()` is called before
