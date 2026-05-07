@@ -39,6 +39,12 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      # actions/setup-java does NOT ship sbt — the runner image only has
+      # the JDK after the previous step. Install sbt explicitly via the
+      # official sbt-maintained action.
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Cache sbt
         uses: actions/cache@v4
         with:
