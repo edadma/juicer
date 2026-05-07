@@ -908,6 +908,75 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     out("about/index.html") shouldBe "ok"
   }
 
+  it should "respect headingShift = 0 (no level shift)" in {
+    writeAt(
+      "site.toml",
+      """title = "S"
+        |baseURL = "http://x"
+        |headingShift = 0
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: T
+        |---
+        |
+        |# Top
+        |
+        |## Sub
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "{{ .content }}")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    html should include("<h1 id=\"top\">Top</h1>")
+    html should include("<h2 id=\"sub\">Sub</h2>")
+    // No shifted h3
+    html should not include "<h3"
+  }
+
+  it should "respect headingShift = 1" in {
+    writeAt(
+      "site.toml",
+      """title = "S"
+        |baseURL = "http://x"
+        |headingShift = 1
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: T\n---\n\n# A\n\n## B\n")
+    writeAt("layouts/_default/folder.html", "{{ .content }}")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    html should include("<h2 id=\"a\">A</h2>")
+    html should include("<h3 id=\"b\">B</h3>")
+  }
+
+  it should "expose .site.root pointing at the root section's _index" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n.\n")
+    writeAt("content/docs/_index.md", "---\ntitle: Docs\nweight: 10\n---\n\n.\n")
+    writeAt("content/blog/_index.md", "---\ntitle: Blog\nweight: 20\n---\n\n.\n")
+    writeAt(
+      "layouts/_default/folder.html",
+      """root={{ .site.root.title }} | {{ for s <- .site.root.subsections }}{{ s.title }}={{ s.url }} {{ end }}""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    html should include("root=Home")
+    html should include("Docs=/docs/")
+    html should include("Blog=/blog/")
+  }
+
   // ===== search.json emitter =====
 
   it should "emit search.json with one entry per page" in {

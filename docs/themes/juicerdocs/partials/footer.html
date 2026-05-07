@@ -1,0 +1,9 @@
+<footer class="mt-16 border-t border-zinc-200 dark:border-zinc-800">
+  <div class="mx-auto max-w-screen-2xl px-4 py-8 text-sm text-zinc-500 dark:text-zinc-500 flex flex-col sm:flex-row justify-between gap-2">
+    <p>
+      Built with <a href="https://juicer.run/" class="text-orange-600 dark:text-orange-400 hover:underline">Juicer</a>
+      &middot; Theme: <a href="https://juicer.run/themes/juicerdocs/" class="text-orange-600 dark:text-orange-400 hover:underline">juicerdocs</a>
+    </p>
+    {{ if .site.author }}<p>© {{ .site.author }}</p>{{ end }}
+  </div>
+</footer>

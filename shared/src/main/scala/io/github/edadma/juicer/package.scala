@@ -91,13 +91,40 @@ package object juicer {
 
   // ===== Markdown parser + helpers =====
 
-  /** Cached `markdown.MarkdownConfig`. We turn on `autoHeadingIds` so the
-    * parser populates each heading's `attrs.id` directly (which our TOC
-    * builder then reads instead of re-slugifying). Change here to enable
-    * tables, math, etc.
+  /** Cached `markdown.MarkdownConfig`. Tuned for SSG / docs use: every GFM
+    * extension we ship support for is on, plus auto heading ids.
+    *
+    *   - autoHeadingIds   — every `<hN>` gets an `id` from the slugified text
+    *                        so the TOC builder can read it back, and so
+    *                        deep-link anchors work.
+    *   - tables           — GitHub-style pipe tables.
+    *   - strikethrough    — `~~text~~`.
+    *   - taskListItems    — `- [ ]` / `- [x]` checkboxes.
+    *   - extendedAutolinks — bare URLs like `https://example.com` autolink.
+    *   - footnotes        — `[^1]` references and `[^1]: …` definitions.
+    *   - smartPunctuation — straight quotes → curly, `--`/`---` → en/em dashes.
+    *   - attributes       — `## Heading {#anchor .class key=val}` syntax.
+    *   - callouts         — `> [!NOTE]` / `> [!TIP]` admonition blocks.
+    *   - definitionLists  — `term\n: definition` blocks.
+    *   - emoji = Unicode  — `:smile:` becomes 😄 inline.
+    *
+    * `math` stays off because KaTeX needs a runtime asset; turn it on per-site
+    * if your theme loads KaTeX.
     */
   lazy val markdownConfig: io.github.edadma.markdown.MarkdownConfig =
-    io.github.edadma.markdown.MarkdownConfig.default.copy(autoHeadingIds = true)
+    io.github.edadma.markdown.MarkdownConfig.default.copy(
+      autoHeadingIds    = true,
+      tables            = true,
+      strikethrough     = true,
+      taskListItems     = true,
+      extendedAutolinks = true,
+      footnotes         = true,
+      smartPunctuation  = true,
+      attributes        = true,
+      callouts          = true,
+      definitionLists   = true,
+      emoji             = io.github.edadma.markdown.EmojiConfig.Unicode,
+    )
 
   /** Parse markdown text into a [[Document]] AST. */
   def parseMarkdown(s: String): Document =

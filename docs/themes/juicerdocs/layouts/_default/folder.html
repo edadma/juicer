@@ -1,0 +1,37 @@
+{{ define main }}
+<article class="prose prose-zinc dark:prose-invert prose-headings:scroll-mt-20 max-w-none">
+  <h1>{{ .page.title }}</h1>
+  {{ if .page.summary }}<p class="lead text-lg text-zinc-600 dark:text-zinc-400 not-prose mb-8">{{ .page.summary }}</p>{{ end }}
+  {{ .content }}
+</article>
+
+{{ if .section.subsections }}
+<section class="not-prose mt-12">
+  <h2 class="text-xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100">Sections</h2>
+  <ul class="grid sm:grid-cols-2 gap-3">
+    {{ for s <- .section.subsections }}
+      <li>
+        <a href="{{ s.url }}" class="block p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-zinc-900 transition">
+          <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ s.title }}</div>
+          {{ if s.summary }}<div class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">{{ s.summary }}</div>{{ end }}
+        </a>
+      </li>
+    {{ end }}
+  </ul>
+</section>
+{{ end }}
+
+{{ if .section.pages }}
+<section class="not-prose mt-12">
+  <h2 class="text-xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100">Pages</h2>
+  <ul class="space-y-2">
+    {{ for p <- .section.pages }}
+      <li class="flex items-baseline gap-3">
+        <a href="{{ p.url }}" class="text-orange-600 dark:text-orange-400 hover:underline font-medium">{{ p.title }}</a>
+        {{ if p.summary }}<span class="text-sm text-zinc-600 dark:text-zinc-400">— {{ p.summary }}</span>{{ end }}
+      </li>
+    {{ end }}
+  </ul>
+</section>
+{{ end }}
+{{ end }}

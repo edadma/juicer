@@ -1,0 +1,13 @@
+# juicer.run — the docs site for juicer, built with juicer (dogfood ftw).
+#
+# Local preview:   sbt 'juicerJVM/run serve -s docs'
+# Production:      pushed to `stable`, built and deployed to juicer.run.
+
+title   = "Juicer"
+author  = "Ed Maxedon"
+baseURL = "https://juicer.run/"
+
+theme = "juicerdocs"
+
+# The page <h1> comes from frontmatter title — markdown headings start at h2.
+headingShift = 0

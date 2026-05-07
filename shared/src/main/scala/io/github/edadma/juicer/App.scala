@@ -123,7 +123,7 @@ object App {
       show(s"parse markdown file $name")
 
       val raw = parseMarkdown(preprocessor.process(c.source))
-      val doc = transformLinks(shiftHeadings(raw, by = 2), linkCallback)
+      val doc = transformLinks(shiftHeadings(raw, by = conf.int.headingShift), linkCallback)
 
       c.toc = buildToc(doc)
       c.content = io.github.edadma.markdown.renderToHTML(doc, markdownConfig).trim
@@ -245,45 +245,7 @@ object App {
       case _ => Map.empty[String, Any]
     }
 
-    /** First-pass page record — frontmatter plus self-derived fields only
-      * (URL trio, summary, isSection). No cross-page references — those are
-      * computed in the second pass. Keeping this lean breaks what would
-      * otherwise be a recursion problem when one page's enriched record
-      * mentions its parent / siblings (each of which has its own parent /
-      * siblings).
-      *
-      * Frontmatter wins on key collisions only for fields we don't own.
-      * The URL fields (`permalink`, `relPermalink`, `url`), `summary`, and
-      * `isSection` are always overwritten so authors can't accidentally
-      * shadow them.
-      */
-    def basicRecord(c: ContentFile): Map[String, Any] = {
-      val rel = relPermalinkFor(c)
-      val abs = baseURL.base + rel
-      frontmatterMap(c.page) ++ Map(
-        "permalink"    -> abs,
-        "relPermalink" -> rel,
-        "url"          -> rel,
-        "summary"      -> (if (c.summary eq null) "" else c.summary),
-        "isSection"    -> (c.name == folderContent),
-      )
-    }
-
     val contentFiles: List[ContentFile] = site.content.collect { case c: ContentFile => c }
-
-    // Pair list for both passes. We use a `find(_._1 eq c)` lookup below
-    // so we never use `ContentFile` as a HashMap key — case-class equality
-    // on the var fields was a footgun before; identity comparison sidesteps
-    // it forever.
-    val basicEntries: List[(ContentFile, Map[String, Any])] =
-      contentFiles.map(c => c -> basicRecord(c))
-
-    /** Look up the basic record for a content file by reference. Returns an
-      * empty map if `c` isn't a known file, which shouldn't happen but keeps
-      * the call sites simple.
-      */
-    def basic(c: ContentFile): Map[String, Any] =
-      basicEntries.find(_._1 eq c).map(_._2).getOrElse(Map.empty)
 
     // ----- Section / navigation graph -----
 
@@ -315,17 +277,22 @@ object App {
       contentFiles.groupBy(_.outdir)
 
     /** Outdir → sorted list of immediate child sections (their `_index`
-      * pages). "Immediate child" = section whose outdir's parent is this
-      * outdir. Walks `c.outdir.parent` rather than recursing into
-      * descendants so subsections don't bleed into a parent's listing. */
+      * pages). "Immediate" here means *nearest enclosing* section — under
+      * the default `htmlDir = "html"` layout the on-disk parent of
+      * `dst1/html/docs` is `dst1/html`, which is never an _index outdir, so
+      * we walk up until we hit one. A section whose nearest enclosing
+      * section is the root therefore lands in the root's subsection list,
+      * even though the on-disk path goes through `html/`. */
     val subsectionsByParent: Map[Path, List[ContentFile]] = {
       val by = scala.collection.mutable.HashMap.empty[Path, List[ContentFile]]
-      for (c <- contentFiles if c.name == folderContent)
-        c.outdir.parent.foreach { p =>
-          val pn = p.normalize
-          if (sectionIndex.contains(pn))
-            by(pn) = c :: by.getOrElse(pn, Nil)
+      for (c <- contentFiles if c.name == folderContent) {
+        var cur: Option[Path] = c.outdir.parent.map(_.normalize)
+        while (cur.isDefined && !sectionIndex.contains(cur.get))
+          cur = cur.get.parent.map(_.normalize)
+        cur.foreach { p =>
+          by(p) = c :: by.getOrElse(p, Nil)
         }
+      }
       by.toMap.view.mapValues(pageOrder).toMap
     }
 
@@ -346,6 +313,54 @@ object App {
           subsections = subsectionsByParent.getOrElse(outdir, Nil),
         )
       }
+
+    // ----- Per-page basic records -----
+
+    /** Build the "basic" record for a content file. Frontmatter + URL trio
+      * + summary + isSection. For section indexes, the record additionally
+      * carries `pages` and `subsections` — each itself a basic record built
+      * recursively. The section graph is a tree (acyclic by construction:
+      * outdirs nest), so the recursion always terminates at leaf
+      * (non-_index) pages, which carry no descendants.
+      *
+      * The recursive shape costs some duplication (an ancestor's record
+      * contains a snapshot of every descendant's record) but lets templates
+      * walk the section tree from any starting point — `.site.root.subsections[i].pages`,
+      * `.section.subsections[j].subsections[k]`, etc. — without having to
+      * thread a separate lookup table through every partial.
+      *
+      * Frontmatter wins on key collisions only for fields we don't own.
+      * The URL fields (`permalink`, `relPermalink`, `url`), `summary`, and
+      * `isSection` always overwrite so authors can't accidentally shadow
+      * them.
+      */
+    def buildBasic(c: ContentFile): Map[String, Any] = {
+      val rel  = relPermalinkFor(c)
+      val abs  = baseURL.base + rel
+      val core = frontmatterMap(c.page) ++ Map(
+        "permalink"    -> abs,
+        "relPermalink" -> rel,
+        "url"          -> rel,
+        "summary"      -> (if (c.summary eq null) "" else c.summary),
+        "isSection"    -> (c.name == folderContent),
+      )
+      if (c.name == folderContent) {
+        val info = sectionInfoByOutdir(c.outdir)
+        core ++ Map(
+          "pages"       -> info.pages.map(buildBasic),
+          "subsections" -> info.subsections.map(buildBasic),
+        )
+      } else core
+    }
+
+    val basicEntries: List[(ContentFile, Map[String, Any])] =
+      contentFiles.map(c => c -> buildBasic(c))
+
+    /** Look up the basic record for a content file by reference identity.
+      * Avoids using `ContentFile` as a HashMap key — case-class equality
+      * on `var` fields was a footgun before. */
+    def basic(c: ContentFile): Map[String, Any] =
+      basicEntries.find(_._1 eq c).map(_._2).getOrElse(Map.empty)
 
     /** Nearest enclosing `_index` page. For a non-`_index` page this is the
       * `_index` of its own outdir (same section). For an `_index` page it's
@@ -432,11 +447,21 @@ object App {
     val pagesByPath: Map[String, Map[String, Any]] =
       pages.map(p => p("relPermalink").asInstanceOf[String] -> p).toMap
 
+    // The root section's _index page (if any), looked up by its URL. Themes
+    // use this for site-wide navigation that walks `.site.root.subsections`.
+    val rootRecord: Map[String, Any] = {
+      val rootKey =
+        if (baseURL.path == "/" || baseURL.path.isEmpty) "/"
+        else baseURL.path + "/"
+      pagesByPath.getOrElse(rootKey, null)
+    }
+
     val sitedata = confdata +
       ("toc"         -> sitetoc.toList) +
       ("start"       -> start) +
       ("pages"       -> pages) +
-      ("pagesByPath" -> pagesByPath)
+      ("pagesByPath" -> pagesByPath) +
+      ("root"        -> rootRecord)
 
     def findLayout(folders: List[String], name: String): Option[TemplateFile] =
       site.layoutTemplates

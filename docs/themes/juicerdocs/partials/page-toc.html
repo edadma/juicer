@@ -1,0 +1,19 @@
+{{ if .sub }}
+  <nav aria-label="On this page" class="text-sm">
+    <p class="font-semibold text-zinc-900 dark:text-zinc-100 mb-3">On this page</p>
+    <ul class="space-y-2">
+      {{ for h <- .sub }}
+        <li>
+          <a href="#{{ h.id }}" class="block text-zinc-600 dark:text-zinc-400 hover:text-orange-600 dark:hover:text-orange-400">{{ h.heading }}</a>
+          {{ if h.sub }}
+            <ul class="ml-3 mt-1 space-y-1">
+              {{ for h2 <- h.sub }}
+                <li><a href="#{{ h2.id }}" class="block text-zinc-500 dark:text-zinc-500 hover:text-orange-600 dark:hover:text-orange-400 text-xs">{{ h2.heading }}</a></li>
+              {{ end }}
+            </ul>
+          {{ end }}
+        </li>
+      {{ end }}
+    </ul>
+  </nav>
+{{ end }}

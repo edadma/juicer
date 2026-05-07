@@ -26,6 +26,7 @@ object BaseConfigs {
         |staticDir      = "."
         |themeDir       = ""
         |publicDir      = "public"
+        |headingShift   = 2
         |""".stripMargin,
     "standard" ->
       """baseURL        = "http://localhost:8080"
@@ -45,6 +46,7 @@ object BaseConfigs {
         |staticDir      = "static"
         |themeDir       = "themes"
         |publicDir      = "public"
+        |headingShift   = 2
         |""".stripMargin,
     "norme" ->
       """baseURL        = "http://localhost:8080"
@@ -64,6 +66,7 @@ object BaseConfigs {
         |staticDir      = "statique"
         |themeDir       = "thèmes"
         |publicDir      = "public"
+        |headingShift   = 2
         |""".stripMargin,
   )
 

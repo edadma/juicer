@@ -1,0 +1,90 @@
+/*
+ * juicerdocs custom CSS — supplements Tailwind utilities for the few things
+ * that are awkward in pure utility classes. Most styling lives in templates
+ * via Tailwind classes; this file is for prose-tweaks, code blocks, and
+ * the search dropdown.
+ */
+
+/* Smooth scrolling for in-page anchor links (clicking the TOC). */
+html { scroll-behavior: smooth; }
+
+/* Code blocks — add a copy button affordance and a subtle language badge.
+ * The copy button itself is injected by juicerdocs.js. */
+.prose pre {
+  position: relative;
+  padding-top: 2rem;
+}
+.prose pre::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0.5rem;
+  left: 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgb(161 161 170);
+  font-family: ui-monospace, monospace;
+}
+
+.juicerdocs-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.25rem;
+  color: rgb(161 161 170);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+.prose pre:hover .juicerdocs-copy { opacity: 1; }
+.juicerdocs-copy:hover { color: rgb(244 244 245); }
+.juicerdocs-copy.copied { color: rgb(34 197 94); opacity: 1; }
+
+/* Active sidebar link — styled by JS adding the .active class on
+ * window load. */
+.juicerdocs-nav-active {
+  background: rgb(255 247 237);
+  color: rgb(194 65 12);
+  font-weight: 600;
+}
+.dark .juicerdocs-nav-active {
+  background: rgba(255, 247, 237, 0.06);
+  color: rgb(251 146 60);
+}
+
+/* Search results dropdown — a simple list. */
+#juicerdocs-search-results .juicerdocs-result {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgb(228 228 231 / 0.5);
+}
+.dark #juicerdocs-search-results .juicerdocs-result {
+  border-bottom-color: rgb(39 39 42 / 0.5);
+}
+#juicerdocs-search-results .juicerdocs-result:hover,
+#juicerdocs-search-results .juicerdocs-result.active {
+  background: rgb(255 247 237);
+  color: rgb(194 65 12);
+}
+.dark #juicerdocs-search-results .juicerdocs-result:hover,
+.dark #juicerdocs-search-results .juicerdocs-result.active {
+  background: rgba(194, 65, 12, 0.1);
+  color: rgb(251 146 60);
+}
+#juicerdocs-search-results .juicerdocs-result-title {
+  display: block;
+  font-weight: 500;
+}
+#juicerdocs-search-results .juicerdocs-result-snippet {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-top: 0.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -1,0 +1,42 @@
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{{ if .page.title }}{{ .page.title }} – {{ end }}{{ .site.title }}</title>
+{{ if .page.summary }}<meta name="description" content="{{ .page.summary }}" />{{ end }}
+<link rel="canonical" href="{{ .page.permalink }}" />
+
+<!--
+  Tailwind CSS v4 — browser CDN. JIT-compiles classes on every page load.
+  Fine for a docs site; swap for a build step (postcss / tailwind-cli) if
+  you need first-paint performance.
+-->
+<script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+<script type="text/tailwindcss">
+  @plugin "@tailwindcss/typography";
+  @theme {
+    --color-brand-50:  #fff7ed;
+    --color-brand-100: #ffedd5;
+    --color-brand-500: #f97316;
+    --color-brand-600: #ea580c;
+    --color-brand-700: #c2410c;
+  }
+  /* Make sure dark-mode variant uses the `.dark` class on <html> */
+  @custom-variant dark (&:where(.dark, .dark *));
+</script>
+
+<link rel="stylesheet" href="{{ relURL '/juicerdocs.css' }}" />
+
+<!--
+  Apply the dark-mode class BEFORE first paint to avoid the white flash.
+  Reads localStorage ('juicerdocs-theme'), falls back to system preference.
+-->
+<script>
+  (function() {
+    try {
+      var stored = localStorage.getItem('juicerdocs-theme');
+      var dark = stored
+        ? stored === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (dark) document.documentElement.classList.add('dark');
+    } catch (e) {}
+  })();
+</script>
