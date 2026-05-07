@@ -179,13 +179,81 @@ object App {
       if (confdata.contains("nav")) mktocFromConfig
       else if (site.content.nonEmpty) mktocFromContent(site.content.tail)
       else null
-    val sitedata      = confdata + ("toc" -> sitetoc.toList) + ("start" -> start)
     val defaultLayout = conf.defaultLayout
     val baseofLayout  = conf.baseofLayout
     val fileLayout    = conf.fileLayout
     val folderLayout  = conf.folderLayout
     val folderContent = conf.folderContent
     val html          = conf.htmlDir
+
+    // ----- per-page URL computation + site.pages enrichment -----
+    //
+    // Each ContentFile gets one "enriched page record" — the parsed
+    // frontmatter map plus derived fields (`permalink`, `relPermalink`,
+    // `url`, eventually `summary`). The same record is used twice: as
+    // the `.page` data when rendering that file's own template, and as
+    // an entry in `site.pages` / `site.pagesByPath` for sitemap, list
+    // pages, and cross-references in other templates.
+
+    /** Path-only URL for a content file, prefixed by `baseURL.path`.
+      * Folder content (`_index.md`) lives at the section directory; every
+      * other file becomes its own pretty-URL directory (`/<name>/`).
+      * The configured `htmlDir` is *stripped* from the URL since it's a
+      * filesystem-only convenience for keeping static assets alongside
+      * rather than under rendered pages.
+      */
+    def relPermalinkFor(c: ContentFile): String = {
+      val rel        = c.outdir.relativeTo(dst1)
+      val allSegs    = if (c.outdir == dst1) Nil else rel.segments.toList
+      val withoutHtml = if (html != "" && allSegs.nonEmpty) allSegs.drop(1) else allSegs
+      val pathSegs   =
+        if (c.name == folderContent) withoutHtml
+        else withoutHtml :+ c.name
+      val basePath   =
+        if (baseURL.path == "/" || baseURL.path.isEmpty) ""
+        else baseURL.path
+      val joined     = pathSegs.mkString("/")
+      if (joined.isEmpty) basePath + "/"
+      else basePath + "/" + joined + "/"
+    }
+
+    /** Coerce a frontmatter `Any` (typically `Map[String, Any]`, possibly
+      * empty) to a `Map[String, Any]`; non-map / null frontmatter degrades
+      * to an empty map.
+      */
+    def frontmatterMap(page: Any): Map[String, Any] = page match {
+      case m: Map[?, ?] =>
+        m.collect { case (k: String, v) => k -> v }.toMap
+      case _ => Map.empty[String, Any]
+    }
+
+    /** The page record exposed to templates as `.page` and as each entry of
+      * `site.pages`. Frontmatter wins on key collisions only for fields we
+      * don't own; the URL fields (`permalink`, `relPermalink`, `url`) are
+      * always overwritten so authors can't accidentally shadow them.
+      */
+    def enrichPage(c: ContentFile): Map[String, Any] = {
+      val rel = relPermalinkFor(c)
+      val abs = baseURL.base + rel
+      frontmatterMap(c.page) ++ Map(
+        "permalink"    -> abs,
+        "relPermalink" -> rel,
+        "url"          -> rel,
+      )
+    }
+
+    val contentFiles: List[ContentFile] = site.content.collect { case c: ContentFile => c }
+    val enrichedByFile: Map[ContentFile, Map[String, Any]] =
+      contentFiles.map(c => c -> enrichPage(c)).toMap
+    val pages: List[Map[String, Any]]            = contentFiles.map(enrichedByFile)
+    val pagesByPath: Map[String, Map[String, Any]] =
+      pages.map(p => p("relPermalink").asInstanceOf[String] -> p).toMap
+
+    val sitedata = confdata +
+      ("toc"         -> sitetoc.toList) +
+      ("start"       -> start) +
+      ("pages"       -> pages) +
+      ("pagesByPath" -> pagesByPath)
 
     def findLayout(folders: List[String], name: String): Option[TemplateFile] =
       site.layoutTemplates
@@ -205,7 +273,7 @@ object App {
     def subheadings(l: List[TocEntry]): List[SubHeading] =
       l.map(h => SubHeading(renderInlinesHtml(h.contents), h.id, subheadings(h.sub.headings)))
 
-    for (case ContentFile(outdir, name, data, _, content, toc) <- site.content) {
+    for (case c @ ContentFile(outdir, name, _, _, content, toc) <- site.content) {
       templateRenderer.blocks.clear()
 
       val outfile =
@@ -223,7 +291,7 @@ object App {
       }
       val pagedata = Map(
         "site"    -> sitedata,
-        "page"    -> data,
+        "page"    -> enrichedByFile(c),
         "content" -> content,
         "toc"     -> toc,
         "sub"     -> sub,

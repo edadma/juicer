@@ -286,6 +286,105 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     html should include("abs-/:  https://example.com/docs/page.html")
   }
 
+  it should "expose site.pages as a list of enriched page records" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: Home
+        |---
+        |
+        |# Home
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/about.md",
+      """---
+        |title: About
+        |---
+        |
+        |# About
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/contact.md",
+      """---
+        |title: Contact
+        |---
+        |
+        |# Contact
+        |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      """{{ for p <- .site.pages }}<a href="{{ p.relPermalink }}">{{ p.title }}</a>
+        |{{ end }}""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    html should include("""<a href="/">Home</a>""")
+    html should include("""<a href="/about/">About</a>""")
+    html should include("""<a href="/contact/">Contact</a>""")
+  }
+
+  it should "expose page.permalink, .page.relPermalink, .page.url" in {
+    writeAt(
+      "site.toml",
+      """title   = "S"
+        |baseURL = "https://example.com/docs"
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n# Home\n")
+    writeAt("content/about.md", "---\ntitle: About\n---\n\n# About\n")
+    writeAt(
+      "layouts/_default/folder.html",
+      """abs:  {{ .page.permalink }}
+        |rel:  {{ .page.relPermalink }}
+        |url:  {{ .page.url }}
+        |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/file.html",
+      """abs:  {{ .page.permalink }}
+        |rel:  {{ .page.relPermalink }}
+        |url:  {{ .page.url }}
+        |""".stripMargin,
+    )
+
+    build()
+
+    val home = out("index.html")
+    home should include("abs:  https://example.com/docs/")
+    home should include("rel:  /docs/")
+    home should include("url:  /docs/")
+
+    val about = out("about/index.html")
+    about should include("abs:  https://example.com/docs/about/")
+    about should include("rel:  /docs/about/")
+    about should include("url:  /docs/about/")
+  }
+
+  it should "key site.pagesByPath by relPermalink" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n# H\n")
+    writeAt("content/about.md", "---\ntitle: About Us\n---\n\n# A\n")
+    writeAt(
+      "layouts/_default/folder.html",
+      """{{ for k, v <- .site.pagesByPath }}{{ k }} -> {{ v.title }}
+        |{{ end }}""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    html should include("/ -> Home")
+    html should include("/about/ -> About Us")
+  }
+
   it should "copy static/ files into the output tree as-is" in {
     writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
     writeAt("content/_index.md", "---\ntitle: T\n---\n\n# A\n")
