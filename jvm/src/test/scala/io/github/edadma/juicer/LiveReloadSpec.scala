@@ -42,4 +42,44 @@ class LiveReloadSpec extends AnyFlatSpec with Matchers {
     LiveReloadScript should include("'reload'")
     LiveReloadScript should include("location.reload")
   }
+
+  "bindWithRetry" should "bump to the next free port when the first is taken" in {
+    // Reserve a port by binding a plain ServerSocket; bindWithRetry should
+    // skip it and land on something higher. Loopback so we don't trip
+    // firewall prompts on macOS.
+    val occupied = new java.net.ServerSocket(0, 0, java.net.InetAddress.getByName("127.0.0.1"))
+    try {
+      val taken  = occupied.getLocalPort
+      val server = bindWithRetry("127.0.0.1", taken, retriesLeft = 5)
+      try {
+        val landed = server.getAddress.getPort
+        landed should be > taken
+        landed should be <= (taken + 5)
+      } finally server.stop(0)
+    } finally occupied.close()
+  }
+
+  it should "throw BindException after exhausting retries" in {
+    // Reserve enough consecutive ports that all retries fail. Tightly racy
+    // on a busy host — if nothing else grabs adjacent ports between
+    // ServerSocket(0) calls, we get a contiguous block.
+    val sockets =
+      (0 until 4).map(_ => new java.net.ServerSocket(0, 0, java.net.InetAddress.getByName("127.0.0.1")))
+    try {
+      val ports = sockets.map(_.getLocalPort).toList.sorted
+      // Look for a contiguous run of 3 — if our four sockets happen to be
+      // contiguous, we have a 3-port range we can challenge bindWithRetry
+      // with using retriesLeft = 2 (start + 2 bumps = 3 attempts).
+      val contig =
+        ports.zip(ports.drop(1)).zip(ports.drop(2)).find { case ((a, b), c) => b == a + 1 && c == b + 1 }
+      contig match {
+        case None => cancel("OS handed out non-contiguous ports; can't exercise the all-fail path")
+        case Some(((a, _), _)) =>
+          val ex = intercept[java.net.BindException] {
+            bindWithRetry("127.0.0.1", a, retriesLeft = 2)
+          }
+          ex.getMessage should not be empty
+      }
+    } finally sockets.foreach(_.close())
+  }
 }

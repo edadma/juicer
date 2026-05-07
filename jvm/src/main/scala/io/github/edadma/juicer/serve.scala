@@ -30,7 +30,7 @@ def serve(
     watchRoot:  Path          = null,
     rebuild:    () => Boolean = () => false,
 ): Unit = {
-  val server = HttpServer.create(new InetSocketAddress(host, port), 0)
+  val server = bindWithRetry(host, port, retriesLeft = 20)
 
   if (liveReload) {
     val sse = new SseChannel
@@ -47,7 +47,10 @@ def serve(
 
   server.start()
 
-  println(s"juicer serve: http://$host:$port/")
+  // `actualPort` may differ from the requested `port` if `bindWithRetry`
+  // had to scan to the next free one — print what the OS actually gave us.
+  val actualPort = server.getAddress.getPort
+  println(s"juicer serve: http://$host:$actualPort/")
   println(s"  root: $root")
   if (liveReload) println("  live reload: enabled")
   println("Press Ctrl+C to stop.")
@@ -110,6 +113,26 @@ private final class SseChannel extends HttpHandler {
 }
 
 // ===== File watcher + rebuild loop =====
+
+/** Try to bind a fresh `HttpServer` on `host:startPort`. If the port is in
+  * use, scan upward up to `retriesLeft` times and use the first free one.
+  * Prints a one-liner whenever it bumps so the user knows what happened.
+  * Throws the original `BindException` after exhausting `retriesLeft` —
+  * that's better than silently picking some far-away port the user didn't
+  * ask for. Exposed for tests. */
+@scala.annotation.tailrec
+private[juicer] def bindWithRetry(host: String, startPort: Int, retriesLeft: Int): HttpServer = {
+  val attempt: Either[java.net.BindException, HttpServer] =
+    try Right(HttpServer.create(new InetSocketAddress(host, startPort), 0))
+    catch case e: java.net.BindException => Left(e)
+  attempt match {
+    case Right(s)            => s
+    case Left(e) if retriesLeft <= 0 => throw e
+    case Left(_) =>
+      println(s"[juicer] port $startPort is in use; trying ${startPort + 1}…")
+      bindWithRetry(host, startPort + 1, retriesLeft - 1)
+  }
+}
 
 /** SSE client script — injected into HTML responses when live-reload is on.
   * Idempotent (the `__juicerLive` guard) so duplicate injection is harmless. */
