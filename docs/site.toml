@@ -11,3 +11,9 @@ theme = "juicerdocs"
 
 # The page <h1> comes from frontmatter title — markdown headings start at h2.
 headingShift = 0
+
+# GitHub Pages (and any other static-file host) serves the on-disk layout
+# literally, so the URL space MUST match the file tree. The `standard`
+# baseline ships htmlDir = "html" — useful for tidy local browsing but it
+# breaks deploys (URLs strip the segment, file paths don't). Force it off.
+htmlDir = ""

@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-screen-2xl flex items-center gap-4 h-full px-4">
     <a href="{{ relURL '/' }}" class="flex items-center gap-2 shrink-0 jd-fg" style="text-decoration:none">
       <img src="{{ if .site.juicerdocs.logo }}{{ relURL .site.juicerdocs.logo }}{{ else }}{{ relURL '/juicer-logo.png' }}{{ end }}" alt="" class="w-8 h-8" />
-      <span class="hidden sm:inline font-bold text-lg tracking-tight">{{ .site.title }}</span>
+      <span class="hidden sm:inline font-bold text-2xl tracking-tight leading-none">{{ .site.title }}</span>
     </a>
 
     <div class="flex-1 max-w-md mx-auto relative">
