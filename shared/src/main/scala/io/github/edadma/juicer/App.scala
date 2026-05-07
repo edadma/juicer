@@ -153,8 +153,17 @@ object App {
 
           sitetoc += TOCList(
             files.map(h =>
+              // Prefer the first heading; fall back to frontmatter title;
+              // last resort is the file name. Heading-less content used to
+              // crash here on `headings.head`.
               TOCLink(
-                renderInlinesHtml(h.toc.headings.head.contents),
+                if (h.toc.headings.nonEmpty) renderInlinesHtml(h.toc.headings.head.contents)
+                else
+                  (h.page match {
+                    case m: Map[?, ?] =>
+                      m.collect { case (k: String, v: String) if k == "title" => v }.headOption
+                    case _ => None
+                  }).getOrElse(h.name),
                 s"${h.outdir.relativeTo(dst1)}/${h.name}",
               )),
           )
@@ -236,13 +245,19 @@ object App {
       case _ => Map.empty[String, Any]
     }
 
-    /** The page record exposed to templates as `.page` and as each entry of
-      * `site.pages`. Frontmatter wins on key collisions only for fields we
-      * don't own; the URL fields (`permalink`, `relPermalink`, `url`) and
-      * the computed `summary` are always overwritten so authors can't
-      * accidentally shadow them.
+    /** First-pass page record — frontmatter plus self-derived fields only
+      * (URL trio, summary, isSection). No cross-page references — those are
+      * computed in the second pass. Keeping this lean breaks what would
+      * otherwise be a recursion problem when one page's enriched record
+      * mentions its parent / siblings (each of which has its own parent /
+      * siblings).
+      *
+      * Frontmatter wins on key collisions only for fields we don't own.
+      * The URL fields (`permalink`, `relPermalink`, `url`), `summary`, and
+      * `isSection` are always overwritten so authors can't accidentally
+      * shadow them.
       */
-    def enrichPage(c: ContentFile): Map[String, Any] = {
+    def basicRecord(c: ContentFile): Map[String, Any] = {
       val rel = relPermalinkFor(c)
       val abs = baseURL.base + rel
       frontmatterMap(c.page) ++ Map(
@@ -250,16 +265,170 @@ object App {
         "relPermalink" -> rel,
         "url"          -> rel,
         "summary"      -> (if (c.summary eq null) "" else c.summary),
+        "isSection"    -> (c.name == folderContent),
       )
     }
 
-    val contentFiles: List[ContentFile]          = site.content.collect { case c: ContentFile => c }
-    // Parallel list to contentFiles. Driving the render loop from this
-    // avoids using `ContentFile` as a Map key (case-class equality on var
-    // fields would make pre/post-render keys non-equal).
+    val contentFiles: List[ContentFile] = site.content.collect { case c: ContentFile => c }
+
+    // Pair list for both passes. We use a `find(_._1 eq c)` lookup below
+    // so we never use `ContentFile` as a HashMap key — case-class equality
+    // on the var fields was a footgun before; identity comparison sidesteps
+    // it forever.
+    val basicEntries: List[(ContentFile, Map[String, Any])] =
+      contentFiles.map(c => c -> basicRecord(c))
+
+    /** Look up the basic record for a content file by reference. Returns an
+      * empty map if `c` isn't a known file, which shouldn't happen but keeps
+      * the call sites simple.
+      */
+    def basic(c: ContentFile): Map[String, Any] =
+      basicEntries.find(_._1 eq c).map(_._2).getOrElse(Map.empty)
+
+    // ----- Section / navigation graph -----
+
+    /** Map from outdir → its `_index.md` page (if any). One section per
+      * directory; absent if the section was created implicitly via a
+      * non-`_index` child. */
+    val sectionIndex: Map[Path, ContentFile] =
+      contentFiles.collect { case c if c.name == folderContent => c.outdir -> c }.toMap
+
+    /** Frontmatter weight for sorting. Default is `Long.MaxValue / 2` so
+      * pages with no `weight` cluster after explicitly weighted ones but
+      * before any sentinel value an author might choose. */
+    def pageWeight(c: ContentFile): Long =
+      frontmatterMap(c.page).get("weight").collect {
+        case n: BigDecimal => n.toLong
+        case n: Long       => n
+        case n: Int        => n.toLong
+      }.getOrElse(Long.MaxValue / 2)
+
+    /** Sort by weight ascending, then by name ascending. Stable secondary
+      * key so pages with the same weight have a predictable order. */
+    def pageOrder(cs: List[ContentFile]): List[ContentFile] =
+      cs.sortBy(c => (pageWeight(c), c.name))
+
+    /** All content files grouped by outdir — one bucket per section
+      * directory. Each bucket holds the section's `_index` (if present) and
+      * its non-`_index` siblings, unordered. */
+    val pagesByOutdir: Map[Path, List[ContentFile]] =
+      contentFiles.groupBy(_.outdir)
+
+    /** Outdir → sorted list of immediate child sections (their `_index`
+      * pages). "Immediate child" = section whose outdir's parent is this
+      * outdir. Walks `c.outdir.parent` rather than recursing into
+      * descendants so subsections don't bleed into a parent's listing. */
+    val subsectionsByParent: Map[Path, List[ContentFile]] = {
+      val by = scala.collection.mutable.HashMap.empty[Path, List[ContentFile]]
+      for (c <- contentFiles if c.name == folderContent)
+        c.outdir.parent.foreach { p =>
+          val pn = p.normalize
+          if (sectionIndex.contains(pn))
+            by(pn) = c :: by.getOrElse(pn, Nil)
+        }
+      by.toMap.view.mapValues(pageOrder).toMap
+    }
+
+    /** Per-outdir digest: index + sorted children + sorted subsections.
+      * Drives the `.section` data block at render time and the `.pages` /
+      * `.subsections` keys on `_index` page records. */
+    case class SectionInfo(
+        index:       Option[ContentFile],
+        pages:       List[ContentFile],
+        subsections: List[ContentFile],
+    )
+
+    val sectionInfoByOutdir: Map[Path, SectionInfo] =
+      pagesByOutdir.map { case (outdir, all) =>
+        outdir -> SectionInfo(
+          index       = sectionIndex.get(outdir),
+          pages       = pageOrder(all.filter(_.name != folderContent)),
+          subsections = subsectionsByParent.getOrElse(outdir, Nil),
+        )
+      }
+
+    /** Nearest enclosing `_index` page. For a non-`_index` page this is the
+      * `_index` of its own outdir (same section). For an `_index` page it's
+      * the nearest ancestor outdir's `_index`. Walks up through outdir
+      * parents until either an index is found or the root is reached. */
+    def parentSectionOf(c: ContentFile): Option[ContentFile] =
+      if (c.name != folderContent) sectionIndex.get(c.outdir)
+      else {
+        var cur: Option[Path] = c.outdir.parent.map(_.normalize)
+        while (cur.isDefined) {
+          sectionIndex.get(cur.get) match {
+            case Some(idx) => return Some(idx)
+            case None      => cur = cur.get.parent.map(_.normalize)
+          }
+        }
+        None
+      }
+
+    /** Chain of ancestor `_index` pages from the root section down to the
+      * page's parent (exclusive of the page itself). Used by templates to
+      * render breadcrumbs. */
+    def ancestorsOf(c: ContentFile): List[ContentFile] = {
+      val out = scala.collection.mutable.ListBuffer.empty[ContentFile]
+      var cur = parentSectionOf(c)
+      while (cur.isDefined) {
+        out.prepend(cur.get)
+        cur = parentSectionOf(cur.get)
+      }
+      out.toList
+    }
+
+    /** Previous / next siblings within the page's section, by `pageOrder`.
+      * `_index` pages don't get prev/next (they sit above their siblings
+      * in the hierarchy, not beside them). */
+    def prevNextOf(c: ContentFile): (Option[ContentFile], Option[ContentFile]) =
+      if (c.name == folderContent) (None, None)
+      else {
+        val sibs = sectionInfoByOutdir.get(c.outdir).map(_.pages).getOrElse(Nil)
+        val idx  = sibs.indexWhere(_ eq c)
+        val prv  = if (idx > 0) Some(sibs(idx - 1)) else None
+        val nxt  = if (idx >= 0 && idx < sibs.length - 1) Some(sibs(idx + 1)) else None
+        (prv, nxt)
+      }
+
+    /** Second-pass enriched record. Adds navigation cross-references whose
+      * targets are basic records (one level only — `.page.parent.parent`
+      * is never defined; templates walk `.page.ancestors` for the chain). */
+    def enrichedRecord(c: ContentFile): Map[String, Any] = {
+      val base    = basic(c)
+      val parent  = parentSectionOf(c).map(basic).orNull
+      val ancs    = ancestorsOf(c).map(basic)
+      val (p, n)  = prevNextOf(c)
+      val withNav = base ++ Map(
+        "parent"    -> parent,
+        "ancestors" -> ancs,
+        "prev"      -> p.map(basic).orNull,
+        "next"      -> n.map(basic).orNull,
+      )
+      if (c.name == folderContent) {
+        val info = sectionInfoByOutdir(c.outdir)
+        withNav ++ Map(
+          "pages"       -> info.pages.map(basic),
+          "subsections" -> info.subsections.map(basic),
+        )
+      } else withNav
+    }
+
+    /** `.section` data block — the enclosing section's pages list +
+      * subsections list + section-index page record. For a non-`_index`
+      * page this describes the page's own section; for an `_index` page
+      * this describes the section the page heads. */
+    def sectionDataFor(c: ContentFile): Map[String, Any] = {
+      val info = sectionInfoByOutdir(c.outdir)
+      Map(
+        "pages"       -> info.pages.map(basic),
+        "subsections" -> info.subsections.map(basic),
+        "index"       -> info.index.map(basic).orNull,
+      )
+    }
+
     val pageEntries: List[(ContentFile, Map[String, Any])] =
-      contentFiles.map(c => c -> enrichPage(c))
-    val pages: List[Map[String, Any]]            = pageEntries.map(_._2)
+      contentFiles.map(c => c -> enrichedRecord(c))
+    val pages: List[Map[String, Any]]              = pageEntries.map(_._2)
     val pagesByPath: Map[String, Map[String, Any]] =
       pages.map(p => p("relPermalink").asInstanceOf[String] -> p).toMap
 
@@ -296,8 +465,13 @@ object App {
       templateRenderer.blocks.clear()
 
       val outfile =
-        if (name == folderContent) (outdir / "index.html").toString
-        else {
+        if (name == folderContent) {
+          // Section index — outdir IS the section dir. For nested sections
+          // the directory may not yet exist on disk (no `static/` overlap
+          // forced its creation), so make sure it does. Idempotent.
+          outdir.createDirectories()
+          (outdir / "index.html").toString
+        } else {
           val pagedir = outdir / name
 
           show(s"content: create directory $pagedir")
@@ -311,6 +485,7 @@ object App {
       val pagedata = Map(
         "site"    -> sitedata,
         "page"    -> pageMap,
+        "section" -> sectionDataFor(c),
         "content" -> content,
         "toc"     -> toc,
         "sub"     -> sub,
