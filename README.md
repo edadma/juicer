@@ -39,7 +39,7 @@ then open `http://localhost:8080/`.
 ## Install (use juicer as a library)
 
 ```scala
-libraryDependencies += "io.github.edadma" %%% "juicer" % "0.1.0"
+libraryDependencies += "io.github.edadma" %%% "juicer" % "0.2.0"
 ```
 
 The CLI is the typical way to use it; the library API exposes
@@ -83,7 +83,7 @@ rendered into the page's layout via **squiggly**.
 ## CLI
 
 ```
-Juicer Site Generator v0.1.0
+Juicer Site Generator v0.2.0
 Usage: juicer [options] [command]
 
   -b, --baseurl <URL>     base site URL (overrides site.toml)
