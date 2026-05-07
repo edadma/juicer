@@ -497,10 +497,10 @@ object App {
           t
         }
 
-    case class SubHeading(heading: String, id: String, sub: List[SubHeading])
+    case class SubHeading(heading: String, id: String, level: Int, sub: List[SubHeading])
 
     def subheadings(l: List[TocEntry]): List[SubHeading] =
-      l.map(h => SubHeading(renderInlinesHtml(h.contents), h.id, subheadings(h.sub.headings)))
+      l.map(h => SubHeading(renderInlinesHtml(h.contents), h.id, h.level, subheadings(h.sub.headings)))
 
     for ((c, pageMap) <- pageEntries) {
       val outdir  = c.outdir
@@ -528,6 +528,10 @@ object App {
         case Some(h) => subheadings(h.sub.headings)
         case None    => Nil
       }
+      // Full TOC tree as SubHeading data — used by the "On this page" rail
+      // for showing every heading on the page, not just the children of the
+      // first one (which is what `.sub` carries for back-compat).
+      val tocList = subheadings(toc.headings)
       val pagedata = Map(
         "site"    -> sitedata,
         "page"    -> pageMap,
@@ -535,6 +539,7 @@ object App {
         "content" -> content,
         "toc"     -> toc,
         "sub"     -> sub,
+        "tocList" -> tocList,
       )
       val folders = {
         val rel = outdir.relativeTo(dst1)

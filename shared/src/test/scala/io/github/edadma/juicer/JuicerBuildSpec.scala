@@ -1143,6 +1143,23 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     json should include("""\\backslash""")
   }
 
+  // Regression: a stale <src>/<publicDir> from a prior default build used to
+  // get walked + parsed as squiggly templates whenever the user redirected
+  // output with `-d /elsewhere`. The dst-only exclude didn't catch the
+  // default publicDir; now both are excluded.
+  it should "skip <src>/<publicDir> from the source walk even when -d redirects elsewhere" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: H\n---\n\n# Hi\n")
+    writeAt("layouts/_default/folder.html", "{{ .content }}")
+    writeAt("layouts/_default/file.html", "x")
+    // Stale rendered HTML in the default publicDir — would trip the
+    // squiggly template parser if it weren't excluded.
+    writeAt("public/leftover/index.html", "<html><body>... random rendered output ...</body></html>")
+    writeAt("public/leftover.css", "body { color: red; }")
+
+    noException should be thrownBy build()
+  }
+
   // Bug: nested section indexes (`content/docs/_index.md`) used to fail with
   // NoSuchFileException because the section directory (`html/docs/`) was
   // never created on disk. Now `outdir.createDirectories()` is called before

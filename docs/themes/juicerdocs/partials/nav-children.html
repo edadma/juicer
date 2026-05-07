@@ -1,9 +1,8 @@
 {{ if .pages }}
-  <ul class="ml-3 mt-1 space-y-1 border-l border-zinc-200 dark:border-zinc-800">
+  <ul class="mt-1 space-y-0.5 border-l jd-border-soft">
     {{ for p <- .pages }}
       <li>
-        <a href="{{ p.url }}" data-juicerdocs-nav-link
-           class="block pl-3 py-1 text-zinc-600 dark:text-zinc-400 hover:text-orange-600 dark:hover:text-orange-400 hover:border-l-2 hover:border-orange-500 -ml-px hover:-ml-px">
+        <a href="{{ p.url }}" data-juicerdocs-nav-link class="jd-nav-link">
           {{ p.title }}
         </a>
       </li>
@@ -11,11 +10,10 @@
   </ul>
 {{ end }}
 {{ if .subsections }}
-  <ul class="ml-3 mt-1 space-y-2 border-l border-zinc-200 dark:border-zinc-800">
+  <ul class="mt-1 space-y-0.5 border-l jd-border-soft">
     {{ for sub <- .subsections }}
       <li>
-        <a href="{{ sub.url }}" data-juicerdocs-nav-link
-           class="block pl-3 py-1 font-medium text-zinc-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400">
+        <a href="{{ sub.url }}" data-juicerdocs-nav-link class="jd-nav-link" style="font-weight:500">
           {{ sub.title }}
         </a>
         {{ partial 'nav-children' sub }}

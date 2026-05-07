@@ -1,13 +1,16 @@
 /*
  * juicerdocs — small client-side helpers.
  *
- *   - Theme toggle (writes localStorage; the <head> snippet applies the
- *     class before paint so there's no white flash on dark-mode reload).
+ *   - Theme toggle (data-theme attribute on <html>; persisted in
+ *     localStorage; the <head> snippet applies it before paint so there's
+ *     no white flash on dark-mode reload).
  *   - Mobile sidebar toggle.
- *   - "Copy" buttons on every <pre> code block.
+ *   - "Copy" buttons + language badges on every <pre> code block.
  *   - Mark active sidebar link based on current URL.
- *   - Tag <pre> elements with `data-language` so the CSS badge can render.
+ *   - Tabs widget (synthesizes button bar from panels).
  *   - Client-side search via /search.json.
+ *   - "On this page" right-rail active-heading highlight via
+ *     IntersectionObserver.
  *
  * Self-contained — no external dependencies.
  */
@@ -15,14 +18,14 @@
 (function () {
   "use strict";
 
-  // ===== Theme toggle =====
+  // ===== Theme toggle (data-theme attribute) =====
   const themeBtn = document.getElementById("juicerdocs-theme-toggle");
   if (themeBtn) {
     themeBtn.addEventListener("click", () => {
-      const dark = document.documentElement.classList.toggle("dark");
-      try {
-        localStorage.setItem("juicerdocs-theme", dark ? "dark" : "light");
-      } catch (e) { /* private mode */ }
+      const cur  = document.documentElement.getAttribute("data-theme");
+      const next = cur === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      try { localStorage.setItem("juicerdocs-theme", next); } catch (e) { /* private mode */ }
     });
   }
 
@@ -42,9 +45,8 @@
     if (!pre || pre.dataset.juicerdocsCopyDone) return;
     pre.dataset.juicerdocsCopyDone = "1";
 
-    // Extract language from the className (format: language-foo) and tag
-    // <pre> with data-language so the CSS ::before can show it.
-    const cls = code.className || "";
+    // Tag <pre> with data-language so the CSS ::before can show it.
+    const cls   = code.className || "";
     const match = cls.match(/language-(\S+)/);
     if (match) pre.dataset.language = match[1];
 
@@ -70,10 +72,6 @@
   });
 
   // ===== Tabs widget — see {= tabs / tab =} shortcodes =====
-  // Each .juicerdocs-tabs container holds N .juicerdocs-tab-panel children
-  // (one per `[= tab "Label" =]` block). We synthesize a button bar from the
-  // panels' `data-tab-label` attributes, hide all but the first panel, and
-  // wire click handlers.
   document.querySelectorAll(".juicerdocs-tabs[data-juicerdocs-tabs]").forEach((root) => {
     const panels = Array.from(root.querySelectorAll(":scope > .juicerdocs-tab-panel"));
     if (panels.length === 0) return;
@@ -99,7 +97,6 @@
   });
 
   // ===== Sidebar active-link highlight =====
-  // Matches by URL path (ignoring query/fragment) and adds a class.
   const here = location.pathname.replace(/\/+$/, "/") || "/";
   document.querySelectorAll("[data-juicerdocs-nav-link]").forEach((a) => {
     const href = a.getAttribute("href");
@@ -107,6 +104,62 @@
     const norm = href.replace(/\/+$/, "/") || "/";
     if (norm === here) a.classList.add("juicerdocs-nav-active");
   });
+
+  // ===== "On this page" — active-heading highlight =====
+  //
+  // We use IntersectionObserver to track which heading is currently
+  // closest to the top of the viewport. Whichever heading just crossed
+  // a 0–25% horizontal band gets the "active" style on its TOC link.
+  // Falls back to highlighting nothing when no headings exist or
+  // IntersectionObserver isn't available.
+  (function highlightActiveHeading() {
+    const tocLinks = document.querySelectorAll("[data-juicerdocs-toc-link]");
+    if (tocLinks.length === 0 || !("IntersectionObserver" in window)) return;
+
+    const linkById = new Map();
+    tocLinks.forEach((a) => linkById.set(a.dataset.jdTocId, a));
+
+    const headings = Array.from(document.querySelectorAll("article h2[id], article h3[id], article h4[id]"))
+      .filter((h) => linkById.has(h.id));
+
+    let active = null;
+    function setActive(id) {
+      if (active === id) return;
+      if (active) {
+        const prev = linkById.get(active);
+        if (prev) prev.classList.remove("active");
+      }
+      active = id;
+      if (id) {
+        const next = linkById.get(id);
+        if (next) next.classList.add("active");
+      }
+    }
+
+    // Observe each heading. The `rootMargin` shrinks the viewport from
+    // the top and bottom so we get a stable "above the fold" band that
+    // tracks reading position rather than the whole page.
+    const visible = new Set();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) visible.add(e.target.id);
+          else visible.delete(e.target.id);
+        });
+        // Pick whichever visible heading appears earliest in document order.
+        if (visible.size > 0) {
+          const earliest = headings.find((h) => visible.has(h.id));
+          if (earliest) setActive(earliest.id);
+        }
+      },
+      { rootMargin: "-80px 0px -75% 0px", threshold: 0 },
+    );
+    headings.forEach((h) => observer.observe(h));
+
+    // Initial state — whatever heading is highest above the fold.
+    const initial = headings.find((h) => h.getBoundingClientRect().top >= 80) || headings[0];
+    if (initial) setActive(initial.id);
+  })();
 
   // ===== Search =====
   const searchInput = document.getElementById("juicerdocs-search");
@@ -118,9 +171,6 @@
     async function ensureIndex() {
       if (index) return index;
       try {
-        // Find the search.json relative to this page's site root by walking
-        // up from the page URL to the host root. Simpler: assume it's at
-        // /search.json relative to the site origin.
         const res = await fetch("/search.json");
         index = await res.json();
       } catch (e) {
@@ -141,7 +191,7 @@
     function renderResults(matches, q) {
       searchResults.innerHTML = "";
       if (matches.length === 0) {
-        searchResults.innerHTML = '<div class="juicerdocs-result text-zinc-500 dark:text-zinc-500">No matches.</div>';
+        searchResults.innerHTML = '<div class="juicerdocs-result jd-muted">No matches.</div>';
       } else {
         for (let i = 0; i < matches.length; i++) {
           const r = matches[i];

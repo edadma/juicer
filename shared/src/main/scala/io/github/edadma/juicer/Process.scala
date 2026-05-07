@@ -57,8 +57,13 @@ object Process {
       partials   = (src / conf.path.partialDir).normalize,
       shortcodes = (src / conf.path.shortcodeDir).normalize,
       static     = (src / conf.path.staticDir).normalize,
-      // Don't double-process theme directories during the site pass.
-      excludes       = themeRoots.toSet,
+      // Don't double-process theme directories during the site pass. Also
+      // exclude `<src>/<publicDir>` outright — it's the conventional output
+      // location, and recursing into it tries to re-parse rendered HTML as
+      // squiggly templates the moment a user passes `-d` to a different
+      // path. The `dst` exclude (added later) only catches the active dst,
+      // not the default one when `-d` redirects elsewhere.
+      excludes       = themeRoots.toSet + (src / conf.publicDir).normalize,
       otherTemplates = true,
     )
 

@@ -1,3 +1,3 @@
-<a href="{{ if .href }}{{ .href }}{{ end }}" class="inline-flex items-center px-4 py-2 rounded-lg {{ if .primary }}bg-orange-600 text-white hover:bg-orange-700{{ else }}border border-zinc-200 dark:border-zinc-800 hover:border-orange-500 text-zinc-700 dark:text-zinc-300{{ end }} font-medium transition no-underline">
-  {{ if .icon }}<span class="mr-2">{{ .icon }}</span>{{ end }}{{ head .args }}
+<a href="{{ if .href }}{{ .href }}{{ end }}" class="jd-btn {{ if .primary }}jd-btn-primary{{ else }}jd-btn-secondary{{ end }}">
+  {{ if .icon }}<span>{{ .icon }}</span>{{ end }}{{ head .args }}
 </a>
