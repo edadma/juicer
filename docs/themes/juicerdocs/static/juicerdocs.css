@@ -394,8 +394,8 @@ body {
   border: 1px solid var(--jd-code-border);
   border-radius: var(--jd-radius);
   font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.8125rem;
-  line-height: 1.6;
+  font-size: 0.875rem;
+  line-height: 1.625;
 }
 .prose pre code { color: inherit; }
 .prose pre::before {
@@ -581,6 +581,11 @@ body {
 
 /* ===== "On this page" right rail ===== */
 
+.jd-toc-link {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
 .jd-toc-link[data-jd-toc-level="2"] { padding-left: 0.75rem; }
 .jd-toc-link[data-jd-toc-level="3"] { padding-left: 1.5rem; }
 .jd-toc-link[data-jd-toc-level="4"] { padding-left: 2.25rem; font-size: 0.8125rem; }

@@ -1,7 +1,7 @@
 <header class="jd-topbar h-14">
   <div class="mx-auto max-w-screen-2xl flex items-center gap-4 h-full px-4">
     <a href="{{ relURL '/' }}" class="flex items-center gap-2 shrink-0 jd-fg" style="text-decoration:none">
-      <img src="{{ relURL '/juicer-logo.png' }}" alt="" class="w-8 h-8" />
+      <img src="{{ if .site.juicerdocs.logo }}{{ relURL .site.juicerdocs.logo }}{{ else }}{{ relURL '/juicer-logo.png' }}{{ end }}" alt="" class="w-8 h-8" />
       <span class="hidden sm:inline font-bold text-lg tracking-tight">{{ .site.title }}</span>
     </a>
 

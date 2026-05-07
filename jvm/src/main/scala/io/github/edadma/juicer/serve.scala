@@ -259,6 +259,13 @@ private[juicer] final class StaticFileHandler(
             injectLiveReloadHtml(t.readText()).getBytes("UTF-8")
           else t.readBytes
         ex.getResponseHeaders.set("Content-Type", mime)
+        // In live-reload mode the user is iterating; never let the browser
+        // hand back yesterday's JS / CSS / HTML out of its cache.
+        if (injectLiveReload) {
+          ex.getResponseHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate")
+          ex.getResponseHeaders.set("Pragma", "no-cache")
+          ex.getResponseHeaders.set("Expires", "0")
+        }
         ex.sendResponseHeaders(200, bytes.length.toLong)
         val out = ex.getResponseBody
         try out.write(bytes)

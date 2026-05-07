@@ -31,28 +31,29 @@
 
   // ===== Mobile sidebar overlay =====
   // Toggles `body[data-jd-sidebar="open"]`, which the CSS uses to slide
-  // the sidebar in from the left as a fixed overlay. Backdrop click and
-  // Esc key both close. Closing on link click is also useful since the
-  // user almost certainly wants the sidebar gone after navigating.
-  const sidebarBtn      = document.getElementById("juicerdocs-sidebar-toggle");
-  const sidebarBackdrop = document.querySelector(".jd-sidebar-backdrop");
-  const sidebarAside    = document.querySelector(".jd-sidebar-aside");
+  // the sidebar in from the left as a fixed overlay. Uses event delegation
+  // so a missing element on this page doesn't matter; clicks elsewhere
+  // (backdrop, nav links, Esc key) all close the sidebar.
   function setSidebar(open) {
     if (open) document.body.setAttribute("data-jd-sidebar", "open");
     else      document.body.removeAttribute("data-jd-sidebar");
   }
-  if (sidebarBtn) {
-    sidebarBtn.addEventListener("click", (e) => {
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#juicerdocs-sidebar-toggle")) {
+      e.preventDefault();
       e.stopPropagation();
       setSidebar(document.body.getAttribute("data-jd-sidebar") !== "open");
-    });
-  }
-  if (sidebarBackdrop) sidebarBackdrop.addEventListener("click", () => setSidebar(false));
+      return;
+    }
+    if (e.target.closest(".jd-sidebar-backdrop")) {
+      setSidebar(false);
+      return;
+    }
+    // Close when a sidebar nav link is tapped (mobile UX).
+    const link = e.target.closest(".jd-sidebar-aside a");
+    if (link) setSidebar(false);
+  });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setSidebar(false); });
-  if (sidebarAside)
-    sidebarAside.addEventListener("click", (e) => {
-      if (e.target.closest("a")) setSidebar(false);
-    });
 
   // ===== Code block copy buttons + language badge =====
   document.querySelectorAll("pre > code").forEach((code) => {

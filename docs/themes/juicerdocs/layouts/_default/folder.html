@@ -37,7 +37,7 @@
   <section class="jd-hero -mx-4 sm:-mx-6 lg:-mx-10 px-4 sm:px-6 lg:px-10">
     <div class="jd-hero-bg" aria-hidden="true"></div>
     <div class="flex items-center gap-4 mb-4">
-      <img src="{{ relURL '/juicer-logo.png' }}" alt="" class="w-14 h-14" />
+      <img src="{{ if .site.juicerdocs.logo }}{{ relURL .site.juicerdocs.logo }}{{ else }}{{ relURL '/juicer-logo.png' }}{{ end }}" alt="" class="w-14 h-14" />
       <span class="text-sm font-mono jd-muted">v0.1.0</span>
     </div>
     <h1 class="jd-hero-title not-prose">
