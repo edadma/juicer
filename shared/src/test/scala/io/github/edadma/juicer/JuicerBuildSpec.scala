@@ -583,6 +583,155 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     html should include("About: About blurb.")
   }
 
+  it should "fall back to a theme's layout when the site has none" in {
+    writeAt(
+      "site.toml",
+      """title   = "S"
+        |baseURL = "http://x"
+        |theme   = "minty"
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: T\n---\n\n# H\n")
+    // Theme provides both layouts; site provides neither.
+    writeAt(
+      "themes/minty/layouts/_default/folder.html",
+      """[theme] {{ .page.title }} — {{ .site.title }}""".stripMargin,
+    )
+    writeAt(
+      "themes/minty/layouts/_default/file.html",
+      "[theme] file",
+    )
+
+    build()
+
+    out("index.html") shouldBe "[theme] T — S"
+  }
+
+  it should "let the site override theme layouts on a per-file basis" in {
+    writeAt(
+      "site.toml",
+      """title   = "S"
+        |baseURL = "http://x"
+        |theme   = "minty"
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n# H\n")
+    writeAt("content/about.md", "---\ntitle: About\n---\n\n# A\n")
+    // Theme provides both file.html and folder.html.
+    writeAt(
+      "themes/minty/layouts/_default/folder.html",
+      "[theme-folder] {{ .page.title }}",
+    )
+    writeAt(
+      "themes/minty/layouts/_default/file.html",
+      "[theme-file] {{ .page.title }}",
+    )
+    // Site overrides folder.html only.
+    writeAt(
+      "layouts/_default/folder.html",
+      "[site-folder] {{ .page.title }}",
+    )
+
+    build()
+
+    // Site-overridden layout wins for the index.
+    out("index.html") shouldBe "[site-folder] Home"
+    // Theme layout still ships for the page that has no site override.
+    out("about/index.html") shouldBe "[theme-file] About"
+  }
+
+  it should "fall back to theme partials and shortcodes" in {
+    writeAt(
+      "site.toml",
+      """title   = "S"
+        |baseURL = "http://x"
+        |theme   = "minty"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: T
+        |---
+        |
+        |[= alert =]watch out[= /alert =]
+        |""".stripMargin,
+    )
+    writeAt(
+      "themes/minty/layouts/_default/folder.html",
+      "{{ partial 'header' . }}{{ .content }}",
+    )
+    writeAt(
+      "themes/minty/layouts/_default/file.html",
+      "x",
+    )
+    writeAt(
+      "themes/minty/partials/header.html",
+      "<header>{{ .site.title }}</header>",
+    )
+    writeAt(
+      "themes/minty/shortcodes/alert.html",
+      "<div class=\"alert\">{{ .content }}</div>",
+    )
+
+    build()
+
+    val html = out("index.html")
+    html should include("<header>S</header>")
+    html should include("<div class=\"alert\">watch out</div>")
+  }
+
+  it should "ship theme static/ files; site static/ overwrites on path collision" in {
+    writeAt(
+      "site.toml",
+      """title   = "S"
+        |baseURL = "http://x"
+        |theme   = "minty"
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: T\n---\n\n# H\n")
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "x")
+    // Theme ships theme.css + style.css (the latter the site overrides).
+    writeAt("themes/minty/static/theme.css", ".theme {}")
+    writeAt("themes/minty/static/style.css", ".theme-style {}")
+    writeAt("static/style.css", ".site-style {}")
+
+    build()
+
+    out("theme.css") shouldBe ".theme {}"
+    out("style.css") shouldBe ".site-style {}"
+  }
+
+  it should "chain themes in declared order (earlier wins)" in {
+    writeAt(
+      "site.toml",
+      """title   = "S"
+        |baseURL = "http://x"
+        |theme   = ["primary", "secondary"]
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: T\n---\n\n# H\n")
+    // Both themes provide folder.html; primary wins.
+    writeAt("themes/primary/layouts/_default/folder.html", "[primary]")
+    writeAt("themes/primary/layouts/_default/file.html", "x")
+    writeAt("themes/secondary/layouts/_default/folder.html", "[secondary]")
+    writeAt("themes/secondary/layouts/_default/file.html", "x")
+    // secondary-only partial — primary doesn't override it, so secondary wins.
+    writeAt("themes/secondary/partials/footer.html", "[footer-from-secondary]")
+
+    build()
+
+    out("index.html") shouldBe "[primary]"
+    // Sanity: the secondary partial is still reachable when used.
+    writeAt(
+      "layouts/_default/folder.html",
+      "[combined] {{ partial 'footer' . }}",
+    )
+    build()
+    out("index.html") shouldBe "[combined] [footer-from-secondary]"
+  }
+
   it should "copy static/ files into the output tree as-is" in {
     writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
     writeAt("content/_index.md", "---\ntitle: T\n---\n\n# A\n")

@@ -15,15 +15,28 @@ import scala.language.postfixOps
   */
 object Process {
 
+  /** Bundle of per-pass roots — site or theme. Themes share the same shape
+    * as a site (own `layouts/` / `partials/` / `shortcodes/` / `static/`)
+    * but contribute no content and no top-level "other templates" (those
+    * paths only make sense relative to the user's own source root).
+    */
+  private case class Roots(
+      src:            Path,
+      content:        Path, // null when this pass should not process content
+      layouts:        Path,
+      partials:       Path,
+      shortcodes:     Path,
+      static:         Path,
+      excludes:       Set[Path] = Set.empty, // dirs to skip during recursion
+      otherTemplates: Boolean   = true,
+  )
+
   def apply(src: Path, dst: Path, conf: ConfigWrapper, drafts: Boolean = false): Site = {
-    val content       = (src / conf.path.contentDir).normalize
     val html          = conf.htmlDir
     val stripPrefix   = conf.boolean.stripPrefix
-    val static        = (src / conf.path.staticDir).normalize
-    val layouts       = (src / conf.path.layoutDir).normalize
-    val partials      = (src / conf.path.partialDir).normalize
-    val shortcodes    = (src / conf.path.shortcodeDir).normalize
     val folderContent = conf.folderContent
+    val themeDirName  = conf.themeDir
+    val themeNames    = conf.themes
 
     val contentItems       = new ListBuffer[ContentItem]
     val contentMap         = new mutable.HashMap[String, ContentFile]
@@ -33,14 +46,35 @@ object Process {
     val shortcodeTemplates = new mutable.HashMap[String, TemplateFile]
     val otherTemplates     = new ListBuffer[TemplateFile]
 
-    if (!isDir(content)) problem(s"can't read content directory: $content")
+    val themeRoots: List[Path] = themeNames
+      .map(n => if (themeDirName.isEmpty) (src / n).normalize else (src / themeDirName / n).normalize)
+      .filter(isDir)
 
-    def processDir(dir: Path): Unit = {
+    val siteRoots = Roots(
+      src        = src,
+      content    = (src / conf.path.contentDir).normalize,
+      layouts    = (src / conf.path.layoutDir).normalize,
+      partials   = (src / conf.path.partialDir).normalize,
+      shortcodes = (src / conf.path.shortcodeDir).normalize,
+      static     = (src / conf.path.staticDir).normalize,
+      // Don't double-process theme directories during the site pass.
+      excludes       = themeRoots.toSet,
+      otherTemplates = true,
+    )
+
+    if (!isDir(siteRoots.content)) problem(s"can't read content directory: ${siteRoots.content}")
+
+    def processDir(dir: Path, r: Roots): Unit = {
       show(s">>> $dir")
 
       val listing = list(dir)
+      val content    = r.content
+      val layouts    = r.layouts
+      val partials   = r.partials
+      val shortcodes = r.shortcodes
+      val static     = r.static
 
-      if (dir.startsWith(content)) {
+      if (content != null && dir.startsWith(content)) {
         val files = filesIncludingExtensions(listing, markdownExtensions*)
         val outdir = {
           val uncleaned = dst / dir.relativeTo(content)
@@ -184,7 +218,7 @@ object Process {
         subdir.createDirectories()
 
         val toCopy =
-          if (static == src)
+          if (static == r.src)
             filesExcludingExtensions(
               listing,
               "html", "sq", "css", "scss", "sass",
@@ -204,26 +238,46 @@ object Process {
       }
 
       if (
-        !(layouts != src && dir.startsWith(layouts)) &&
-        !(partials != src && dir.startsWith(partials)) &&
-        !(shortcodes != src && dir.startsWith(shortcodes)) &&
-        !(static != src && dir.startsWith(static))
+        r.otherTemplates &&
+        !(layouts != r.src && dir.startsWith(layouts)) &&
+        !(partials != r.src && dir.startsWith(partials)) &&
+        !(shortcodes != r.src && dir.startsWith(shortcodes)) &&
+        !(static != r.src && dir.startsWith(static))
       ) {
         val l = filesIncludingExtensions(listing, "html", "css", "scss", "sass")
 
         show(s"other templates: ${l.map(_.filename).mkString(", ")}", l.nonEmpty)
         l foreach { p =>
-          val outfile = dst / p.relativeTo(src)
+          val outfile = dst / p.relativeTo(r.src)
 
           show(s"parse template $p")
           otherTemplates += TemplateFile(outfile, null, templateParser.parse(p.readText()))
         }
       }
 
-      dirsExcluding(listing, dst) foreach processDir
+      val excluded = r.excludes + dst
+      dirsExcluding(listing, excluded.toSeq*) foreach (d => processDir(d, r))
     }
 
-    processDir(src)
+    // Theme passes run BEFORE the site pass so site entries naturally win on
+    // map collisions (mutable HashMap put-overwrites). Within a theme chain
+    // (`theme = ["a", "b"]`), `a` wins over `b`, so process `b` first.
+    for (themeRoot <- themeRoots.reverse) {
+      show(s"theme: $themeRoot")
+      val themeR = Roots(
+        src        = themeRoot,
+        content    = null, // themes never contribute content
+        layouts    = (themeRoot / conf.path.layoutDir).normalize,
+        partials   = (themeRoot / conf.path.partialDir).normalize,
+        shortcodes = (themeRoot / conf.path.shortcodeDir).normalize,
+        static     = (themeRoot / conf.path.staticDir).normalize,
+        excludes       = Set.empty,
+        otherTemplates = false,
+      )
+      processDir(themeRoot, themeR)
+    }
+
+    processDir(src, siteRoots)
     Site(
       contentItems.toList,
       contentMap.toMap,

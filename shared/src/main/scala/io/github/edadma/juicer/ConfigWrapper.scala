@@ -65,6 +65,18 @@ class ConfigWrapper(c: TomlDocument) extends Dynamic {
   def selectDynamic(name: String): String =
     c.getString(name).getOrElse(fail(name, "string"))
 
+  /** List of theme names from the `theme` config key. Accepts a string
+    * (single theme), an array of strings (chain — earlier entries win),
+    * or absent (no themes). Unlike most `ConfigWrapper` accessors this
+    * tolerates a missing key, returning an empty list.
+    */
+  def themes: List[String] = c.get("theme") match {
+    case Some(TomlValue.Str(s))     => List(s)
+    case Some(TomlValue.Arr(elems)) => elems.toList.collect { case TomlValue.Str(s) => s }
+    case None                       => Nil
+    case _                          => fail("theme", "string or array of strings")
+  }
+
   /** Underlying parsed document, for the rare case the caller needs more
     * structured access than the Dynamic accessors provide.
     */
