@@ -142,6 +142,36 @@ public `markdown.plainText` helper for option 3.
 
 ## Tier 2 — bigger but bounded; one at a time
 
+**Status: complete (except #7).** Shipped on `dev` between commits
+`03fe603` and `68c053c`:
+
+- ✓ #6 live reload (`5931e17`) — WatchService + SSE + script injection
+- ✗ #7 render hooks — **deferred indefinitely**. The juicerdocs theme
+  covers the docs-site need entirely with Tailwind utility classes plus
+  the lightweight JS for code-block copy buttons / language badges /
+  active-anchor highlight. Re-evaluate if a non-Tailwind theme ever
+  asks for richer per-element AST hooks.
+- ✓ #8 RSS / Atom feeds (`f498f2a`) — site-wide + per-section
+- ✓ #9 section list pages (`8911324`) — `.section.pages`,
+  `.section.subsections`, `.page.parent`, `.page.ancestors`,
+  `.page.next`, `.page.prev`, `.site.root`
+- ✓ #10 i18n (`68c053c`) — language detection, `.page.lang`,
+  `.page.translations`, `i18n/<lang>.toml` strings + `i18n` helper
+- ✓ #11 themes (`03fe603`) — site-wins-on-collision overlay + chains
+
+Plus several Tier-2-adjacent shipments:
+
+- ✓ Search index (`a20f384`) — `search.json` for client-side search
+- ✓ juicerdocs theme + 13 docs pages (`188cc3a` … `acc20f0`,
+  `60de287`, `d38d23b`)
+- ✓ `juicer theme add` subcommand (`c12feaf`) — clone a theme from a
+  git URL into `themes/<name>/`
+- ✓ Tailwind v4 brand tokens, sticky topbar, mobile sidebar overlay,
+  "On this page" right rail with IntersectionObserver-driven active
+  highlight, configurable brand palette via `[juicerdocs]` site config
+
+
+
 ### 6. Live reload in `serve` (JVM-only)
 
 **What.** When `serve` is running, watch the source tree; on file
