@@ -21,6 +21,10 @@ import scopt.OParser
     val cur = c.cmd.collect { case s: ConfigCommand => s }.getOrElse(ConfigCommand())
     c.copy(cmd = Some(f(cur)))
 
+  def updateThemeAdd(c: Args, f: ThemeAddCommand => ThemeAddCommand): Args =
+    val cur = c.cmd.collect { case s: ThemeAddCommand => s }.getOrElse(ThemeAddCommand())
+    c.copy(cmd = Some(f(cur)))
+
   val builder = OParser.builder[Args]
   val parser =
     import builder._
@@ -77,6 +81,33 @@ import scopt.OParser
             .valueName("<path>")
             .action((s, c) => updateConfig(c, _.copy(src = Path(s))))
             .text("site sources directory path"),
+        ),
+      cmd("theme")
+        .text("  Theme management")
+        .children(
+          cmd("add")
+            .action((_, c) => c.copy(cmd = Some(ThemeAddCommand())))
+            .text("    Install a theme from a git URL into <src>/<themeDir>/")
+            .children(
+              opt[String]('s', "source")
+                .valueName("<path>")
+                .action((s, c) => updateThemeAdd(c, _.copy(src = Path(s))))
+                .text("site sources directory path"),
+              opt[String]('n', "name")
+                .valueName("<name>")
+                .action((n, c) => updateThemeAdd(c, _.copy(name = Some(n))))
+                .text("install under this theme name (default: derived from URL)"),
+              opt[String]('r', "ref")
+                .valueName("<branch|tag|sha>")
+                .action((r, c) => updateThemeAdd(c, _.copy(ref = Some(r))))
+                .text("branch, tag, or commit to check out (default: repo HEAD)"),
+              opt[Unit]("force")
+                .action((_, c) => updateThemeAdd(c, _.copy(force = true)))
+                .text("overwrite an existing theme directory"),
+              arg[String]("<git-url>")
+                .action((u, c) => updateThemeAdd(c, _.copy(url = u)))
+                .text("HTTPS or SSH git URL of the theme repo"),
+            ),
         ),
       cmd("serve")
         .action((_, c) => c.copy(cmd = Some(ServeCommand())))

@@ -20,3 +20,15 @@ case class ServeCommand(
 ) extends Command
 
 case class ConfigCommand(src: Path = Path(".")) extends Command
+
+/** `juicer theme add <git-url>` — clone a theme repo into the site's
+  * `themeDir`. Optional `--name` overrides the directory name (default:
+  * the URL's last segment, stripped of `.git`). Optional `--branch` /
+  * `--ref` pins a branch, tag, or commit. */
+case class ThemeAddCommand(
+    src:    Path           = Path("."),
+    url:    String         = "",
+    name:   Option[String] = None,
+    ref:    Option[String] = None,
+    force:  Boolean        = false,
+) extends Command

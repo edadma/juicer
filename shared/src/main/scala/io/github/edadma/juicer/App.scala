@@ -42,6 +42,8 @@ object App {
         rebuild    = rebuild,
         htmlDir    = htmlDir,
       )
+    case Args(baseConfig, _, _, Some(ThemeAddCommand(src, url, name, ref, force))) =>
+      themeAdd(baseConfig, src, url, name, ref, force)
     case Args(baseConfig, _, baseurl, Some(ConfigCommand(src))) =>
       println("Site config:")
 
@@ -799,6 +801,78 @@ object App {
     }
 
     dst1
+  }
+
+  // ===== `juicer theme add` =====
+
+  /** Install a theme from a git URL into `<src>/<themeDir>/<name>`. Reads
+    * the site config to discover the theme directory; falls back to
+    * `themes` if absent. The clone itself is platform-specific (shells out
+    * to `git` on the JVM; stubs out on JS / Native), so the cross-platform
+    * driver here just resolves paths and validates inputs. */
+  def themeAdd(
+      baseConfig: String,
+      src:        Path,
+      url:        String,
+      name:       Option[String],
+      ref:        Option[String],
+      force:      Boolean,
+  ): Unit = {
+    if (url.isEmpty) problem("theme add: a git URL is required")
+
+    val src1     = src.normalize.toAbsolutePath
+    if (!isDir(src1)) problem(s"not a readable directory: $src1")
+
+    val confdoc  = config(src1, baseConfig)
+    val themeDir = confdoc.getString("themeDir").getOrElse("themes")
+    val themeName = name.getOrElse(deriveThemeName(url))
+
+    if (themeName.isEmpty) problem(s"could not derive theme name from URL: $url (use --name)")
+    if (themeName.contains('/') || themeName.contains('\\') || themeName.startsWith("."))
+      problem(s"invalid theme name: $themeName")
+
+    val themeRoot = if (themeDir.isEmpty) src1 else (src1 / themeDir)
+    if (!themeRoot.exists) themeRoot.createDirectories()
+    val target = themeRoot / themeName
+
+    if (target.exists) {
+      if (!force)
+        problem(s"theme already exists: $target (pass --force to overwrite)")
+      else {
+        show(s"removing existing theme directory $target")
+        deleteRecursive(target)
+      }
+    }
+
+    println(s"juicer theme add: cloning $url${ref.map(r => s" ($r)").getOrElse("")} → $target")
+    gitClone(url, target, ref) match {
+      case Right(()) =>
+        println(s"installed theme: $themeName")
+        println(s"  set `theme = \"$themeName\"` in site.toml to activate")
+      case Left(err) =>
+        problem(s"theme add: $err")
+    }
+  }
+
+  /** Strip the trailing `.git` and any path prefix from a git URL to get a
+    * sensible theme directory name. Handles `https://github.com/foo/bar.git`,
+    * `git@github.com:foo/bar.git`, and `./local/path/bar` alike. */
+  private[juicer] def deriveThemeName(url: String): String = {
+    val tail = url.split('/').lastOption.getOrElse(url)
+    // SSH URLs are `git@host:path/repo.git` — split on `:` too.
+    val basename = tail.split(':').lastOption.getOrElse(tail)
+    val noExt    = if (basename.endsWith(".git")) basename.dropRight(4) else basename
+    noExt.trim
+  }
+
+  /** Recursive delete — used when `--force` is passed and an existing theme
+    * directory needs to be replaced. */
+  private def deleteRecursive(p: Path): Unit = {
+    if (!p.exists) return
+    if (p.isDirectory) {
+      p.listDirectory().foreach(e => deleteRecursive(p / e.name))
+    }
+    p.delete()
   }
 
   /** Minimal XML escaping for sitemap URLs — covers the five entities the

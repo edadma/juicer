@@ -744,6 +744,20 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     out("style.css") shouldBe "body { color: red; }"
   }
 
+  // ===== `juicer theme add` =====
+
+  "theme add" should "derive a theme name from a typical HTTPS git URL" in {
+    App.deriveThemeName("https://github.com/edadma/juicer-theme-foo.git") shouldBe "juicer-theme-foo"
+  }
+
+  it should "derive a name from an SSH-style git URL" in {
+    App.deriveThemeName("git@github.com:edadma/juicer-theme-foo.git") shouldBe "juicer-theme-foo"
+  }
+
+  it should "leave a name without .git suffix alone" in {
+    App.deriveThemeName("https://example.com/themes/minty") shouldBe "minty"
+  }
+
   // ===== Tier 2 #9: section list pages + page navigation =====
   //
   // NB: with the default `htmlDir = "html"`, nested sections live on disk at
