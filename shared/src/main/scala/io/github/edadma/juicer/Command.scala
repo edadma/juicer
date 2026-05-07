@@ -4,13 +4,18 @@ import io.github.edadma.path.Path
 
 trait Command
 
-case class BuildCommand(src: Path = Path("."), dst: Path = null) extends Command
+case class BuildCommand(
+    src:    Path    = Path("."),
+    dst:    Path    = null,
+    drafts: Boolean = false,
+) extends Command
 
 case class ServeCommand(
-    src:  Path   = Path("."),
-    dst:  Path   = null,
-    host: String = "localhost",
-    port: Int    = 8080,
+    src:    Path    = Path("."),
+    dst:    Path    = null,
+    host:   String  = "localhost",
+    port:   Int     = 8080,
+    drafts: Boolean = false,
 ) extends Command
 
 case class ConfigCommand(src: Path = Path(".")) extends Command

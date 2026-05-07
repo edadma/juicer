@@ -65,6 +65,9 @@ import scopt.OParser
             .valueName("<path>")
             .action((i, c) => updateBuild(c, _.copy(src = Path(i))))
             .text("site sources directory path"),
+          opt[Unit]('D', "drafts")
+            .action((_, c) => updateBuild(c, _.copy(drafts = true)))
+            .text("include draft pages (frontmatter `draft: true`)"),
         ),
       cmd("config")
         .action((_, c) => c.copy(cmd = Some(ConfigCommand())))
@@ -95,6 +98,9 @@ import scopt.OParser
             .valueName("<port>")
             .action((p, c) => updateServe(c, _.copy(port = p)))
             .text("port to listen on (default 8080)"),
+          opt[Unit]('D', "drafts")
+            .action((_, c) => updateServe(c, _.copy(drafts = true)))
+            .text("include draft pages (frontmatter `draft: true`)"),
         ),
     )
 

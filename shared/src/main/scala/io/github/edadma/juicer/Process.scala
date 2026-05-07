@@ -15,7 +15,7 @@ import scala.language.postfixOps
   */
 object Process {
 
-  def apply(src: Path, dst: Path, conf: ConfigWrapper): Site = {
+  def apply(src: Path, dst: Path, conf: ConfigWrapper, drafts: Boolean = false): Site = {
     val content       = (src / conf.path.contentDir).normalize
     val html          = conf.htmlDir
     val stripPrefix   = conf.boolean.stripPrefix
@@ -104,18 +104,35 @@ object Process {
               case `folderContent` => folderContent
               case n               => cleanName(n, stripPrefix)
             }
-          val contentFile = ContentFile(
-            outdir,
-            name,
-            parseYamlData(frontmatter),
-            ((if (first == "---") ""
-              else first :+ '\n') ++ lines.map(_ :+ '\n').mkString).trim,
-            null,
-            null,
-          )
 
-          contentMap(p.relativeTo(content).toString) = contentFile
-          contentItems += contentFile
+          val pageData = parseYamlData(frontmatter)
+
+          // Skip draft pages unless --drafts was passed. A "draft" page is one
+          // whose frontmatter has `draft: true` (boolean). Skipping happens here
+          // rather than later so the page is invisible to TOC, site.pages,
+          // sitemap, etc. — anything downstream of Process.
+          val isDraft = pageData match {
+            case m: Map[?, ?] =>
+              m.asInstanceOf[Map[Any, Any]].get("draft").contains(true)
+            case _ => false
+          }
+
+          if (isDraft && !drafts) {
+            show(s"skipping draft: ${p.filename}")
+          } else {
+            val contentFile = ContentFile(
+              outdir,
+              name,
+              pageData,
+              ((if (first == "---") ""
+                else first :+ '\n') ++ lines.map(_ :+ '\n').mkString).trim,
+              null,
+              null,
+            )
+
+            contentMap(p.relativeTo(content).toString) = contentFile
+            contentItems += contentFile
+          }
         }
       }
 

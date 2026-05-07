@@ -385,6 +385,61 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     html should include("/about/ -> About Us")
   }
 
+  it should "skip draft: true pages by default" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n# H\n")
+    writeAt(
+      "content/wip.md",
+      """---
+        |title: Work in Progress
+        |draft: true
+        |---
+        |
+        |# WIP
+        |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      """{{ for p <- .site.pages }}{{ p.title }}; {{ end }}""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    // Draft page is excluded from the build entirely.
+    out("index.html") should include("Home;")
+    out("index.html") should not include "Work in Progress"
+
+    val wipDir = dst / "wip"
+    wipDir.exists shouldBe false
+  }
+
+  it should "include draft: true pages when --drafts is set" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n# H\n")
+    writeAt(
+      "content/wip.md",
+      """---
+        |title: Work in Progress
+        |draft: true
+        |---
+        |
+        |# WIP
+        |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      """{{ for p <- .site.pages }}{{ p.title }}; {{ end }}""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "<title>{{ .page.title }}</title>")
+
+    App.run(Args(cmd = Some(BuildCommand(src = src, dst = dst, drafts = true))))
+
+    out("index.html") should include("Home;")
+    out("index.html") should include("Work in Progress;")
+    out("wip/index.html") should include("<title>Work in Progress</title>")
+  }
+
   it should "copy static/ files into the output tree as-is" in {
     writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
     writeAt("content/_index.md", "---\ntitle: T\n---\n\n# A\n")

@@ -16,10 +16,10 @@ import scala.collection.mutable.ListBuffer
 object App {
 
   val run: PartialFunction[Args, Unit] = {
-    case Args(baseConfig, verbose, baseurl, Some(BuildCommand(src, dst))) =>
-      build(baseConfig, verbose, baseurl, src, dst)
-    case Args(baseConfig, verbose, baseurl, Some(ServeCommand(src, dst, host, port))) =>
-      val outDir = build(baseConfig, verbose, baseurl, src, dst)
+    case Args(baseConfig, verbose, baseurl, Some(BuildCommand(src, dst, drafts))) =>
+      build(baseConfig, verbose, baseurl, src, dst, drafts)
+    case Args(baseConfig, verbose, baseurl, Some(ServeCommand(src, dst, host, port, drafts))) =>
+      val outDir = build(baseConfig, verbose, baseurl, src, dst, drafts)
       serve(outDir, host, port)
     case Args(baseConfig, _, baseurl, Some(ConfigCommand(src))) =>
       println("Site config:")
@@ -35,7 +35,14 @@ object App {
         println(s"  $k = ${renderValue(v)}")
   }
 
-  def build(baseConfig: String, verbose: Boolean, baseurl: Option[String], src: Path, dst: Path): Path = {
+  def build(
+      baseConfig: String,
+      verbose:    Boolean,
+      baseurl:    Option[String],
+      src:        Path,
+      dst:        Path,
+      drafts:     Boolean = false,
+  ): Path = {
     showSteps = verbose
 
     val src1 = src.normalize.toAbsolutePath
@@ -82,7 +89,7 @@ object App {
 
     show(s"base URL = ${baseURL.base}${baseURL.path}")
 
-    val site = Process(src1, dst1, conf)
+    val site = Process(src1, dst1, conf, drafts)
     val partialsLoader: TemplateLoader =
       (name: String) =>
         site.partialTemplates.get(name).map { t =>
