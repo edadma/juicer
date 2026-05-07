@@ -29,19 +29,20 @@ def serve(
     liveReload: Boolean       = false,
     watchRoot:  Path          = null,
     rebuild:    () => Boolean = () => false,
+    htmlDir:    String        = "",
 ): Unit = {
   val server = bindWithRetry(host, port, retriesLeft = 20)
 
   if (liveReload) {
     val sse = new SseChannel
     server.createContext("/__juicer/live", sse)
-    server.createContext("/", new StaticFileHandler(root, injectLiveReload = true))
+    server.createContext("/", new StaticFileHandler(root, injectLiveReload = true, htmlDir = htmlDir))
     server.setExecutor(Executors.newCachedThreadPool())
 
     if (watchRoot != null)
       startWatcher(watchRoot, rebuild, sse)
   } else {
-    server.createContext("/", new StaticFileHandler(root, injectLiveReload = false))
+    server.createContext("/", new StaticFileHandler(root, injectLiveReload = false, htmlDir = htmlDir))
     server.setExecutor(null) // single-threaded — fine for dev
   }
 
@@ -223,33 +224,52 @@ private def startWatcher(src: Path, rebuild: () => Boolean, sse: SseChannel): Un
 
 // ===== Static-file handler =====
 
-private final class StaticFileHandler(root: Path, injectLiveReload: Boolean) extends HttpHandler {
+private[juicer] final class StaticFileHandler(
+    root:             Path,
+    injectLiveReload: Boolean,
+    htmlDir:          String,
+) extends HttpHandler {
 
   def handle(ex: HttpExchange): Unit = {
-    val raw     = ex.getRequestURI.getPath
-    val rel     = if (raw == "/") "/index.html" else raw
-    val sub     = rel.split('/').filter(_.nonEmpty).toList
-    val located = sub.foldLeft(root)(_ / _)
-    val target  = if (located.exists && located.isDirectory) located / "index.html" else located
+    val raw = ex.getRequestURI.getPath
+    val rel = if (raw == "/") "/index.html" else raw
+    val sub = rel.split('/').filter(_.nonEmpty).toList
 
-    if (target.exists && target.isFile && target.isReadable) {
-      val mime  = contentType(target.filename)
-      val bytes =
-        if (injectLiveReload && mime.startsWith("text/html"))
-          injectLiveReloadHtml(target.readText()).getBytes("UTF-8")
-        else target.readBytes
-      ex.getResponseHeaders.set("Content-Type", mime)
-      ex.sendResponseHeaders(200, bytes.length.toLong)
-      val out = ex.getResponseBody
-      try out.write(bytes)
-      finally out.close()
-    } else {
-      val msg = s"Not found: $raw\n".getBytes("UTF-8")
-      ex.getResponseHeaders.set("Content-Type", "text/plain; charset=utf-8")
-      ex.sendResponseHeaders(404, msg.length.toLong)
-      val out = ex.getResponseBody
-      try out.write(msg)
-      finally out.close()
+    /** Resolve `segs` against `base`, falling through to `<base>/index.html`
+      * when the resolved path is a directory. Returns `None` when the path
+      * doesn't exist or isn't readable. */
+    def resolve(base: Path, segs: List[String]): Option[Path] = {
+      val located = segs.foldLeft(base)(_ / _)
+      val target  = if (located.exists && located.isDirectory) located / "index.html" else located
+      if (target.exists && target.isFile && target.isReadable) Some(target) else None
+    }
+
+    // Try the URL path verbatim against `root`. If that misses, try with the
+    // configured `htmlDir` injected as the leading filesystem segment — that's
+    // where the build pipeline puts nested content under the default
+    // `htmlDir = "html"` layout, even though URLs strip it.
+    val target = resolve(root, sub)
+      .orElse(if (htmlDir.isEmpty) None else resolve(root, htmlDir :: sub))
+
+    target match {
+      case Some(t) =>
+        val mime = contentType(t.filename)
+        val bytes =
+          if (injectLiveReload && mime.startsWith("text/html"))
+            injectLiveReloadHtml(t.readText()).getBytes("UTF-8")
+          else t.readBytes
+        ex.getResponseHeaders.set("Content-Type", mime)
+        ex.sendResponseHeaders(200, bytes.length.toLong)
+        val out = ex.getResponseBody
+        try out.write(bytes)
+        finally out.close()
+      case None =>
+        val msg = s"Not found: $raw\n".getBytes("UTF-8")
+        ex.getResponseHeaders.set("Content-Type", "text/plain; charset=utf-8")
+        ex.sendResponseHeaders(404, msg.length.toLong)
+        val out = ex.getResponseBody
+        try out.write(msg)
+        finally out.close()
     }
   }
 

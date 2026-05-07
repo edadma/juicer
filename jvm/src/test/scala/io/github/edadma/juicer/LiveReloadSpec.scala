@@ -59,6 +59,60 @@ class LiveReloadSpec extends AnyFlatSpec with Matchers {
     } finally occupied.close()
   }
 
+  "StaticFileHandler with htmlDir" should "resolve /foo/bar/ at <root>/html/foo/bar/index.html" in {
+    val root = io.github.edadma.path.Path("/tmp") / s"juicer-serve-test-${System.currentTimeMillis()}"
+    try {
+      (root / "html" / "foo" / "bar").createDirectories()
+      (root / "index.html").writeText("<html><body>ROOT</body></html>")
+      (root / "html" / "foo" / "bar" / "index.html").writeText("<html><body>NESTED</body></html>")
+
+      val server = bindWithRetry("127.0.0.1", 0, retriesLeft = 1)
+      server.createContext("/", new StaticFileHandler(root, injectLiveReload = false, htmlDir = "html"))
+      server.start()
+      try {
+        val port = server.getAddress.getPort
+        httpGet(s"http://127.0.0.1:$port/")        should include("ROOT")
+        httpGet(s"http://127.0.0.1:$port/foo/bar/") should include("NESTED")
+        httpGet(s"http://127.0.0.1:$port/no/such/") should include("Not found")
+      } finally server.stop(0)
+    } finally rmTree(root)
+  }
+
+  it should "fall back through htmlDir without losing the htmlDir = \"\" baseline" in {
+    val root = io.github.edadma.path.Path("/tmp") / s"juicer-serve-flat-${System.currentTimeMillis()}"
+    try {
+      (root / "page").createDirectories()
+      (root / "index.html").writeText("<html><body>FLAT-ROOT</body></html>")
+      (root / "page" / "index.html").writeText("<html><body>FLAT-PAGE</body></html>")
+
+      val server = bindWithRetry("127.0.0.1", 0, retriesLeft = 1)
+      server.createContext("/", new StaticFileHandler(root, injectLiveReload = false, htmlDir = ""))
+      server.start()
+      try {
+        val port = server.getAddress.getPort
+        httpGet(s"http://127.0.0.1:$port/")      should include("FLAT-ROOT")
+        httpGet(s"http://127.0.0.1:$port/page/") should include("FLAT-PAGE")
+      } finally server.stop(0)
+    } finally rmTree(root)
+  }
+
+  private def httpGet(url: String): String = {
+    val u   = java.net.URI.create(url).toURL
+    val con = u.openConnection.asInstanceOf[java.net.HttpURLConnection]
+    con.setRequestMethod("GET")
+    val is  = if (con.getResponseCode >= 400) con.getErrorStream else con.getInputStream
+    val out = new String(is.readAllBytes(), "UTF-8")
+    is.close()
+    con.disconnect()
+    out
+  }
+
+  private def rmTree(p: io.github.edadma.path.Path): Unit =
+    if (p.exists) {
+      if (p.isDirectory) p.listDirectory().foreach(e => rmTree(p / e.name))
+      p.delete()
+    }
+
   it should "throw BindException after exhausting retries" in {
     // Reserve enough consecutive ports that all retries fail. Tightly racy
     // on a busy host — if nothing else grabs adjacent ports between

@@ -28,7 +28,20 @@ object App {
       val rebuild: () => Boolean = () =>
         try { build(baseConfig, verbose, baseurl, src, dst, drafts); true }
         catch { case t: Throwable => Console.err.println(s"rebuild failed: ${t.getMessage}"); false }
-      serve(outDir, host, port, liveReload = liveReload, watchRoot = if (liveReload) src else null, rebuild = rebuild)
+      // Pass the configured htmlDir to serve so URL-to-file resolution can
+      // try the prefixed path on miss. Without this, nested content (under
+      // `<dst>/html/...` by default) is unreachable since URLs strip the
+      // `html/` segment.
+      val htmlDir = config(src.normalize.toAbsolutePath, baseConfig).getString("htmlDir").getOrElse("")
+      serve(
+        outDir,
+        host,
+        port,
+        liveReload = liveReload,
+        watchRoot  = if (liveReload) src else null,
+        rebuild    = rebuild,
+        htmlDir    = htmlDir,
+      )
     case Args(baseConfig, _, baseurl, Some(ConfigCommand(src))) =>
       println("Site config:")
 

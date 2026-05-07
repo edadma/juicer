@@ -8,11 +8,12 @@ import io.github.edadma.path.Path
   */
 def serve(
     root:       Path,
-    host:       String       = "localhost",
-    port:       Int          = 8080,
-    liveReload: Boolean      = false,
-    watchRoot:  Path         = null,
+    host:       String        = "localhost",
+    port:       Int           = 8080,
+    liveReload: Boolean       = false,
+    watchRoot:  Path          = null,
     rebuild:    () => Boolean = () => false,
+    htmlDir:    String        = "",
 ): Unit =
   problem(
     "`juicer serve` is not implemented on Scala Native — run via the JVM target. " +
