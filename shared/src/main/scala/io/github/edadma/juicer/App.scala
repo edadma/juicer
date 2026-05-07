@@ -104,10 +104,33 @@ object App {
         val tail     = if (url.startsWith("/")) url else "/" + url
         basePath + tail
       }
+    // ----- i18n strings -----
+    //
+    // Each `<src>/i18n/<lang>.toml` file becomes one entry in the
+    // `i18nStrings` map. Top-level string keys are flattened into a
+    // Map[String, String]; nested tables are not supported (yet — flat
+    // is enough for the common case of UI-string translation, and avoids
+    // surprising path syntax in templates).
+    val i18nStrings: Map[String, Map[String, String]] = {
+      val i18nDir = (src1 / "i18n").normalize
+      if (!isDir(i18nDir)) Map.empty
+      else
+        list(i18nDir)
+          .filter(p => isFile(p) && p.toString.endsWith(".toml"))
+          .map { p =>
+            val lang = p.filename.stripSuffix(".toml")
+            val doc  = readConfig(p)
+            val flat = doc.root.collect { case (k, TomlValue.Str(v)) => k -> v }.toMap
+            lang -> flat
+          }.toMap
+    }
+
     val rendererData =
       Map(
-        "baseURL" -> baseURL,
-        "link"    -> linkCallback,
+        "baseURL"     -> baseURL,
+        "link"        -> linkCallback,
+        "i18n"        -> i18nStrings,
+        "defaultLang" -> conf.defaultLanguage,
       )
 
     show(s"base URL = ${baseURL.base}${baseURL.path}")
@@ -270,6 +293,53 @@ object App {
 
     val contentFiles: List[ContentFile] = site.content.collect { case c: ContentFile => c }
 
+    // ----- i18n (Tier 2 #10) -----
+
+    /** Languages the site is published in. Empty list = single-language site
+      * (no URL prefix, no `.page.lang`, no `.page.translations`). */
+    val langs: List[String] = conf.languages
+
+    /** Default language code. Falls back to the first declared language, or
+      * `""` for single-language sites. */
+    val defaultLang: String = conf.defaultLanguage
+
+    /** Reverse map from `ContentFile` to its source path under `contentDir`
+      * (e.g. `"en/getting-started.md"`). Looked up by reference identity to
+      * avoid case-class equality on a class with var fields. */
+    val sourcePathOf: ContentFile => String = {
+      val byCf = site.map.iterator.map { case (k, v) => v -> k }.toList
+      (c: ContentFile) => byCf.find(_._1 eq c).map(_._2).getOrElse("")
+    }
+
+    /** Language of a content file. Detected from the first segment of its
+      * source path under `contentDir`: if that segment matches one of the
+      * configured `languages`, that's the lang. Otherwise `""`
+      * (single-language fallback). */
+    def langOf(c: ContentFile): String =
+      if (langs.isEmpty) ""
+      else {
+        val sp = sourcePathOf(c)
+        val first = sp.takeWhile(_ != '/')
+        if (langs.contains(first)) first else ""
+      }
+
+    /** "Stem" of a content file — its source path with the leading lang
+      * segment stripped. Translations of the same conceptual page share a
+      * stem (e.g. `getting-started.md` for both `en/getting-started.md` and
+      * `fr/getting-started.md`). */
+    def stemOf(c: ContentFile): String = {
+      val sp = sourcePathOf(c)
+      val l  = langOf(c)
+      if (l.isEmpty) sp
+      else if (sp.startsWith(l + "/")) sp.drop(l.length + 1)
+      else sp
+    }
+
+    /** All content files grouped by their stem. Used to compute
+      * `.page.translations`. */
+    val byStem: Map[String, List[ContentFile]] =
+      if (langs.isEmpty) Map.empty else contentFiles.groupBy(stemOf)
+
     // ----- Section / navigation graph -----
 
     /** Map from outdir → its `_index.md` page (if any). One section per
@@ -366,6 +436,7 @@ object App {
         "url"          -> rel,
         "summary"      -> (if (c.summary eq null) "" else c.summary),
         "isSection"    -> (c.name == folderContent),
+        "lang"         -> langOf(c),
       )
       if (c.name == folderContent) {
         val info = sectionInfoByOutdir(c.outdir)
@@ -454,19 +525,36 @@ object App {
       }
     }
 
+    /** Translations of a content file — the same conceptual page in other
+      * languages. Computed by stem-matching across language directories.
+      * Empty for single-language sites. */
+    def translationsOf(c: ContentFile): List[Map[String, Any]] = {
+      if (langs.isEmpty) Nil
+      else {
+        val stem = stemOf(c)
+        if (stem.isEmpty) Nil
+        else
+          byStem.getOrElse(stem, Nil)
+            .filter(_ ne c)
+            .map(basic)
+      }
+    }
+
     /** Second-pass enriched record. Adds navigation cross-references whose
       * targets are basic records (one level only — `.page.parent.parent`
-      * is never defined; templates walk `.page.ancestors` for the chain). */
+      * is never defined; templates walk `.page.ancestors` for the chain).
+      * Also adds `.page.translations` when the site is multilingual. */
     def enrichedRecord(c: ContentFile): Map[String, Any] = {
       val base    = basic(c)
       val parent  = parentSectionOf(c).map(basic).orNull
       val ancs    = ancestorsOf(c).map(basic)
       val (p, n)  = prevNextOf(c)
       val withNav = base ++ Map(
-        "parent"    -> parent,
-        "ancestors" -> ancs,
-        "prev"      -> p.map(basic).orNull,
-        "next"      -> n.map(basic).orNull,
+        "parent"       -> parent,
+        "ancestors"    -> ancs,
+        "prev"         -> p.map(basic).orNull,
+        "next"         -> n.map(basic).orNull,
+        "translations" -> translationsOf(c),
       )
       if (c.name == folderContent) {
         val info = sectionInfoByOutdir(c.outdir)
@@ -506,11 +594,14 @@ object App {
     }
 
     val sitedata = confdata +
-      ("toc"         -> sitetoc.toList) +
-      ("start"       -> start) +
-      ("pages"       -> pages) +
-      ("pagesByPath" -> pagesByPath) +
-      ("root"        -> rootRecord)
+      ("toc"             -> sitetoc.toList) +
+      ("start"           -> start) +
+      ("pages"           -> pages) +
+      ("pagesByPath"     -> pagesByPath) +
+      ("root"            -> rootRecord) +
+      ("languages"       -> langs) +
+      ("defaultLanguage" -> defaultLang) +
+      ("i18n"            -> i18nStrings)
 
     def findLayout(folders: List[String], name: String): Option[TemplateFile] =
       site.layoutTemplates
@@ -987,6 +1078,20 @@ object App {
         "emojify",
         1,
         { case (con, Seq(s: String)) => io.github.edadma.emoji.Emoji(s) },
+      ),
+      // i18n string lookup — `{{ i18n .page.lang 'browse_docs' }}`. Falls
+      // back to the site's default language, then to the literal key.
+      // Strings come from `<src>/i18n/<lang>.toml` (flat key=value pairs).
+      "i18n" -> TemplateFunction(
+        "i18n",
+        2,
+        { case (con, Seq(lang: String, key: String)) =>
+          val tables = con.renderer.data("i18n").asInstanceOf[Map[String, Map[String, String]]]
+          val defaultLang = con.renderer.data.get("defaultLang").collect { case s: String => s }.getOrElse("")
+          tables.get(lang).flatMap(_.get(key))
+            .orElse(tables.get(defaultLang).flatMap(_.get(key)))
+            .getOrElse(key)
+        },
       ),
     )
   }

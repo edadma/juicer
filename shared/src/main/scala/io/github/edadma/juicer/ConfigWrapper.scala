@@ -77,6 +77,32 @@ class ConfigWrapper(c: TomlDocument) extends Dynamic {
     case _                          => fail("theme", "string or array of strings")
   }
 
+  /** List of language codes the site is published in, from the `languages`
+    * config key. Returns an empty list when absent — that's the
+    * single-language mode (no URL prefix, no `.page.lang`, no translations).
+    *
+    * Example:
+    *   languages = ["en", "fr"]
+    */
+  def languages: List[String] = c.get("languages") match {
+    case Some(TomlValue.Arr(elems)) => elems.toList.collect { case TomlValue.Str(s) => s }
+    case None                       => Nil
+    case _                          => fail("languages", "array of strings")
+  }
+
+  /** Default language code. Used as the fallback when a translation is
+    * missing for a content file. Falls back to the first entry of
+    * `languages` when unset, or `""` when there are no languages declared. */
+  def defaultLanguage: String =
+    c.getString("defaultLanguage").getOrElse(languages.headOption.getOrElse(""))
+
+  /** When true, the default language's URLs live at the site root (no
+    * `/<lang>/` prefix); other languages still get prefixed. Default false
+    * — every language carries its prefix, which is the easier story for a
+    * fresh i18n site. */
+  def defaultLanguageInRoot: Boolean =
+    c.getBool("defaultLanguageInRoot").getOrElse(false)
+
   /** Underlying parsed document, for the rare case the caller needs more
     * structured access than the Dynamic accessors provide.
     */
