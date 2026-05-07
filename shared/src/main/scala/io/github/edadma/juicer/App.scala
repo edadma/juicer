@@ -592,6 +592,119 @@ object App {
       path.writeText(sb.toString)
     }
 
+    // ----- Atom feeds (per section + site-wide) -----
+    //
+    // Atom 1.0 over RSS 2.0 because it's better-spec'd; both are still
+    // recognized by every feed reader. One feed per section at
+    // `<section>/feed.xml`, plus the site-wide feed at `/feed.xml`.
+    //
+    // Pages inside a feed sort by frontmatter `date` (ISO-8601 string)
+    // descending — newest first; pages without `date` sort to the end.
+    // The feed's own `<updated>` is the latest entry date, falling back to
+    // the build time if no entries are dated.
+    //
+    // Disable site-wide with `feeds = false` in site.toml.
+    val feedsEnabled: Boolean =
+      confdoc.getBool("feeds").getOrElse(true)
+
+    if (feedsEnabled) {
+      def pageDate(c: ContentFile): String =
+        frontmatterMap(c.page).get("date").collect { case s: String => s }.getOrElse("")
+
+      def byDateDesc(cs: List[ContentFile]): List[ContentFile] =
+        cs.sortBy(c => (pageDate(c).isEmpty, -pageDate(c).hashCode, c.name))
+          .sortBy(c => if (pageDate(c).isEmpty) "9999-12-31" else pageDate(c)).reverse
+
+      val nowIso: String =
+        java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC).format(
+          java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME,
+        )
+
+      def normalizeDate(s: String): String =
+        // Accept "2024-01-15", "2024-01-15T10:00:00Z", or full ISO-8601 — emit
+        // an Atom-friendly form. Bare YYYY-MM-DD becomes T00:00:00Z.
+        if (s.isEmpty) nowIso
+        else if (s.length == 10) s + "T00:00:00Z"
+        else s
+
+      def writeFeed(targetPath: Path, feedTitle: String, feedUrl: String, entries: List[ContentFile]): Unit = {
+        val sb = new StringBuilder
+        // Site root URL — `baseURL.base + baseURL.path` already terminates
+        // either at the host (path = "/") or at the resolved subpath (no
+        // trailing /). Normalize to exactly one trailing slash.
+        val siteRootUrl = {
+          val s = baseURL.base + baseURL.path
+          if (s.endsWith("/")) s else s + "/"
+        }
+        sb.append("""<?xml version="1.0" encoding="UTF-8"?>""").append('\n')
+        sb.append("""<feed xmlns="http://www.w3.org/2005/Atom">""").append('\n')
+        sb.append("  <title>").append(escapeXml(feedTitle)).append("</title>\n")
+        sb.append("  <link href=\"").append(escapeXml(feedUrl)).append("\" rel=\"self\"/>\n")
+        sb.append("  <link href=\"").append(escapeXml(siteRootUrl)).append("\"/>\n")
+        sb.append("  <id>").append(escapeXml(feedUrl)).append("</id>\n")
+        val newest = entries.iterator.map(pageDate).filter(_.nonEmpty).maxOption.getOrElse("")
+        sb.append("  <updated>").append(escapeXml(normalizeDate(newest))).append("</updated>\n")
+        confdoc.getString("author").foreach { a =>
+          sb.append("  <author><name>").append(escapeXml(a)).append("</name></author>\n")
+        }
+        for (c <- entries) {
+          val rec = basic(c)
+          val abs = rec("permalink").asInstanceOf[String]
+          sb.append("  <entry>\n")
+          sb.append("    <title>").append(escapeXml(rec.get("title").collect { case s: String => s }.getOrElse(c.name))).append("</title>\n")
+          sb.append("    <link href=\"").append(escapeXml(abs)).append("\"/>\n")
+          sb.append("    <id>").append(escapeXml(abs)).append("</id>\n")
+          sb.append("    <updated>").append(escapeXml(normalizeDate(pageDate(c)))).append("</updated>\n")
+          val summary = rec.get("summary").collect { case s: String => s }.getOrElse("")
+          if (summary.nonEmpty)
+            sb.append("    <summary>").append(escapeXml(summary)).append("</summary>\n")
+          if (c.content != null && c.content.nonEmpty)
+            sb.append("    <content type=\"html\">").append(escapeXml(c.content)).append("</content>\n")
+          sb.append("  </entry>\n")
+        }
+        sb.append("</feed>\n")
+        targetPath.parent.foreach(_.createDirectories())
+        show(s"write $targetPath")
+        targetPath.writeText(sb.toString)
+      }
+
+      // Site-wide feed — every non-`_index` page, newest first.
+      val allEntries = byDateDesc(contentFiles.filter(_.name != folderContent))
+      val siteFeedUrl = baseURL.base + baseURL.path + (if (baseURL.path.endsWith("/")) "" else "/") + "feed.xml"
+      writeFeed(
+        dst1 / "feed.xml",
+        confdoc.getString("title").getOrElse("Untitled"),
+        siteFeedUrl,
+        allEntries,
+      )
+
+      // Per-section feeds. Skip sections that have no non-`_index` pages
+      // (an empty Atom feed is technically valid but adds nothing). Also
+      // skip the root section — the site-wide feed already lives at
+      // `dst1/feed.xml` and would otherwise be overwritten with a duplicate
+      // entry list under the section's own title.
+      for ((outdir, info) <- sectionInfoByOutdir if info.pages.nonEmpty && outdir != dst1) {
+        val sectionTitle = info.index.flatMap { c =>
+          frontmatterMap(c.page).get("title").collect { case s: String => s }
+        }.getOrElse(outdir.filename)
+        val sectionRel = info.index.map(c => relPermalinkFor(c)).getOrElse {
+          // Fallback for sections without an _index: derive from outdir.
+          val rel = outdir.relativeTo(dst1)
+          val segs = if (outdir == dst1) Nil else rel.segments.toList
+          val withoutHtml = if (html != "" && segs.nonEmpty) segs.drop(1) else segs
+          val basePath = if (baseURL.path == "/" || baseURL.path.isEmpty) "" else baseURL.path
+          if (withoutHtml.isEmpty) basePath + "/" else basePath + "/" + withoutHtml.mkString("/") + "/"
+        }
+        val feedUrl = baseURL.base + sectionRel + "feed.xml"
+        writeFeed(
+          outdir / "feed.xml",
+          confdoc.getString("title").getOrElse("Untitled") + " · " + sectionTitle,
+          feedUrl,
+          byDateDesc(info.pages),
+        )
+      }
+    }
+
     // ----- search.json -----
     //
     // Per-page index for client-side full-text search. Each entry has title,

@@ -3,6 +3,7 @@
 <title>{{ if .page.title }}{{ .page.title }} – {{ end }}{{ .site.title }}</title>
 {{ if .page.summary }}<meta name="description" content="{{ .page.summary }}" />{{ end }}
 <link rel="canonical" href="{{ .page.permalink }}" />
+<link rel="alternate" type="application/atom+xml" href="{{ relURL '/feed.xml' }}" title="{{ .site.title }}" />
 
 <!--
   Tailwind CSS v4 — browser CDN. JIT-compiles classes on every page load.
