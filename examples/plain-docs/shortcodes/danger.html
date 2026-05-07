@@ -1,8 +1,0 @@
-<article class="message is-danger">
-    <div class="message-header">
-        <span>{{ if .args.nonEmpty }}{{ .args.head }}{{ else }}Danger{{ end }}</span>
-    </div>
-    <div class="message-body">
-        {{ markdownify .content }}
-    </div>
-</article>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ .page.title }} — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL 'style.css' }}">
+</head>
+<body>
+  <div class="layout">
+    {{ partial 'nav' . }}
+    <main>
+      <article>
+        {{ .content }}
+      </article>
+      {{ partial 'footer' . }}
+    </main>
+  </div>
+</body>
+</html>

@@ -17,44 +17,49 @@ on a stack of small libraries:
 - [**toml**](https://github.com/edadma/toml) — site config (`site.toml`)
 - [**scala-yaml**](https://github.com/VirtusLab/scala-yaml) — YAML frontmatter
 - [**path**](https://github.com/edadma/path) + [**cross_platform**](https://github.com/edadma/cross_platform) — file I/O across JVM / Scala.js / Scala Native
+- [**emoji**](https://github.com/edadma/emoji) — `:smile:` → 😄
 
-> A more thorough docs site, built with juicer itself, is in progress.
-> This README is the short version.
+## Quickstart
 
-## Status
+Two ready-to-build examples ship with the source:
 
-`v0.1.0`. The cross-platform port is just landing; the JVM build is well-shaken
-through `examples/`. Scala.js and Scala Native compile from the same sources
-but are less battle-tested.
+```bash
+sbt 'juicerJVM/run build --source examples/minimal'
+sbt 'juicerJVM/run build --source examples/docs-site'
+```
 
-## Install
+Each builds into `<source>/public/`. For live preview during authoring:
+
+```bash
+sbt 'juicerJVM/run serve --source examples/docs-site --port 8080'
+```
+
+then open `http://localhost:8080/`.
+
+## Install (use juicer as a library)
 
 ```scala
 libraryDependencies += "io.github.edadma" %%% "juicer" % "0.1.0"
 ```
 
-Or as a published binary, run via sbt:
-
-```bash
-sbt 'juicerJVM/run build -s ./mysite'
-```
+The CLI is the typical way to use it; the library API exposes
+`io.github.edadma.juicer.App.build(...)` and `App.run(args)` for callers
+that want to embed it in another build pipeline.
 
 ## Project layout
 
 ```
 mysite/
 ├── site.toml                 # site config (overlays a built-in baseline)
-├── content/                  # markdown sources, with YAML frontmatter
+├── content/                  # markdown sources with YAML frontmatter
 │   ├── _index.md
 │   └── posts/
 │       └── hello-world.md
-├── layouts/                  # squiggly templates that wrap content
-│   ├── _default/
-│   │   ├── baseof.html
-│   │   ├── file.html
-│   │   └── folder.html
+├── layouts/_default/         # squiggly templates that wrap content
+│   ├── file.html             # used for individual pages
+│   └── folder.html           # used for *_index.md* pages
 ├── partials/                 # reusable squiggly fragments
-├── shortcodes/               # `[= name … =]` template fragments
+├── shortcodes/               # [= name args =] preprocessor templates
 └── static/                   # copied as-is into the output
 ```
 
@@ -72,8 +77,8 @@ This is the body.
 ```
 
 YAML frontmatter (between `---` lines) is parsed by **scala-yaml**; the body
-goes through **markdown** and the result is rendered into the page's layout
-via **squiggly**.
+goes through **markdown** with auto-generated heading IDs; the result is
+rendered into the page's layout via **squiggly**.
 
 ## CLI
 
@@ -81,7 +86,7 @@ via **squiggly**.
 Juicer Site Generator v0.1.0
 Usage: juicer [options] [command]
 
-  -b, --baseurl <URL>     base site URL
+  -b, --baseurl <URL>     base site URL (overrides site.toml)
   -c, --config <name>     base site configuration (default 'standard';
                           others: 'simple', 'norme')
   -h, --help              prints this usage text
@@ -89,45 +94,104 @@ Usage: juicer [options] [command]
       --version           prints the version
 
 Commands:
-  build  -s <path> -d <path>     build the site (defaults: ./, ./public)
-  config -s <path>               show the resolved build configuration
-  serve  -s <path> -d <path>     build and serve (not yet wired)
+  build                          build the site
+    -s, --source <path>            site source directory (default ./)
+    -d, --dest <path>              destination directory (default ./public)
+
+  config                         show the resolved build configuration
+    -s, --source <path>            site source directory
+
+  serve                          build the site, then serve it on localhost
+    -s, --source <path>            site source directory
+    -d, --dest <path>              destination directory
+        --host <host>              host to bind (default 'localhost')
+    -p, --port <port>              port to listen on (default 8080)
 ```
+
+`serve` is JVM-only — it uses `com.sun.net.httpserver` under the hood.
+`build` and `config` work on JVM, Scala.js, and Scala Native.
 
 ## Site config
 
-`site.toml` overlays a built-in baseline (`standard` by default). The
-baselines live in [`BaseConfigs.scala`](shared/src/main/scala/io/github/edadma/juicer/BaseConfigs.scala);
-the `standard` baseline expects the layout shown above.
+`site.toml` overlays one of three built-in baselines (selected by `-c`).
+The `standard` baseline (default) expects the layout shown above. The
+baselines themselves are in
+[`BaseConfigs.scala`](shared/src/main/scala/io/github/edadma/juicer/BaseConfigs.scala).
 
 ```toml
 title    = "My Site"
 author   = "Ed"
 baseURL  = "https://example.com"
+
+# Optional: drive the sidebar / nav order. Items ending in a markdown
+# extension reference a content file (path relative to content/);
+# anything else is a section label.
+nav = [
+  "Getting Started",
+  "_index.md",
+  "guide/installation.md",
+  "Reference",
+  "guide/cheatsheet.md",
+]
 ```
 
 ## Templates
 
-Layouts and partials use **squiggly** syntax: `{{ .field }}`, `{{ for x <- .items }}`,
-`{{ if cond }}`, etc. Pages can override blocks defined in a `baseof.html`
-layout via `{{ define name }}`.
+Layouts and partials use **squiggly** syntax: `{{ .field }}`,
+`{{ for x <- .items }}`, `{{ if cond }}`, `{{ partial 'name' . }}`,
+`{{ define name }} … {{ end }}`. The page-rendering context exposes:
 
-The page-rendering context exposes:
+| key       | what                                              |
+|-----------|---------------------------------------------------|
+| `site`    | site config (TOML) plus `toc` and `start` nav data |
+| `page`    | the page's YAML frontmatter (any-data shape)      |
+| `content` | the rendered markdown body (HTML)                 |
+| `toc`     | the page's heading tree                           |
+| `sub`     | flattened sub-headings (for an "On this page" list) |
 
-| key       | what                                                       |
-|-----------|------------------------------------------------------------|
-| `site`    | the resolved site config + nav data                        |
-| `page`    | the page's YAML frontmatter (any-data shape)               |
-| `content` | the rendered markdown body (HTML)                          |
-| `toc`     | the page's heading tree (auto-generated anchors)           |
-| `sub`     | flattened sub-headings (for sidebars)                      |
+### Helpers juicer adds on top of squiggly's defaults
+
+| name | what |
+|------|------|
+| `relURL '...'`     | site-relative URL — prepends `baseURL.path` |
+| `absURL '...'`     | absolute URL — prepends `baseURL.base` + `baseURL.path` |
+| `markdownify '...'`| render a string as markdown into HTML |
+| `emojify '...'`    | substitute `:shortcode:` → emoji glyph |
+
+### Markdown extras
+
+- **Auto heading IDs** — every `<h*N*>` gets an `id` attribute slugified from
+  its text content, suitable for permalinks.
+- **TOC tree** — `{{ for h <- .toc.headings }}` walks each top-level heading;
+  each entry has `level`, `contents`, `id`, and a nested `sub` of the same
+  shape.
+
+## Shortcodes
+
+Inside markdown content, the bracket-equals preprocessor expands
+`[= name args =]` into the template at `shortcodes/name.html`. A self-closing
+shortcode is `[= name args / =]`; a paired one wraps content between
+`[= name =]` and `[= /name =]`. Inside the template, positional args are
+exposed as `args[i]` and named args as `key`.
 
 ## Cross-platform
 
 `build.sbt` cross-builds for JVM, Scala.js, and Scala Native. JVM is the
-primary target right now; the JS build runs under Node and the Native build
-produces a standalone executable. All three exercise the same shared code
-through the `path` and `cross_platform` libraries.
+primary target right now; Scala.js and Scala Native compile from the same
+sources but are less battle-tested. The `serve` command is intentionally
+JVM-only — a cross-platform server library is on the roadmap (the existing
+`microserve` is currently JVM-only).
+
+## Tests
+
+```bash
+sbt juicerJVM/test
+sbt juicerJS/test
+sbt juicerNative/test
+```
+
+The integration test suite (`JuicerBuildSpec`) builds small sites under a
+temp directory and asserts the rendered HTML structure end-to-end.
 
 ## License
 

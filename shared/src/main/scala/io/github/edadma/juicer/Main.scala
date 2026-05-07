@@ -87,6 +87,14 @@ import scopt.OParser
             .valueName("<path>")
             .action((s, c) => updateServe(c, _.copy(src = Path(s))))
             .text("site sources directory path"),
+          opt[String]("host")
+            .valueName("<host>")
+            .action((h, c) => updateServe(c, _.copy(host = h)))
+            .text("host to bind to (default 'localhost')"),
+          opt[Int]('p', "port")
+            .valueName("<port>")
+            .action((p, c) => updateServe(c, _.copy(port = p)))
+            .text("port to listen on (default 8080)"),
         ),
     )
 

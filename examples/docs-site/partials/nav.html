@@ -1,0 +1,15 @@
+<nav class="sidebar">
+  <h2><a href="{{ relURL '/' }}">{{ .site.title }}</a></h2>
+  {{ for item <- .site.toc }}
+    {{ if item.label }}
+      <h3>{{ item.label }}</h3>
+    {{ end }}
+    {{ if item.headings }}
+      <ul>
+        {{ for h <- item.headings }}
+          <li><a href="{{ relURL h.href }}">{{ h.html }}</a></li>
+        {{ end }}
+      </ul>
+    {{ end }}
+  {{ end }}
+</nav>

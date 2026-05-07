@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ .page.title }} — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL 'style.css' }}">
+</head>
+<body>
+  <div class="layout">
+    {{ partial 'nav' . }}
+    <main>
+      <article>
+        {{ .content }}
+      </article>
+      {{ if .sub }}
+        <aside class="page-toc">
+          <h3>On this page</h3>
+          <ul>
+            {{ for h <- .sub }}<li><a href="#{{ h.id }}">{{ h.heading }}</a></li>{{ end }}
+          </ul>
+        </aside>
+      {{ end }}
+      {{ partial 'footer' . }}
+    </main>
+  </div>
+</body>
+</html>

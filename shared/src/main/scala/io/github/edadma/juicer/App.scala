@@ -2,7 +2,7 @@ package io.github.edadma.juicer
 
 import io.github.edadma.markdown.{Document, Inline, Heading => MdHeading, Link, Paragraph}
 import io.github.edadma.path.Path
-import io.github.edadma.squiggly.{TemplateAST, TemplateLoader, TemplateRenderer}
+import io.github.edadma.squiggly.{BaseURL, TemplateAST, TemplateBuiltin, TemplateFunction, TemplateLoader, TemplateRenderer}
 import io.github.edadma.toml.{TomlDocument, TomlValue}
 
 import scala.annotation.tailrec
@@ -18,6 +18,9 @@ object App {
   val run: PartialFunction[Args, Unit] = {
     case Args(baseConfig, verbose, baseurl, Some(BuildCommand(src, dst))) =>
       build(baseConfig, verbose, baseurl, src, dst)
+    case Args(baseConfig, verbose, baseurl, Some(ServeCommand(src, dst, host, port))) =>
+      val outDir = build(baseConfig, verbose, baseurl, src, dst)
+      serve(outDir, host, port)
     case Args(baseConfig, _, baseurl, Some(ConfigCommand(src))) =>
       println("Site config:")
 
@@ -32,7 +35,7 @@ object App {
         println(s"  $k = ${renderValue(v)}")
   }
 
-  def build(baseConfig: String, verbose: Boolean, baseurl: Option[String], src: Path, dst: Path): Unit = {
+  def build(baseConfig: String, verbose: Boolean, baseurl: Option[String], src: Path, dst: Path): Path = {
     showSteps = verbose
 
     val src1 = src.normalize.toAbsolutePath
@@ -88,7 +91,12 @@ object App {
 
           t.template
         }.orElse(problem(s"partial '$name' not found"))
-    val templateRenderer: TemplateRenderer = new TemplateRenderer(partials = partialsLoader, data = rendererData)
+    val templateRenderer: TemplateRenderer =
+      new TemplateRenderer(
+        partials  = partialsLoader,
+        data      = rendererData,
+        functions = TemplateBuiltin.functions ++ juicerUrlBuiltins,
+      )
     val shortcodesLoader: TemplateLoader =
       (name: String) =>
         site.shortcodeTemplates.get(name).map { t =>
@@ -269,6 +277,72 @@ object App {
       val rendered = renderToString(templateRenderer, Map("site" -> sitedata), template)
       path.writeText(rendered)
     }
+
+    dst1
+  }
+
+  // ===== juicer-side URL template builtins =====
+  //
+  // squiggly dropped its own absURL / relURL when it lost java.nio.file.Paths
+  // in the cross-platform port. juicer has the cross-platform `path` lib and
+  // already carries a BaseURL through the renderer's `data`, so it's the
+  // natural home for these. Both are arity-1 functions; the URL is the sole
+  // argument (or the pipe target).
+
+  /** Join `base` (already-resolved baseURL.path, may be empty or "/") with a
+    * link-target path that may itself be already absolute (`/foo`) or relative
+    * (`foo`).
+    */
+  private def joinUrlPath(base: String, url: String): String = {
+    val basePath = if (base.endsWith("/")) base.dropRight(1) else base
+    val tail     = if (url.startsWith("/")) url else "/" + url
+    basePath + tail
+  }
+
+  /** Juicer-side template builtins: URL helpers + a `markdownify` wrapper
+    * around the new `markdown` library. Merged into the renderer's function
+    * map alongside squiggly's defaults.
+    */
+  private lazy val juicerUrlBuiltins: Map[String, TemplateFunction] = {
+    def baseFromContext(con: io.github.edadma.squiggly.Context): BaseURL =
+      con.renderer.data("baseURL").asInstanceOf[BaseURL]
+
+    Map(
+      "relURL" -> TemplateFunction(
+        "relURL",
+        1,
+        { case (con, Seq(arg: String)) =>
+          if (absoluteURL(arg)) arg
+          else joinUrlPath(baseFromContext(con).path, arg)
+        },
+      ),
+      "absURL" -> TemplateFunction(
+        "absURL",
+        1,
+        { case (con, Seq(arg: String)) =>
+          if (absoluteURL(arg)) arg
+          else {
+            val base = baseFromContext(con)
+            base.base + joinUrlPath(base.path, arg)
+          }
+        },
+      ),
+      // Render a markdown string to HTML directly, for templates that want
+      // to mix markdown into a layout without going through a content file.
+      "markdownify" -> TemplateFunction(
+        "markdownify",
+        1,
+        { case (con, Seq(s: String)) =>
+          io.github.edadma.markdown.renderToHTML(parseMarkdown(s), markdownConfig).trim
+        },
+      ),
+      // Substitute :shortcode: tokens with the corresponding Unicode emoji.
+      "emojify" -> TemplateFunction(
+        "emojify",
+        1,
+        { case (con, Seq(s: String)) => io.github.edadma.emoji.Emoji(s) },
+      ),
+    )
   }
 
   // ===== AST transforms applied to each content document before rendering =====

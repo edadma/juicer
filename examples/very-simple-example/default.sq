@@ -1,9 +1,0 @@
-{{ partial 'header' . }}
-
-<p><a href="{{ .site.baseURL }}">&larr; {{ .site.title }}</a></p>
-
-<h1>{{ .page.title }}</h1>
-{{ .content }}
-<p><em>Posted on {{ .page.date | format ':date_full' }}.</em></p>
-
-{{ partial 'footer' . }}

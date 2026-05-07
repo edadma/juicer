@@ -1,0 +1,21 @@
+title    = "Docs Site Example"
+author   = "Ed"
+baseURL  = "http://localhost:8080"
+
+# Flat output (no `/html/` prefix on URLs). The `standard` config baseline
+# sets `htmlDir = "html"` so static assets sit alongside (rather than under)
+# the rendered content; we don't need that separation in this example.
+htmlDir  = ""
+
+# `nav` controls the sidebar order. Items are either:
+#   * a string ending in a markdown extension — a content file, picked up by
+#     juicer's content map (path is relative to content/);
+#   * any other string — a section label.
+nav = [
+  "Getting Started",
+  "_index.md",
+  "guide/installation.md",
+  "guide/quickstart.md",
+  "Reference",
+  "guide/cheatsheet.md",
+]

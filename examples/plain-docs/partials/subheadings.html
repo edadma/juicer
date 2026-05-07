@@ -1,8 +1,0 @@
-<ul class="menu-list">
-    {{- for . }}
-        <li><a href="#{{ .id }}">{{ .heading }}</a></li>
-        {{- if .sub }}
-            <li>{{ partial 'subheadings' .sub }}</li>
-        {{- end }}
-    {{- end -}}
-</ul>

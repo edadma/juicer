@@ -1,9 +1,0 @@
-body {
-  min-height: 94vh;
-  display: flex;
-  flex-direction: column;
-}
-
-footer {
-  margin-top: auto;
-}

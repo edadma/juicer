@@ -1,9 +1,0 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>{{ .site.title }}</title>
-  <meta charset="utf-8">
-  <link rel="stylesheet" href="{{ 'index.css' | relURL }}">
-</head>
-<body>
-<div class="container">
