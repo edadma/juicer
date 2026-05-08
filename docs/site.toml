@@ -17,3 +17,6 @@ headingShift = 0
 # baseline ships htmlDir = "html" — useful for tidy local browsing but it
 # breaks deploys (URLs strip the segment, file paths don't). Force it off.
 htmlDir = ""
+
+[juicerdocs]
+version = "v0.2.0"

@@ -1,5 +1,7 @@
 ---
 title: Juicer
+heroTitle: Squeeze your markdown into a
+heroHighlight: site
 summary: A cross-platform Hugo-style static site generator written in Scala 3 — markdown-first, themable, JVM/JS/Native.
 ---
 
