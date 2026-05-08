@@ -57,13 +57,25 @@ object Process {
       partials   = (src / conf.path.partialDir).normalize,
       shortcodes = (src / conf.path.shortcodeDir).normalize,
       static     = (src / conf.path.staticDir).normalize,
-      // Don't double-process theme directories during the site pass. Also
-      // exclude `<src>/<publicDir>` outright — it's the conventional output
-      // location, and recursing into it tries to re-parse rendered HTML as
-      // squiggly templates the moment a user passes `-d` to a different
-      // path. The `dst` exclude (added later) only catches the active dst,
-      // not the default one when `-d` redirects elsewhere.
-      excludes       = themeRoots.toSet + (src / conf.publicDir).normalize,
+      // Don't double-process theme directories during the site pass. Two
+      // mechanisms layered together:
+      //   - `themeRoots` excludes the *active* themes (already processed
+      //     via the explicit theme passes above the site pass).
+      //   - The whole `<src>/<themeDir>/` tree is also excluded so that
+      //     INACTIVE themes living alongside the active one (e.g. the
+      //     juicer repo ships both juicerdocs and juicerblog under
+      //     `docs/themes/`) don't get scanned as the site's "other
+      //     templates" and rendered into the output tree. Themes are
+      //     loaded explicitly by name; sit them under `themeDir` and
+      //     they stay invisible until activated.
+      // Also exclude `<src>/<publicDir>` outright — it's the conventional
+      // output location, and recursing into it tries to re-parse rendered
+      // HTML as squiggly templates the moment a user passes `-d` to a
+      // different path. The `dst` exclude (added later) only catches the
+      // active dst, not the default one when `-d` redirects elsewhere.
+      excludes       = themeRoots.toSet
+        ++ (if (themeDirName.nonEmpty) Set((src / themeDirName).normalize) else Set.empty)
+        + (src / conf.publicDir).normalize,
       otherTemplates = true,
     )
 
@@ -167,6 +179,7 @@ object Process {
                 else first :+ '\n') ++ lines.map(_ :+ '\n').mkString).trim,
               null,
               null,
+              srcPath = p,
             )
 
             contentMap(p.relativeTo(content).toString) = contentFile
@@ -341,6 +354,10 @@ case class ContentFile(
     var content: String,
     var toc:     TOC,
     var summary: String = null,
+    /** Absolute path to the source file under `<src>/content/...`. Captured at
+      * parse time so the rendering pass can reach back for filesystem facts
+      * (mtime fallback for `.page.date`, etc.) without recomputing the path. */
+    srcPath:     Path   = null,
 ) extends ContentItem
 case class ContentFolder(outdir: Path) extends ContentItem
 case class ContentLabel(label: String) extends ContentItem { val outdir: Path = null }
