@@ -3,11 +3,11 @@
 <head>
   {{ partial 'head' . }}
 </head>
-<body class="antialiased">
+<body class="antialiased bg-bg text-fg">
   {{ partial 'topbar' . }}
 
   <div class="mx-auto max-w-screen-2xl flex">
-    <aside class="jd-sidebar-aside hidden lg:block w-64 shrink-0 border-r jd-border px-4 py-8 sticky top-14 self-start max-h-[calc(100vh-3.5rem)] overflow-y-auto">
+    <aside class="jd-sidebar-aside hidden lg:block w-64 shrink-0 border-r border-border px-4 py-8 sticky top-14 self-start max-h-[calc(100vh-3.5rem)] overflow-y-auto">
       {{ partial 'sidebar' . }}
     </aside>
     <div class="jd-sidebar-backdrop" aria-hidden="true"></div>

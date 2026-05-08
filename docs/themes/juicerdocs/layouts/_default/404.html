@@ -3,12 +3,15 @@
 <head>
   {{ partial 'head' . }}
 </head>
-<body class="min-h-screen flex items-center justify-center">
+<body class="min-h-screen flex items-center justify-center bg-bg text-fg">
   <div class="text-center px-4">
     <img src="{{ if .site.juicerdocs.logo }}{{ relURL .site.juicerdocs.logo }}{{ else }}{{ relURL '/juicer-logo.png' }}{{ end }}" alt="" class="w-20 h-20 mx-auto mb-6 opacity-90" />
-    <h1 class="text-5xl font-bold mb-2 jd-fg">404</h1>
-    <p class="text-lg jd-muted mb-8">No such page on this site.</p>
-    <a href="{{ relURL '/' }}" class="jd-btn jd-btn-primary">Back to home</a>
+    <h1 class="text-5xl font-bold mb-2 text-fg">404</h1>
+    <p class="text-lg text-muted mb-8">No such page on this site.</p>
+    <a href="{{ relURL '/' }}"
+       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-[0.9375rem] bg-brand text-white no-underline hover:bg-brand-strong active:translate-y-px transition">
+      Back to home
+    </a>
   </div>
 </body>
 </html>

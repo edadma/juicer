@@ -1,3 +1,11 @@
-<a href="{{ if .href }}{{ .href }}{{ end }}" class="jd-btn {{ if .primary }}jd-btn-primary{{ else }}jd-btn-secondary{{ end }}">
+{{ if .primary }}
+<a href="{{ if .href }}{{ .href }}{{ end }}"
+   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-[0.9375rem] bg-brand text-white no-underline hover:bg-brand-strong active:translate-y-px transition">
   {{ if .icon }}<span>{{ .icon }}</span>{{ end }}{{ head .args }}
 </a>
+{{ else }}
+<a href="{{ if .href }}{{ .href }}{{ end }}"
+   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-[0.9375rem] bg-surface text-fg border border-border no-underline hover:border-brand hover:text-brand active:translate-y-px transition">
+  {{ if .icon }}<span>{{ .icon }}</span>{{ end }}{{ head .args }}
+</a>
+{{ end }}

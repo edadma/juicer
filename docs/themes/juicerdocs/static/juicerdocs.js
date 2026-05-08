@@ -56,10 +56,15 @@
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setSidebar(false); });
 
   // ===== Code block copy buttons + language badge =====
+  // Add `group` to each <pre> so the button's `group-hover:opacity-100`
+  // works without a hand-rolled `.prose pre:hover .juicerdocs-copy` rule.
+  const COPY_BTN_CLASS = "absolute top-1.5 right-2 px-2 py-0.5 text-xs rounded text-muted bg-fg/10 border border-fg/15 cursor-pointer opacity-0 group-hover:opacity-100 hover:!bg-fg/20 hover:!text-fg transition";
+  const COPY_DONE      = ["!text-leaf", "!opacity-100"];
   document.querySelectorAll("pre > code").forEach((code) => {
     const pre = code.parentElement;
     if (!pre || pre.dataset.juicerdocsCopyDone) return;
     pre.dataset.juicerdocsCopyDone = "1";
+    pre.classList.add("group");
 
     // Tag <pre> with data-language so the CSS ::before can show it.
     const cls   = code.className || "";
@@ -67,7 +72,7 @@
     if (match) pre.dataset.language = match[1];
 
     const btn = document.createElement("button");
-    btn.className = "juicerdocs-copy";
+    btn.className = COPY_BTN_CLASS;
     btn.type = "button";
     btn.setAttribute("aria-label", "Copy code");
     btn.textContent = "Copy";
@@ -75,10 +80,10 @@
       try {
         await navigator.clipboard.writeText(code.innerText);
         btn.textContent = "Copied!";
-        btn.classList.add("copied");
+        btn.classList.add(...COPY_DONE);
         setTimeout(() => {
           btn.textContent = "Copy";
-          btn.classList.remove("copied");
+          btn.classList.remove(...COPY_DONE);
         }, 1500);
       } catch (e) {
         btn.textContent = "Error";
@@ -88,37 +93,49 @@
   });
 
   // ===== Tabs widget — see {= tabs / tab =} shortcodes =====
+  // Each .juicerdocs-tab-panel ships with utility classes for layout
+  // (`p-4 px-5`); we add `block` here when active, `hidden` otherwise.
+  // Buttons are JS-created so we set utility classes inline. The
+  // `!`-prefixed active classes outweigh the inactive state without
+  // having to remove/add a base color each toggle.
+  const TABS_BAR_CLASS    = "flex gap-1 px-2 pt-2 bg-surface border-b border-border";
+  const TABS_BTN_CLASS    = "px-3.5 py-2 text-sm font-medium text-muted bg-transparent border-0 border-b-2 border-transparent -mb-px cursor-pointer hover:text-fg";
+  const TABS_BTN_ACTIVE   = ["!text-brand", "!border-b-brand"];
   document.querySelectorAll(".juicerdocs-tabs[data-juicerdocs-tabs]").forEach((root) => {
     const panels = Array.from(root.querySelectorAll(":scope > .juicerdocs-tab-panel"));
     if (panels.length === 0) return;
     const bar = document.createElement("div");
-    bar.className = "juicerdocs-tabs-buttons";
+    bar.className = TABS_BAR_CLASS;
     panels.forEach((panel, i) => {
       const label = panel.dataset.tabLabel || `Tab ${i + 1}`;
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "juicerdocs-tabs-button" + (i === 0 ? " active" : "");
+      btn.className = TABS_BTN_CLASS;
+      if (i === 0) btn.classList.add(...TABS_BTN_ACTIVE);
       btn.textContent = label;
       btn.addEventListener("click", () => {
-        bar.querySelectorAll(".juicerdocs-tabs-button").forEach((b) => b.classList.remove("active"));
-        panels.forEach((p) => p.classList.remove("active"));
-        btn.classList.add("active");
-        panel.classList.add("active");
+        bar.querySelectorAll("button").forEach((b) => b.classList.remove(...TABS_BTN_ACTIVE));
+        panels.forEach((p) => p.classList.add("hidden"));
+        btn.classList.add(...TABS_BTN_ACTIVE);
+        panel.classList.remove("hidden");
       });
       bar.appendChild(btn);
-      if (i === 0) panel.classList.add("active");
+      if (i !== 0) panel.classList.add("hidden");
     });
     root.insertBefore(bar, root.firstChild);
     root.removeAttribute("data-juicerdocs-tabs");
   });
 
   // ===== Sidebar active-link highlight =====
+  // Tailwind utilities (text-brand, bg-brand-soft, etc.) are listed in
+  // tailwind.css's @source so the build picks them up from this file.
+  const NAV_ACTIVE = ["!text-brand", "bg-brand-soft", "!border-l-brand", "font-medium"];
   const here = location.pathname.replace(/\/+$/, "/") || "/";
   document.querySelectorAll("[data-juicerdocs-nav-link]").forEach((a) => {
     const href = a.getAttribute("href");
     if (!href) return;
     const norm = href.replace(/\/+$/, "/") || "/";
-    if (norm === here) a.classList.add("juicerdocs-nav-active");
+    if (norm === here) a.classList.add(...NAV_ACTIVE);
   });
 
   // ===== "On this page" — active-heading highlight =====
@@ -138,17 +155,18 @@
     const headings = Array.from(document.querySelectorAll("article h2[id], article h3[id], article h4[id]"))
       .filter((h) => linkById.has(h.id));
 
+    const TOC_ACTIVE = ["!text-brand", "!border-brand", "font-medium"];
     let active = null;
     function setActive(id) {
       if (active === id) return;
       if (active) {
         const prev = linkById.get(active);
-        if (prev) prev.classList.remove("active");
+        if (prev) prev.classList.remove(...TOC_ACTIVE);
       }
       active = id;
       if (id) {
         const next = linkById.get(id);
-        if (next) next.classList.add("active");
+        if (next) next.classList.add(...TOC_ACTIVE);
       }
     }
 
@@ -204,22 +222,30 @@
       return (start > 0 ? "…" : "") + content.slice(start, end) + (end < content.length ? "…" : "");
     }
 
+    // Result item Tailwind classes — `last:border-b-0` removes the
+    // bottom border from the final item; the !-prefixed active set
+    // overrides the base color/bg cleanly via JS toggle.
+    const RESULT_CLASS  = "block px-3.5 py-2 border-b border-border-soft last:border-b-0 no-underline text-fg hover:bg-brand-soft hover:text-brand";
+    const RESULT_ACTIVE = ["!bg-brand-soft", "!text-brand"];
     function renderResults(matches, q) {
       searchResults.innerHTML = "";
       if (matches.length === 0) {
-        searchResults.innerHTML = '<div class="juicerdocs-result jd-muted">No matches.</div>';
+        searchResults.innerHTML = '<div class="px-3.5 py-2 text-sm text-muted">No matches.</div>';
       } else {
         for (let i = 0; i < matches.length; i++) {
           const r = matches[i];
           const a = document.createElement("a");
-          a.className = "juicerdocs-result";
+          a.className = RESULT_CLASS;
           a.href = r.url;
           a.dataset.idx = i;
-          a.innerHTML =
-            '<span class="juicerdocs-result-title"></span>' +
-            '<span class="juicerdocs-result-snippet"></span>';
-          a.querySelector(".juicerdocs-result-title").textContent = r.title || r.url;
-          a.querySelector(".juicerdocs-result-snippet").textContent = snippet(r.content || r.summary || "", q);
+          const title = document.createElement("span");
+          title.className = "block font-medium";
+          title.textContent = r.title || r.url;
+          const snip = document.createElement("span");
+          snip.className = "block text-xs opacity-70 mt-0.5 truncate";
+          snip.textContent = snippet(r.content || r.summary || "", q);
+          a.appendChild(title);
+          a.appendChild(snip);
           searchResults.appendChild(a);
         }
       }
@@ -249,7 +275,7 @@
       if (e.target.value.trim()) doSearch(e.target.value.trim());
     });
     searchInput.addEventListener("keydown", (e) => {
-      const items = searchResults.querySelectorAll(".juicerdocs-result");
+      const items = searchResults.querySelectorAll("a");
       if (e.key === "ArrowDown") {
         e.preventDefault();
         activeIndex = Math.min(items.length - 1, activeIndex + 1);
@@ -263,7 +289,10 @@
         searchResults.classList.add("hidden");
         searchInput.blur();
       }
-      items.forEach((it, i) => it.classList.toggle("active", i === activeIndex));
+      items.forEach((it, i) => {
+        if (i === activeIndex) it.classList.add(...RESULT_ACTIVE);
+        else                   it.classList.remove(...RESULT_ACTIVE);
+      });
     });
     document.addEventListener("click", (e) => {
       if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {

@@ -3,7 +3,8 @@
     <ul class="space-y-2">
       {{ for sec <- .site.root.subsections }}
         <li class="mb-5">
-          <a href="{{ sec.url }}" data-juicerdocs-nav-link class="jd-nav-section">
+          <a href="{{ sec.url }}" data-juicerdocs-nav-link
+             class="block py-1.5 px-3 font-semibold text-[0.8125rem] tracking-wider uppercase text-fg no-underline">
             {{ sec.title }}
           </a>
           {{ partial 'nav-children' sec }}

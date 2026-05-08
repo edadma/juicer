@@ -1,7 +1,7 @@
 {{ for h <- . }}
   <li>
     <a href="#{{ h.id }}" data-juicerdocs-toc-link data-jd-toc-id="{{ h.id }}"
-       class="jd-toc-link block py-1 pl-3 -ml-px border-l-2 border-transparent jd-muted hover:jd-fg transition"
+       class="block py-1 -ml-px border-l-2 border-transparent text-muted no-underline leading-snug break-words [overflow-wrap:anywhere] hover:text-fg transition data-[jd-toc-level='2']:pl-3 data-[jd-toc-level='3']:pl-6 data-[jd-toc-level='4']:pl-9 data-[jd-toc-level='4']:text-[0.8125rem] data-[jd-toc-level='5']:pl-12 data-[jd-toc-level='5']:text-[0.8125rem]"
        data-jd-toc-level="{{ h.level }}">
       {{ h.heading }}
     </a>
