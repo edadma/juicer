@@ -14,6 +14,20 @@ Squiggly is the template language juicer uses. It's Go-template-like. This page 
 {{ .args[0] }}           list element by index (in shortcodes)
 ```
 
+## Built-in functions
+
+Juicer adds a few project-specific functions to squiggly's defaults.
+Call them as expressions:
+
+| Function                    | What |
+|-----------------------------|------|
+| `{{ relURL '/path' }}`      | Site-relative URL (`baseURL.path` prefix added if non-trivial) |
+| `{{ absURL '/path' }}`      | Absolute URL (`baseURL.base + relURL`) |
+| `{{ markdownify s }}`       | Render a markdown string to HTML |
+| `{{ emojify s }}`           | Replace `:smile:` etc. with Unicode emoji |
+| `{{ i18n lang 'key' }}`     | Look up an i18n string (falls back to default lang then literal key) |
+| `{{ ogTags .page }}`        | Emit OpenGraph + Twitter card `<meta>` tags for a page record |
+
 ## Conditionals
 
 ```

@@ -64,6 +64,101 @@ The `norme` baseline is here because Quebec's Charter of the French Language req
 | `stripPrefix`  | `true`  | Strip leading numeric prefixes from filenames in URLs (`01-foo.md` → `foo`) |
 | `headingShift` | `2`     | Add this much to every markdown heading level (1-clamped) |
 
+### Blog features
+
+These keys turn on the blogging features documented under
+[Concepts → Blogging features](../../concepts/blogging/). All four are opt-in;
+a docs site that doesn't set them renders unchanged.
+
+| Key          | Default   | What |
+|--------------|-----------|------|
+| `paginate`     | (none)    | Default slice size for section index pages. When unset, sections render in a single page no matter how many children they have. |
+| `sortBy`       | `weight`  | Order section pages: `"date"` (newest first), `"title"` (alphabetical), or `"weight"` (juicer's default — `weight` ascending) |
+| `dateArchives` | `false`   | Emit `/<year>/` and `/<year>/<month>/` archive pages from posts' parsed dates. Requires matching `date-year.html` / `date-month.html` layouts; missing layouts are silent skips. Only pages with **explicit** `date:` frontmatter are included — mtime-fallback dates don't pollute the archive. |
+| `dateFormat`   | (none)    | Reserved for future per-site date-format overrides. Not yet wired up; templates use the built-in `dateLong` / `dateShort` / `dateISO` helpers for now. |
+
+[= note =]
+Both `paginate` and `sortBy` can be overridden per-section by setting the same
+key on the section's `_index.md` frontmatter. So a site that wants 10 posts
+per page on `/posts/` but 30 short notes per page on `/notes/` puts
+`paginate = 30` in `content/notes/_index.md` and leaves the site-wide value at
+10.
+[= /note =]
+
+## `[permalinks]` — URL templates per section
+
+A TOML sub-table that overrides a section's URL pattern. Each key is a
+section name (the first path segment after `htmlDir` is stripped); each
+value is a template string with substitution tokens. Tokens are resolved
+against the page's frontmatter and parsed date.
+
+```toml
+[permalinks]
+posts = ":year/:month/:slug/"
+notes = ":slug/"
+articles = ":year/:section/:title/"
+```
+
+Recognized tokens:
+
+| Token       | Resolves to |
+|-------------|-------------|
+| `:slug`     | The cleaned filename (`01-foo.md` → `foo` when `stripPrefix = true`) |
+| `:title`    | `slugify(.page.title)` — frontmatter title, lowercased and ASCII-folded |
+| `:year`     | 4-digit year from `.page.date` |
+| `:month`    | 2-digit month from `.page.date` |
+| `:day`      | 2-digit day from `.page.date` |
+| `:section`  | The section name itself |
+
+Sections **without** a `[permalinks]` entry keep juicer's default
+physical-path-derived URL (the file tree determines the URL one-to-one).
+Section index pages (`_index.md`) are never routed through permalink
+templates — they always live at the section root.
+
+[= note =]
+Permalink templates change both the URL and the on-disk write location of
+each affected page. Juicer doesn't keep both copies — only the
+permalinked path exists in the output tree. So a `posts/foo.md` with
+`posts = ":year/:slug/"` writes only to `<dst>/2024/foo/index.html`,
+never to `<dst>/posts/foo/index.html`.
+[= /note =]
+
+See [Concepts → Blogging features → Permalinks](../../concepts/blogging/#permalinks)
+for the narrative version.
+
+## `[[authors]]` — author registry
+
+An array of tables describing the people who write posts on the site.
+Each entry needs at least an `id`; everything else is optional and
+flows directly into `.page.author` / `.page.authors` records.
+
+```toml
+[[authors]]
+id     = "ed"
+name   = "Edward A Maxedon"
+email  = "ed@example.com"
+bio    = "Writes a lot of code."
+avatar = "/img/ed.jpg"
+
+[[authors.links]]
+label = "GitHub"
+url   = "https://github.com/edadma"
+```
+
+| Field    | Required | What |
+|----------|----------|------|
+| `id`     | yes      | Stable url-safe identifier; archive lives at `/authors/<id>/` |
+| `name`   | no       | Display name |
+| `email`  | no       | Author email; useful in feed templates |
+| `bio`    | no       | Short bio used in bylines and author archive headers |
+| `avatar` | no       | URL of avatar image — site-relative or absolute |
+| `links[]`| no       | Each entry has `label` and `url`; renders as a list of external links |
+
+Pages reference an author via `author: <id>` or `authors: [<id>, ...]`
+in their frontmatter. See
+[Concepts → Blogging features → Author registry](../../concepts/blogging/#author-registry)
+for the full narrative.
+
 ## Custom keys
 
 Any key you set in `site.toml` is available as `.site.<key>` in templates. Use this for site-wide settings the theme exposes — e.g., `editURL`, `discussionURL`, `social.twitter`. Themes typically document the keys they recognize in their README.

@@ -29,6 +29,7 @@ sbt 'juicerJVM/run build -s . -d public'
 | `-s`, `--source <p>`  | Site source directory (default: `.`) |
 | `-d`, `--dest <p>`    | Output directory (default: `<src>/<publicDir>`) |
 | `-D`, `--drafts`      | Include `draft: true` pages |
+| `-F`, `--future`      | Include pages whose parsed `date:` is past `now` (skipped by default) |
 
 ## `serve`
 
@@ -45,6 +46,8 @@ sbt 'juicerJVM/run serve -s . -p 8080'
 | `--host <h>`          | Bind host (default: `localhost`) |
 | `-p`, `--port <p>`    | Listen port (default: `8080`) |
 | `-D`, `--drafts`      | Include drafts |
+| `-F`, `--future`      | Include future-dated pages |
+| `-L`, `--live-reload` | Rebuild on source changes and reload browser tabs |
 
 [= note =]
 `serve` is currently JVM-only — `com.sun.net.httpserver` doesn't exist on Scala.js or Native. The build itself works on all three platforms; serving is the lone JVM exception.

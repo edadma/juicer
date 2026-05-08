@@ -85,8 +85,26 @@ Use layouts for: the actual `<html>` skeleton and the per-page-kind structural r
 [= /tab =]
 [= /tabs =]
 
+## Bundled themes
+
+Two themes ship in the juicer repo. Pick the one closest to what you're
+building and override individual files from your own `layouts/` or `static/`:
+
+| Theme         | Where it lives              | What it's for |
+|---------------|-----------------------------|----------------|
+| `juicerdocs`  | `docs/themes/juicerdocs/`   | Documentation sites — sidebar nav, "On this page" rail, callout shortcodes |
+| `juicerblog`  | `docs/themes/juicerblog/`   | Blogs — post lists with pagination, tag archives, prev/next nav, post-meta line |
+
+`juicerblog` is the canonical demo for the blogging features documented under
+[Concepts → Blogging features](../blogging/). A working example site lives at
+`examples/blog-site/` in the juicer repo — six posts, pagination set to three,
+sorted by date — that you can copy as a starting point.
+
 ## Building your own
 
-The juicerdocs source is a good reference. It uses every theme primitive, so reading through `themes/juicerdocs/` end-to-end is a quick tour of the conventions.
+Reading through `themes/juicerdocs/` or `themes/juicerblog/` end-to-end is a
+quick tour of the conventions. `juicerdocs` exercises every theme primitive
+(layouts, partials, shortcodes, static); `juicerblog` is the smallest theme
+that touches the blog-specific features.
 
 [= github "edadma/juicer" /=]

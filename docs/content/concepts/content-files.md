@@ -73,6 +73,41 @@ A page with `draft: true` is **skipped entirely** during a normal build — invi
 sbt 'juicerJVM/run serve -s docs -D'
 ```
 
+## Scheduling future posts
+
+A page whose parsed `date:` frontmatter is in the future is **skipped** during a normal build, the same way `draft: true` is — invisible to every downstream consumer. The intended workflow is:
+
+[= steps =]
+## Set the publication date in frontmatter
+
+```markdown
+---
+title: Big announcement
+date: 2024-12-25T09:00:00Z
+---
+```
+
+## Push the post to your repo whenever it's done
+
+The post is invisible to a normal `juicer build` until the system clock catches up.
+
+## Re-build (or re-deploy) on or after the publication date
+
+The post starts appearing in section listings, taxonomy archives, feeds, and the sitemap automatically. Most people set up a daily build cron or use a CI scheduler.
+[= /steps =]
+
+To preview future-dated posts locally, pass `--future` (or `-F`):
+
+```bash
+sbt 'juicerJVM/run serve -s docs -F'
+```
+
+`--future` and `--drafts` are independent flags. A post with `draft: true` *and* a future `date` requires both flags to render.
+
+[= note =]
+The future-skip rule only applies to pages with **explicit** `date:` frontmatter. Pages relying on the filesystem-mtime fallback are never future-skipped — `mtime` can't be in the future under any normal workflow, but the safer rule is "only authored future-dating counts".
+[= /note =]
+
 ## Summaries
 
 Every page exposes a `.page.summary`. Three sources are tried, in order:
