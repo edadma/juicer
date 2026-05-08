@@ -1,19 +1,17 @@
 {{ if .page.prev or .page.next }}
-  <nav class="not-prose mt-12 grid grid-cols-2 gap-4" aria-label="Page navigation">
+  <nav class="juicerdocs-prevnext" aria-label="Page navigation">
     {{ if .page.prev }}
-      <a href="{{ .page.prev.url }}"
-         class="flex flex-col p-4 rounded-lg border border-border bg-surface-2 no-underline transition hover:border-brand hover:-translate-y-0.5 hover:shadow-lg">
-        <span class="text-xs text-muted">← Previous</span>
-        <span class="font-semibold text-fg mt-1">{{ .page.prev.title }}</span>
+      <a href="{{ .page.prev.url }}" class="juicerdocs-prevnext-card">
+        <span class="juicerdocs-prevnext-label">← Previous</span>
+        <span class="juicerdocs-prevnext-title">{{ .page.prev.title }}</span>
       </a>
     {{ else }}
       <div></div>
     {{ end }}
     {{ if .page.next }}
-      <a href="{{ .page.next.url }}"
-         class="flex flex-col p-4 rounded-lg border border-border bg-surface-2 no-underline text-right transition hover:border-brand hover:-translate-y-0.5 hover:shadow-lg">
-        <span class="text-xs text-muted">Next →</span>
-        <span class="font-semibold text-fg mt-1">{{ .page.next.title }}</span>
+      <a href="{{ .page.next.url }}" class="juicerdocs-prevnext-card juicerdocs-prevnext-card-next">
+        <span class="juicerdocs-prevnext-label">Next →</span>
+        <span class="juicerdocs-prevnext-title">{{ .page.next.title }}</span>
       </a>
     {{ else }}
       <div></div>

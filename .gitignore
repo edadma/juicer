@@ -22,6 +22,4 @@ project/plugins/project/
 .bsp/
 
 public/
-
-# juicerdocs theme (Tailwind v4 build output)
-docs/themes/juicerdocs/node_modules/
+_site/

@@ -42,13 +42,6 @@ jobs:
       - name: Set up sbt
         uses: sbt/setup-sbt@v1
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: docs/themes/juicerdocs/package-lock.json
-
       - name: Cache sbt
         uses: actions/cache@v4
         with:
@@ -57,18 +50,6 @@ jobs:
             ~/.cache/coursier
           key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt', '**/project/**') }}
           restore-keys: ${{ runner.os }}-sbt-
-
-      # Tailwind v4 build — compiles src/tailwind.css into the bundled
-      # static/juicerdocs.css. Committed output isn't strictly required
-      # in CI (we could rely on what's in the working tree), but a fresh
-      # build catches any stale artifact bugs.
-      - name: Install theme deps
-        working-directory: docs/themes/juicerdocs
-        run: npm ci
-
-      - name: Build theme CSS
-        working-directory: docs/themes/juicerdocs
-        run: npm run build
 
       - name: Build docs site
         run: sbt 'juicerJVM/run build -s docs -d _site -b https://juicer.run/'
