@@ -1,21 +1,18 @@
 # Build & deploy juicer.run.
 #
-#   Push to `stable` → builds and deploys to GitHub Pages (production).
-#   Push to any other branch → builds and uploads as an artifact (preview).
+#   Push to `stable`     → builds and deploys to GitHub Pages.
+#   PR targeting `stable` → builds (sanity check), no deploy.
+#   workflow_dispatch    → manual trigger from the Actions tab.
 #
-# To wire up the production custom domain (juicer.run):
-#   1. In repo Settings → Pages: source = GitHub Actions.
-#   2. Add `juicer.run` as the custom domain (creates a CNAME file).
-#   3. Add a DNS A/CNAME record pointing juicer.run at GitHub Pages.
-#
-# Preview deployments live in the workflow artifact for now; switch to
-# Cloudflare Pages or Netlify if you want auto preview URLs per branch.
+# `dev` pushes are NOT triggered — local `juicer serve -L` is the
+# preview path. If you want a build-on-every-push canary, add `dev`
+# back to the push branches list.
 
 name: Docs
 
 on:
   push:
-    branches: ["stable", "dev"]
+    branches: ["stable"]
   pull_request:
     branches: ["stable"]
   workflow_dispatch:
