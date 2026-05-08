@@ -1,0 +1,10 @@
+<!-- Used both on the home / archive list and inside a single post header.
+     Renders date + reading time + tag pills with `·` separators. Caller
+     decides the surrounding wrapper class. -->
+{{ if .page.date }}<time datetime="{{ .page.dateISO }}">{{ .page.dateLong }}</time>{{ end }}
+{{ if .page.readingTime }}<span class="juicerblog-sep">·</span>
+<span>{{ .page.readingTime }} min read</span>{{ end }}
+{{ if .page.tags }}<span class="juicerblog-sep">·</span>
+<span class="juicerblog-tags">
+  {{ for t <- .page.tags }}<a class="juicerblog-tag" href="{{ relURL '/tags/' }}{{ t }}/">{{ t }}</a>{{ end }}
+</span>{{ end }}

@@ -72,6 +72,9 @@ import scopt.OParser
           opt[Unit]('D', "drafts")
             .action((_, c) => updateBuild(c, _.copy(drafts = true)))
             .text("include draft pages (frontmatter `draft: true`)"),
+          opt[Unit]('F', "future")
+            .action((_, c) => updateBuild(c, _.copy(future = true)))
+            .text("include future-dated pages (date frontmatter past `now`)"),
         ),
       cmd("config")
         .action((_, c) => c.copy(cmd = Some(ConfigCommand())))
@@ -132,6 +135,9 @@ import scopt.OParser
           opt[Unit]('D', "drafts")
             .action((_, c) => updateServe(c, _.copy(drafts = true)))
             .text("include draft pages (frontmatter `draft: true`)"),
+          opt[Unit]('F', "future")
+            .action((_, c) => updateServe(c, _.copy(future = true)))
+            .text("include future-dated pages (date frontmatter past `now`)"),
           opt[Unit]('L', "live-reload")
             .action((_, c) => updateServe(c, _.copy(liveReload = true)))
             .text("rebuild on source changes and reload browser tabs"),

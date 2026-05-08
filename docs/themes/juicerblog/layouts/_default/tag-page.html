@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#{{ .term.name }} — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerblog.css' }}">
+</head>
+<body>
+  <div class="juicerblog-page">
+    <header class="juicerblog-topbar">
+      <div class="juicerblog-topbar-inner">
+        <a class="juicerblog-brand" href="{{ relURL '/' }}">{{ .site.title }}</a>
+        <nav class="juicerblog-nav" aria-label="Main">
+          <a href="{{ relURL '/' }}">Home</a>
+          <a href="{{ relURL '/tags/' }}">Tags</a>
+        </nav>
+      </div>
+    </header>
+    <main class="juicerblog-main">
+      <h1 class="juicerblog-archive-title">#{{ .term.name }}</h1>
+      <p class="juicerblog-archive-sub">
+        {{ .term.count }} posts tagged "{{ .term.name }}".
+      </p>
+      <ol class="juicerblog-postlist">
+        {{ for p <- .term.pages }}
+        <li>
+          <h2 class="juicerblog-postlist-title">
+            <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+          </h2>
+          <div class="juicerblog-postlist-meta">
+            {{ if p.date }}<time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time>{{ end }}
+            {{ if p.readingTime }}<span class="juicerblog-sep">·</span><span>{{ p.readingTime }} min read</span>{{ end }}
+          </div>
+          {{ if p.summary }}<p class="juicerblog-postlist-summary">{{ p.summary }}</p>{{ end }}
+        </li>
+        {{ end }}
+      </ol>
+    </main>
+    <footer class="juicerblog-footer">
+      <div class="juicerblog-footer-inner">
+        <span>© {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

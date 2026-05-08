@@ -1,0 +1,29 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{{ if .page.title }}<title>{{ .page.title }} — {{ .site.title }}</title>{{ else }}<title>{{ .site.title }}</title>{{ end }}
+{{ if .page.summary }}<meta name="description" content="{{ .page.summary }}">{{ end }}
+{{ if .page.permalink }}<link rel="canonical" href="{{ .page.permalink }}">{{ end }}
+
+<!-- OpenGraph + Twitter card meta tags. Resolves image / description from
+     frontmatter (ogImage/image then ogDescription/description/summary),
+     falling back to site-wide ogImage / image. Pages that don't supply any
+     metadata still get the structural og:type / og:title / og:url block. -->
+{{ ogTags .page }}
+
+<!-- Atom feed discovery — juicer emits a site-wide feed at /feed.xml. -->
+<link rel="alternate" type="application/atom+xml" title="{{ .site.title }}" href="{{ relURL '/feed.xml' }}">
+
+<link rel="stylesheet" href="{{ relURL '/juicerblog.css' }}">
+
+<!-- Per-site palette overrides emitted from site.toml [juicerblog] block.
+     Same pattern as juicerdocs — sites can pin brand/accent without forking
+     the theme CSS. -->
+{{ if .site.juicerblog }}
+<style>
+  :root {
+    {{ if .site.juicerblog.brand }}--brand: {{ .site.juicerblog.brand }};{{ end }}
+    {{ if .site.juicerblog.accent }}--accent: {{ .site.juicerblog.accent }};{{ end }}
+    {{ if .site.juicerblog.leaf }}--leaf: {{ .site.juicerblog.leaf }};{{ end }}
+  }
+</style>
+{{ end }}

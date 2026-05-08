@@ -16,17 +16,17 @@ import scala.collection.mutable.ListBuffer
 object App {
 
   val run: PartialFunction[Args, Unit] = {
-    case Args(baseConfig, verbose, baseurl, Some(BuildCommand(src, dst, drafts))) =>
-      build(baseConfig, verbose, baseurl, src, dst, drafts)
-    case Args(baseConfig, verbose, baseurl, Some(ServeCommand(src, dst, host, port, drafts, liveReload))) =>
-      val outDir = build(baseConfig, verbose, baseurl, src, dst, drafts)
+    case Args(baseConfig, verbose, baseurl, Some(BuildCommand(src, dst, drafts, future))) =>
+      build(baseConfig, verbose, baseurl, src, dst, drafts, future)
+    case Args(baseConfig, verbose, baseurl, Some(ServeCommand(src, dst, host, port, drafts, future, liveReload))) =>
+      val outDir = build(baseConfig, verbose, baseurl, src, dst, drafts, future)
       // Rebuild callback for live-reload — re-runs the build pipeline against
       // the same args. Held by the watcher thread; called when the source
       // tree changes. Returns false silently on rebuild failure so the
       // server stays up and shows the last good site (problems still print
       // to stderr from inside `build`).
       val rebuild: () => Boolean = () =>
-        try { build(baseConfig, verbose, baseurl, src, dst, drafts); true }
+        try { build(baseConfig, verbose, baseurl, src, dst, drafts, future); true }
         catch { case t: Throwable => Console.err.println(s"rebuild failed: ${t.getMessage}"); false }
       // Pass the configured htmlDir to serve so URL-to-file resolution can
       // try the prefixed path on miss. Without this, nested content (under
@@ -65,6 +65,7 @@ object App {
       src:        Path,
       dst:        Path,
       drafts:     Boolean = false,
+      future:     Boolean = false,
   ): Path = {
     showSteps = verbose
 
@@ -79,6 +80,27 @@ object App {
     val confdata: VectorMap[String, Any] = {
       val base = tomlObject(confdoc)
       base + ("baseURL" -> baseURLstr)
+    }
+
+    // ----- Permalink templates (Phase 2.6) -----
+    //
+    // `[permalinks]` table in `site.toml` maps a section name to a URL
+    // pattern. Sections without an entry keep juicer's existing physical-
+    // path-derived URL — preserving byte-identical output for docs sites
+    // that don't opt in. Tokens recognized in the pattern:
+    //
+    //   :year   :month   :day   :slug   :title   :section
+    //
+    // `:year`/`:month`/`:day` come from the parsed `.page.date` (frontmatter
+    // or filesystem-mtime fallback); `:slug` is the cleaned filename;
+    // `:title` is `slugify(.page.title)` (falls back to `:slug` when title
+    // is absent); `:section` is the section name itself. Section pages
+    // (`_index.md`) are NEVER routed through permalink templates — they
+    // always sit at the section root.
+    val permalinks: Map[String, String] = confdata.get("permalinks") match {
+      case Some(m: Map[?, ?]) =>
+        m.collect { case (k: String, v: String) => k -> v }.toMap
+      case _ => Map.empty[String, String]
     }
 
     // ConfigWrapper takes a TomlDocument; for fields we bake into the
@@ -135,7 +157,36 @@ object App {
 
     show(s"base URL = ${baseURL.base}${baseURL.path}")
 
-    val site = Process(src1, dst1, conf, drafts)
+    val unfilteredSite = Process(src1, dst1, conf, drafts)
+
+    // ----- Future-post filter (Phase 2.1) -----
+    //
+    // Pages whose parsed `date:` is strictly after `now` are removed from
+    // the site UNLESS `--future` was passed. Same skip semantics as the
+    // `drafts` filter — invisible to TOC, sitemap, search, section
+    // listings, taxonomy archives, etc. Pages without a `date:` (mtime
+    // fallback) are never future-skipped: only authored future-dating
+    // counts.
+    val site = if (future) unfilteredSite
+    else {
+      val now = java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC)
+      def fmStr(c: ContentFile): Option[String] = c.page match {
+        case m: Map[?, ?] => m.asInstanceOf[Map[Any, Any]].get("date").collect { case s: String => s }
+        case _ => None
+      }
+      def isFuture(c: ContentFile): Boolean =
+        fmStr(c).flatMap(parseDateString).exists(_.isAfter(now))
+      val filteredContent = unfilteredSite.content.filterNot {
+        case c: ContentFile =>
+          val skip = isFuture(c)
+          if (skip) show(s"skipping future-dated: ${c.name}")
+          skip
+        case _ => false
+      }
+      val filteredMap = unfilteredSite.map.filterNot { case (_, c) => isFuture(c) }
+      unfilteredSite.copy(content = filteredContent, map = filteredMap)
+    }
+
     val partialsLoader: TemplateLoader =
       (name: String) =>
         site.partialTemplates.get(name).map { t =>
@@ -165,7 +216,7 @@ object App {
     // and link destinations are pre-transformed at the AST level so the
     // output blends into a layout that already provides an outer `<h1>` for
     // the page title.
-    for (case c @ ContentFile(_, name, _, _, _, _, _) <- site.content) {
+    for (case c @ ContentFile(_, name, _, _, _, _, _, _) <- site.content) {
       show(s"parse markdown file $name")
 
       val raw = parseMarkdown(preprocessor.process(c.source))
@@ -259,27 +310,11 @@ object App {
     // an entry in `site.pages` / `site.pagesByPath` for sitemap, list
     // pages, and cross-references in other templates.
 
-    /** Path-only URL for a content file, prefixed by `baseURL.path`.
-      * Folder content (`_index.md`) lives at the section directory; every
-      * other file becomes its own pretty-URL directory (`/<name>/`).
-      * The configured `htmlDir` is *stripped* from the URL since it's a
-      * filesystem-only convenience for keeping static assets alongside
-      * rather than under rendered pages.
-      */
-    def relPermalinkFor(c: ContentFile): String = {
-      val rel        = c.outdir.relativeTo(dst1)
-      val allSegs    = if (c.outdir == dst1) Nil else rel.segments.toList
-      val withoutHtml = if (html != "" && allSegs.nonEmpty) allSegs.drop(1) else allSegs
-      val pathSegs   =
-        if (c.name == folderContent) withoutHtml
-        else withoutHtml :+ c.name
-      val basePath   =
-        if (baseURL.path == "/" || baseURL.path.isEmpty) ""
-        else baseURL.path
-      val joined     = pathSegs.mkString("/")
-      if (joined.isEmpty) basePath + "/"
-      else basePath + "/" + joined + "/"
-    }
+    // Permalink helpers (`sectionName`, `applyPermalinkPattern`,
+    // `permalinkSegments`, `relPermalinkFor`) live below `pageInstant` —
+    // they reference the parsed-date helper and Scala's local-def forward-
+    // reference rule disallows skipping over an intervening `val`
+    // declaration (`monthNames`).
 
     /** Coerce a frontmatter `Any` (typically `Map[String, Any]`, possibly
       * empty) to a `Map[String, Any]`; non-map / null frontmatter degrades
@@ -289,6 +324,160 @@ object App {
       case m: Map[?, ?] =>
         m.collect { case (k: String, v) => k -> v }.toMap
       case _ => Map.empty[String, Any]
+    }
+
+    // ----- Date formatting (Phase 1.4) -----
+    //
+    // `date` frontmatter is parsed by the package-level `parseDateString`
+    // (in package.scala) so the future-post filter can call it before
+    // `App.build`'s local helpers come into scope. Three rendered helpers
+    // ride alongside: `.page.dateISO` (ISO-8601 with offset, machine-
+    // friendly), `.page.dateLong` (e.g. "January 15, 2024"),
+    // `.page.dateShort` (`YYYY-MM-DD`). The parsed instant itself is exposed
+    // as `.page.date` so templates that want their own format can call
+    // `format` through any future formatter helpers.
+    //
+    // English month names hand-written rather than
+    // `DateTimeFormatter.ofPattern("MMMM …")` so the long-form date renders
+    // identically on JVM / JS / Native. The `scala-java-time` Native build
+    // ships a minimal locale db, and `MMMM` there falls back to "M01"/"M02"/…
+    // without explicit Locale plumbing.
+    val monthNames = Array(
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
+    )
+    val dateShortFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    def formatDateLong(t: java.time.OffsetDateTime): String =
+      s"${monthNames(t.getMonthValue - 1)} ${t.getDayOfMonth}, ${t.getYear}"
+
+    // ----- Word count + reading time (Phase 1.3) -----
+    //
+    // Word count walks the rendered HTML rather than the markdown AST so it
+    // sees the same prose users do — tables, lists, callout body text, even
+    // shortcode-expanded paragraphs all contribute. Code blocks are included
+    // (Hugo and Jekyll both do); a future config knob could exclude them if
+    // someone files an issue.
+    //
+    // Reading time follows the Medium-popularized 200-words-per-minute
+    // ceiling. Empty pages get 0; otherwise the floor is 1 minute so a
+    // 30-word stub doesn't say "0 min read".
+    def wordsOf(html: String): Int = {
+      if (html eq null) 0
+      else {
+        val plain = stripHtmlForSearch(html)
+        if (plain.isEmpty) 0
+        else plain.split("\\s+").count(_.nonEmpty)
+      }
+    }
+
+    def readingTimeOf(words: Int): Int =
+      if (words <= 0) 0
+      else math.max(1, math.ceil(words / 200.0).toInt)
+
+    /** Resolve a content file's effective publication time. Frontmatter
+      * `date` wins; when absent or unparseable, fall back to the source
+      * file's filesystem mtime. Fresh tmp paths used in tests have a
+      * recent mtime, so the fallback always yields a valid timestamp. */
+    def pageInstant(c: ContentFile): java.time.OffsetDateTime = {
+      val fmDate = frontmatterMap(c.page).get("date").collect { case s: String => s }
+      fmDate.flatMap(parseDateString).getOrElse {
+        val ms = if (c.srcPath ne null) c.srcPath.lastModified else 0L
+        java.time.OffsetDateTime.ofInstant(
+          java.time.Instant.ofEpochMilli(ms),
+          java.time.ZoneOffset.UTC,
+        )
+      }
+    }
+
+    // ----- Permalink-template helpers (Phase 2.6) -----
+    //
+    // Sit below `pageInstant` because `applyPermalinkPattern` resolves date
+    // tokens through it (Scala's local-def forward-reference rule disallows
+    // jumping over an intervening `val`).
+
+    /** First-segment section name for a content file's URL. Used as the key
+      * into `[permalinks]`. `htmlDir` is stripped before the head segment
+      * is taken — the URL surface is what counts, not the on-disk layout.
+      * Returns `""` for content sitting at the site root (which can never
+      * permalink-route since there's no section table key to match).
+      */
+    def sectionName(c: ContentFile): String = {
+      val rel = c.outdir.relativeTo(dst1)
+      val segs = if (c.outdir == dst1) Nil else rel.segments.toList
+      val withoutHtml = if (html != "" && segs.nonEmpty) segs.drop(1) else segs
+      withoutHtml.headOption.getOrElse("")
+    }
+
+    /** Substitute `:slug` / `:year` / `:month` / `:day` / `:title` /
+      * `:section` in a permalink pattern. Returns the resulting URL
+      * segments (no leading or trailing slash, no `htmlDir`). The pattern
+      * is treated as a path: extra `/`s are normalized, and an empty
+      * pattern yields an empty list (URL = site root).
+      */
+    def applyPermalinkPattern(c: ContentFile, pattern: String, sectionN: String): List[String] = {
+      val instant = pageInstant(c)
+      val frontmatter = frontmatterMap(c.page)
+      val title = frontmatter.get("title").collect { case s: String => s }.getOrElse(c.name)
+      // Order matters: `:section` must substitute before `:s...` shorts in
+      // case a future token shares a prefix. Today every token is unique
+      // so the order is incidental, but preserving the rule keeps a future
+      // `:slug-fragment` token (or similar) safe.
+      val expanded = pattern
+        .replace(":year",    f"${instant.getYear}%04d")
+        .replace(":month",   f"${instant.getMonthValue}%02d")
+        .replace(":day",     f"${instant.getDayOfMonth}%02d")
+        .replace(":title",   slugify(title))
+        .replace(":section", sectionN)
+        .replace(":slug",    c.name)
+      val trimmed = expanded.stripPrefix("/").stripSuffix("/")
+      if (trimmed.isEmpty) Nil
+      else trimmed.split('/').filter(_.nonEmpty).toList
+    }
+
+    /** Optional permalink-template URL segments for a content file. Returns
+      * `Some(segs)` only when a `[permalinks]` entry matches the section
+      * AND the page is a non-`_index` content file. Section pages and
+      * unmatched sections fall through (`None`) so the caller uses the
+      * default physical-path URL.
+      */
+    def permalinkSegments(c: ContentFile): Option[List[String]] = {
+      if (c.name == folderContent) None
+      else {
+        val sectionN = sectionName(c)
+        permalinks.get(sectionN).map(p => applyPermalinkPattern(c, p, sectionN))
+      }
+    }
+
+    /** Path-only URL for a content file, prefixed by `baseURL.path`.
+      *
+      * Two regimes:
+      *   1. Section in `[permalinks]` — URL follows the configured pattern
+      *      (`:year/:month/:slug/`, etc.).
+      *   2. Otherwise — physical layout drives the URL. Folder content
+      *      (`_index.md`) lives at the section directory; every other file
+      *      becomes its own pretty-URL directory (`/<name>/`). The
+      *      configured `htmlDir` is stripped since it's a filesystem-only
+      *      convenience for keeping static assets alongside rendered pages.
+      */
+    def relPermalinkFor(c: ContentFile): String = {
+      val basePath =
+        if (baseURL.path == "/" || baseURL.path.isEmpty) ""
+        else baseURL.path
+      permalinkSegments(c) match {
+        case Some(segs) =>
+          if (segs.isEmpty) basePath + "/"
+          else basePath + "/" + segs.mkString("/") + "/"
+        case None =>
+          val rel        = c.outdir.relativeTo(dst1)
+          val allSegs    = if (c.outdir == dst1) Nil else rel.segments.toList
+          val withoutHtml = if (html != "" && allSegs.nonEmpty) allSegs.drop(1) else allSegs
+          val pathSegs   =
+            if (c.name == folderContent) withoutHtml
+            else withoutHtml :+ c.name
+          val joined     = pathSegs.mkString("/")
+          if (joined.isEmpty) basePath + "/"
+          else basePath + "/" + joined + "/"
+      }
     }
 
     val contentFiles: List[ContentFile] = site.content.collect { case c: ContentFile => c }
@@ -407,6 +596,57 @@ object App {
         )
       }
 
+    // ----- Author registry (Phase 2.3) -----
+    //
+    // Site config:
+    //
+    //   [[authors]]
+    //   id     = "ed"
+    //   name   = "Edward A Maxedon"
+    //   bio    = "..."
+    //   avatar = "/img/ed.jpg"
+    //
+    //   [[authors.links]]
+    //   label = "GitHub"
+    //   url   = "https://github.com/edadma"
+    //
+    // The registry surfaces per-page as `.page.author` (singular —
+    // resolved from frontmatter `author: <id>`) and `.page.authors`
+    // (always a list — frontmatter `authors: [<id>, ...]`, falling back
+    // to `[ author ]` if only the singular field is set). Each resolved
+    // value is the FULL author record from the registry, not just the id.
+    //
+    // Authors with at least one referencing page get a `/authors/<id>/`
+    // archive page (gated by an optional `author-page.html` layout).
+    val authorRegistry: Map[String, Map[String, Any]] = confdata.get("authors") match {
+      case Some(xs: List[?]) =>
+        xs.collect {
+          case m: Map[?, ?] =>
+            val mm = m.asInstanceOf[Map[Any, Any]]
+            mm.get("id").collect { case s: String => s }.map(id => id -> mm.collect {
+              case (k: String, v) => k -> v
+            }.toMap)
+        }.flatten.toMap
+      case _ => Map.empty[String, Map[String, Any]]
+    }
+
+    /** Resolve a frontmatter `author` / `authors` field to a list of
+      * registry-rich author records. Unknown ids fall back to a stub
+      * record with just `{id: <id>}` so templates that read `.page.author.name`
+      * don't NPE on a typo — the missing fields render as empty.
+      */
+    def resolveAuthors(fm: Map[String, Any]): List[Map[String, Any]] = {
+      val ids: List[String] = fm.get("authors") match {
+        case Some(xs: List[?])  => xs.collect { case s: String => s }
+        case Some(s: String)    => List(s)
+        case _ => fm.get("author") match {
+          case Some(s: String) => List(s)
+          case _               => Nil
+        }
+      }
+      ids.map(id => authorRegistry.getOrElse(id, Map[String, Any]("id" -> id)))
+    }
+
     // ----- Per-page basic records -----
 
     /** Build the "basic" record for a content file. Frontmatter + URL trio
@@ -428,15 +668,30 @@ object App {
       * them.
       */
     def buildBasic(c: ContentFile): Map[String, Any] = {
-      val rel  = relPermalinkFor(c)
-      val abs  = baseURL.base + rel
-      val core = frontmatterMap(c.page) ++ Map(
+      val rel   = relPermalinkFor(c)
+      val abs   = baseURL.base + rel
+      val inst  = pageInstant(c)
+      val words = wordsOf(c.content)
+      val fm    = frontmatterMap(c.page)
+      val authors = resolveAuthors(fm)
+      val core = fm ++ Map(
         "permalink"    -> abs,
         "relPermalink" -> rel,
         "url"          -> rel,
         "summary"      -> (if (c.summary eq null) "" else c.summary),
         "isSection"    -> (c.name == folderContent),
         "lang"         -> langOf(c),
+        "date"         -> inst,
+        "dateISO"      -> inst.format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+        "dateLong"     -> formatDateLong(inst),
+        "dateShort"    -> inst.format(dateShortFormatter),
+        "wordCount"    -> BigDecimal(words),
+        "readingTime"  -> BigDecimal(readingTimeOf(words)),
+        // Authors — `.page.author` is the singular shorthand for
+        // `.page.authors[0]`, null when the page has no author. `authors`
+        // is always present (empty list when none).
+        "author"       -> authors.headOption.orNull,
+        "authors"      -> authors,
       )
       if (c.name == folderContent) {
         val info = sectionInfoByOutdir(c.outdir)
@@ -578,8 +833,58 @@ object App {
       )
     }
 
-    val pageEntries: List[(ContentFile, Map[String, Any])] =
+    val baseEntries: List[(ContentFile, Map[String, Any])] =
       contentFiles.map(c => c -> enrichedRecord(c))
+
+    // ----- Series collection (Phase 2.2) -----
+    //
+    // Frontmatter `series: "OS Internals"` joins pages into a navigable
+    // series. Optional `seriesOrder: <int>` sets explicit ordering;
+    // unordered pages sort by date (oldest first — series usually read
+    // chronologically). Each page in a series gets a `.page.series` map
+    // with `name`, `pages`, `prev`, `next`, `index` (1-based).
+    //
+    // Same single-axis-inverted-index machinery as tags. Pages without a
+    // `series:` frontmatter just skip the augmentation entirely.
+    def seriesNameOf(c: ContentFile): Option[String] =
+      frontmatterMap(c.page).get("series").collect { case s: String => s }
+    def seriesOrderOf(c: ContentFile): Int =
+      frontmatterMap(c.page).get("seriesOrder").collect {
+        case n: BigDecimal => n.toInt
+        case n: Long       => n.toInt
+        case n: Int        => n
+      }.getOrElse(Int.MaxValue)
+
+    val seriesIndex: Map[String, List[(ContentFile, Map[String, Any])]] = {
+      val grouped = baseEntries.groupBy { case (c, _) => seriesNameOf(c) }
+      grouped.collect {
+        case (Some(name), entries) =>
+          val sorted = entries.sortBy { case (c, _) =>
+            (seriesOrderOf(c), pageInstant(c).toEpochSecond, c.name)
+          }
+          name -> sorted
+      }
+    }
+
+    val pageEntries: List[(ContentFile, Map[String, Any])] = baseEntries.map { case (c, m) =>
+      seriesNameOf(c).flatMap(seriesIndex.get) match {
+        case Some(entries) =>
+          val idx  = entries.indexWhere(_._1 eq c)
+          val prev = if (idx > 0) entries(idx - 1)._2 else null
+          val next = if (idx >= 0 && idx < entries.size - 1) entries(idx + 1)._2 else null
+          val seriesData = Map[String, Any](
+            "name"  -> seriesNameOf(c).getOrElse(""),
+            "pages" -> entries.map(_._2),
+            "prev"  -> prev,
+            "next"  -> next,
+            "index" -> BigDecimal(idx + 1),
+            "total" -> BigDecimal(entries.size),
+          )
+          c -> (m + ("series" -> seriesData))
+        case None => c -> m
+      }
+    }
+
     val pages: List[Map[String, Any]]              = pageEntries.map(_._2)
     val pagesByPath: Map[String, Map[String, Any]] =
       pages.map(p => p("relPermalink").asInstanceOf[String] -> p).toMap
@@ -593,6 +898,172 @@ object App {
       pagesByPath.getOrElse(rootKey, null)
     }
 
+    // ----- Taxonomy collection (Phase 1.1) -----
+    //
+    // `tags` and `categories` are two parallel opt-in axes. For each one we
+    // walk every content file's frontmatter, group by slug, and build a
+    // record templates can iterate. Pages within a term sort newest-first
+    // (parsed `date` falls back to filesystem mtime). The two axes are
+    // independent — a site can use just `tags`, just `categories`, both, or
+    // neither without behavior changes for the unused side.
+    //
+    // `.site.tags` / `.site.categories` are populated unconditionally so
+    // templates can render tag clouds inline; the per-term archive pages
+    // (`/tags/<slug>/`) are only emitted when the theme ships a matching
+    // `tag-page.html` layout, which is how docs themes opt out.
+
+    case class TaxonomyTerm(
+        name:  String,                    // first-seen display casing
+        slug:  String,
+        url:   String,
+        count: Int,
+        pages: List[Map[String, Any]],
+    )
+
+    def termToMap(t: TaxonomyTerm): Map[String, Any] =
+      Map(
+        "name"  -> t.name,
+        "slug"  -> t.slug,
+        "url"   -> t.url,
+        // BigDecimal so squiggly's `{{ if .term.count > 1 }}` matches.
+        "count" -> BigDecimal(t.count),
+        "pages" -> t.pages,
+      )
+
+    /** Sort a list of content files newest-first using the parsed publication
+      * instant (frontmatter `date` or filesystem mtime). Secondary key on the
+      * file name keeps results deterministic for same-instant ties. */
+    def byInstantDesc(cs: List[ContentFile]): List[ContentFile] =
+      cs.sortBy(c => (-pageInstant(c).toEpochSecond, c.name))
+
+    /** Build a list of terms for a taxonomy field. `urlSegment` is the path
+      * component under which archive pages live (`tags`, `categories`). */
+    def collectTaxonomy(field: String, urlSegment: String): List[TaxonomyTerm] = {
+      val byTerm = scala.collection.mutable.LinkedHashMap
+        .empty[String, (String, scala.collection.mutable.ListBuffer[ContentFile])]
+      for (c <- contentFiles if c.name != folderContent) {
+        val fm = frontmatterMap(c.page)
+        val terms = fm.get(field) match {
+          case Some(s: String)  => List(s)
+          case Some(l: List[?]) => l.collect { case s: String => s }
+          case _                => Nil
+        }
+        for (t <- terms) {
+          val slug = slugify(t)
+          // `slugify` only returns the placeholder `"-"` for inputs with zero
+          // alphanumerics — drop those silently rather than minting a degenerate
+          // archive at `/tags/-/`.
+          if (slug != "-") {
+            val (_, buf) = byTerm.getOrElseUpdate(slug, t -> scala.collection.mutable.ListBuffer.empty)
+            buf += c
+          }
+        }
+      }
+      val basePath = if (baseURL.path == "/" || baseURL.path.isEmpty) "" else baseURL.path
+      byTerm.iterator.map { case (slug, (name, buf)) =>
+        val sorted = byInstantDesc(buf.toList)
+        TaxonomyTerm(
+          name  = name,
+          slug  = slug,
+          url   = basePath + "/" + urlSegment + "/" + slug + "/",
+          count = sorted.length,
+          pages = sorted.map(basic),
+        )
+      }.toList.sortBy(t => (-t.count, t.name))
+    }
+
+    val tagTerms      = collectTaxonomy("tags", "tags")
+    val categoryTerms = collectTaxonomy("categories", "categories")
+
+    // ----- Author archive collection (Phase 2.3) -----
+    //
+    // For each id in the registry that has at least one referencing page,
+    // build a record with the registry fields PLUS `count`, `pages`, `url`.
+    // Sort the result by post count desc, then by id asc, mirroring how
+    // `.site.tags` orders.
+    val authorTerms: List[Map[String, Any]] = {
+      // Map each page record to its list of resolved-author-ids.
+      val byAuthorId: Map[String, List[Map[String, Any]]] = pageEntries
+        .flatMap { case (c, pageMap) =>
+          val fm = frontmatterMap(c.page)
+          val ids = fm.get("authors") match {
+            case Some(xs: List[?]) => xs.collect { case s: String => s }
+            case _ => fm.get("author") match {
+              case Some(s: String) => List(s)
+              case _               => Nil
+            }
+          }
+          ids.map(id => id -> pageMap)
+        }
+        .groupBy(_._1)
+        .map { case (id, pairs) => id -> pairs.map(_._2) }
+      val basePath =
+        if (baseURL.path == "/" || baseURL.path.isEmpty) ""
+        else baseURL.path
+      // Order: keep registry order (insertion order) for stability across
+      // builds, but only include authors that actually have pages.
+      authorRegistry.toList.collect {
+        case (id, record) if byAuthorId.contains(id) =>
+          val pgs = byAuthorId(id).sortBy { p =>
+            -p.get("date").collect {
+              case t: java.time.OffsetDateTime => t.toEpochSecond
+            }.getOrElse(0L)
+          }
+          record ++ Map[String, Any](
+            "id"    -> id,
+            "url"   -> (basePath + "/authors/" + id + "/"),
+            "count" -> BigDecimal(pgs.size),
+            "pages" -> pgs,
+          )
+      }
+    }
+
+    // ----- Pagination configuration (Phase 1.2) -----
+    //
+    // Site-wide `paginate = N` controls slice size for section list pages
+    // and taxonomy archives. `paginate <= 0` disables pagination — the full
+    // list always lives at the section URL. Per-section override via the
+    // section's `_index.md` frontmatter `paginate: <N>`.
+    //
+    // `sortBy` controls slice ORDER, not `.section.pages` (which keeps its
+    // existing weight-then-name order for back-compat with docs sites).
+    // Allowed values: `"date"` (newest first; default for blogs),
+    // `"title"` (alphabetical), `"weight"` (current docs-site default).
+    // Pages with explicit `weight` always come first regardless of sortBy,
+    // matching Hugo's pin-to-top behaviour.
+    val sitePaginateSize: Int = confdoc.getLong("paginate").map(_.toInt).getOrElse(10)
+    val siteSortBy:      String = confdoc.getString("sortBy").getOrElse("weight")
+
+    def paginateSizeFor(c: ContentFile): Int =
+      frontmatterMap(c.page).get("paginate").collect {
+        case n: BigDecimal => n.toInt
+        case n: Long       => n.toInt
+        case n: Int        => n
+      }.getOrElse(sitePaginateSize)
+
+    def sortByFor(c: ContentFile): String =
+      frontmatterMap(c.page).get("sortBy").collect { case s: String => s }
+        .getOrElse(siteSortBy)
+
+    /** Sort a section's children for the paginator's slice list. Pages with
+      * explicit `weight` come first sorted by weight ascending; remaining
+      * pages sort by the configured `sortBy`. Stable secondary key on
+      * `name` keeps results deterministic. */
+    def sortSectionPages(cs: List[ContentFile], sortBy: String): List[ContentFile] = {
+      def hasWeight(c: ContentFile): Boolean =
+        frontmatterMap(c.page).contains("weight")
+      val (weighted, rest) = cs.partition(hasWeight)
+      val weightedSorted = weighted.sortBy(c => (pageWeight(c), c.name))
+      val restSorted = sortBy match {
+        case "date"  => rest.sortBy(c => (-pageInstant(c).toEpochSecond, c.name))
+        case "title" => rest.sortBy(c =>
+          (frontmatterMap(c.page).get("title").collect { case s: String => s }.getOrElse(c.name), c.name),
+        )
+        case _ => rest.sortBy(c => (pageWeight(c), c.name))
+      }
+      weightedSorted ::: restSorted
+    }
+
     val sitedata = confdata +
       ("toc"             -> sitetoc.toList) +
       ("start"           -> start) +
@@ -601,7 +1072,10 @@ object App {
       ("root"            -> rootRecord) +
       ("languages"       -> langs) +
       ("defaultLanguage" -> defaultLang) +
-      ("i18n"            -> i18nStrings)
+      ("i18n"            -> i18nStrings) +
+      ("tags"            -> tagTerms.map(termToMap)) +
+      ("categories"      -> categoryTerms.map(termToMap)) +
+      ("authors"         -> authorTerms)
 
     def findLayout(folders: List[String], name: String): Option[TemplateFile] =
       site.layoutTemplates
@@ -626,23 +1100,28 @@ object App {
       val name    = c.name
       val content = c.content
       val toc     = c.toc
+      val isSec   = name == folderContent
 
-      templateRenderer.blocks.clear()
-
-      val outfile =
-        if (name == folderContent) {
-          // Section index — outdir IS the section dir. For nested sections
-          // the directory may not yet exist on disk (no `static/` overlap
-          // forced its creation), so make sure it does. Idempotent.
-          outdir.createDirectories()
-          (outdir / "index.html").toString
+      // Slices for paginated section pages. Non-section pages always get one
+      // slice that maps to the page's natural URL. Section pages with a
+      // configured `paginate` size get one slice per page/N/ subdirectory; if
+      // the section's child count is at or below the size the result is a
+      // single slice with `total = 1`, indistinguishable from the unpaginated
+      // case for templates that don't read `.section.paginator`.
+      val baseUrl: String = pageMap("relPermalink").asInstanceOf[String]
+      val slices: List[Paginate.Slice] =
+        if (isSec) {
+          val info       = sectionInfoByOutdir(outdir)
+          val sortedKids = sortSectionPages(info.pages, sortByFor(c)).map(basic)
+          val size       = math.max(1, paginateSizeFor(c))
+          Paginate.paginate(sortedKids, size, baseUrl)
         } else {
-          val pagedir = outdir / name
-
-          show(s"content: create directory $pagedir")
-          pagedir.createDirectories()
-          (pagedir / "index.html").toString
+          // Paginate is a no-op for non-section pages, but we still want a
+          // paginator entry on the data shape for templates that read it
+          // unconditionally. Total = 1, no neighbours.
+          List(Paginate.Slice(1, 1, Nil, baseUrl, baseUrl, baseUrl, "", ""))
         }
+
       val sub = toc.headings.headOption match {
         case Some(h) => subheadings(h.sub.headings)
         case None    => Nil
@@ -651,15 +1130,7 @@ object App {
       // for showing every heading on the page, not just the children of the
       // first one (which is what `.sub` carries for back-compat).
       val tocList = subheadings(toc.headings)
-      val pagedata = Map(
-        "site"    -> sitedata,
-        "page"    -> pageMap,
-        "section" -> sectionDataFor(c),
-        "content" -> content,
-        "toc"     -> toc,
-        "sub"     -> sub,
-        "tocList" -> tocList,
-      )
+
       val folders = {
         val rel = outdir.relativeTo(dst1)
 
@@ -669,7 +1140,7 @@ object App {
           if (html != "") all.drop(1) else all
         }
       }
-      val layout = if (name == folderContent) folderLayout else fileLayout
+      val layout = if (isSec) folderLayout else fileLayout
       val particularTemplate = findLayout(folders, layout) match {
         case Some(TemplateFile(templatePath, _, template)) =>
           show(s"render $name using ${templatePath.relativeTo(src1)}")
@@ -687,20 +1158,300 @@ object App {
           None
       }
 
-      def render(template: TemplateAST): Unit = {
-        show(s"content: write file $outfile")
-        val rendered = renderToString(templateRenderer, pagedata, template)
-        Path(outfile).writeText(rendered)
-      }
+      for (slice <- slices) {
+        templateRenderer.blocks.clear()
 
-      (particularTemplate, baseofTemplate) match {
-        case (None, None)       => problem(s"no template was found for rendering $name")
-        case (Some(p), Some(b)) =>
-          // First pass populates `define` blocks; rendered output is discarded.
-          renderToString(templateRenderer, pagedata, p)
-          render(b)
-        case (Some(p), None) => render(p)
-        case (None, Some(b)) => render(b)
+        val outfile =
+          if (slice.current == 1) {
+            if (isSec) {
+              // Section index — outdir IS the section dir. For nested sections
+              // the directory may not yet exist on disk (no `static/` overlap
+              // forced its creation), so make sure it does. Idempotent.
+              outdir.createDirectories()
+              (outdir / "index.html").toString
+            } else {
+              // Permalink-routed pages override the physical filesystem
+              // location: the on-disk path follows the permalink pattern so
+              // the URL juicer emits actually resolves on a static host.
+              // `htmlDir` (if set) wraps the permalinked path, since the URL
+              // strips that prefix. Sections without a `[permalinks]` entry
+              // fall through to the legacy outdir-derived path.
+              val pagedir = permalinkSegments(c) match {
+                case Some(segs) =>
+                  val base = if (html != "") dst1 / html else dst1
+                  segs.foldLeft(base)(_ / _)
+                case None =>
+                  outdir / name
+              }
+              show(s"content: create directory $pagedir")
+              pagedir.createDirectories()
+              (pagedir / "index.html").toString
+            }
+          } else {
+            // Slice 2+ lives at <outdir>/page/<N>/index.html. Only reachable
+            // for section pages (non-section pages are forced to total=1),
+            // and section pages never permalink-route — so this path uses
+            // the existing outdir-relative location unconditionally.
+            val pagedir = outdir / "page" / slice.current.toString
+            pagedir.createDirectories()
+            (pagedir / "index.html").toString
+          }
+
+        val pagedata = Map(
+          "site"    -> sitedata,
+          "page"    -> pageMap,
+          "section" -> (sectionDataFor(c) + ("paginator" -> Paginate.sliceToMap(slice))),
+          "content" -> content,
+          "toc"     -> toc,
+          "sub"     -> sub,
+          "tocList" -> tocList,
+        )
+
+        def render(template: TemplateAST): Unit = {
+          show(s"content: write file $outfile")
+          val rendered = renderToString(templateRenderer, pagedata, template)
+          Path(outfile).writeText(rendered)
+        }
+
+        (particularTemplate, baseofTemplate) match {
+          case (None, None)       => problem(s"no template was found for rendering $name")
+          case (Some(p), Some(b)) =>
+            // First pass populates `define` blocks; rendered output is discarded.
+            renderToString(templateRenderer, pagedata, p)
+            render(b)
+          case (Some(p), None) => render(p)
+          case (None, Some(b)) => render(b)
+        }
+      }
+    }
+
+    // ----- Taxonomy archive rendering (Phase 1.1) -----
+    //
+    // Two layouts per axis: `<kind>-list.html` for the `/tags/index.html`-style
+    // index of every term, and `<kind>-page.html` for each per-term archive at
+    // `/tags/<slug>/index.html`. Either / both can be absent — silent skip
+    // makes archives strictly opt-in.
+    //
+    // The data block exposes `.term` for the per-page layout (one term, its
+    // pages) and `.terms` for the list layout (every term). `.kind` carries
+    // the singular form so a shared layout can branch on tag vs category.
+    def renderTaxonomyArchives(
+        kind:       String,                  // "tag" or "category"
+        urlSegment: String,                  // "tags" or "categories"
+        terms:      List[TaxonomyTerm],
+        listLayout: String,
+        pageLayout: String,
+    ): Unit = {
+      if (terms.isEmpty) return
+      findLayout(Nil, listLayout).foreach { tmpl =>
+        val outDir = dst1 / urlSegment
+        outDir.createDirectories()
+        val data = Map(
+          "site"  -> sitedata,
+          "kind"  -> s"$kind-list",
+          "terms" -> terms.map(termToMap),
+        )
+        val outFile = outDir / "index.html"
+        show(s"render $outFile using ${tmpl.path.relativeTo(src1)}")
+        outFile.writeText(renderToString(templateRenderer, data, tmpl.template))
+      }
+      findLayout(Nil, pageLayout).foreach { tmpl =>
+        for (t <- terms) {
+          val outDir = dst1 / urlSegment / t.slug
+          outDir.createDirectories()
+          val data = Map(
+            "site" -> sitedata,
+            "kind" -> kind,
+            "term" -> termToMap(t),
+          )
+          val outFile = outDir / "index.html"
+          show(s"render $outFile using ${tmpl.path.relativeTo(src1)}")
+          outFile.writeText(renderToString(templateRenderer, data, tmpl.template))
+        }
+      }
+    }
+
+    renderTaxonomyArchives("tag",      "tags",       tagTerms,      "tag-list",      "tag-page")
+    renderTaxonomyArchives("category", "categories", categoryTerms, "category-list", "category-page")
+
+    // ----- Author archives (Phase 2.3) -----
+    //
+    // `/authors/index.html` lists every author who has at least one page;
+    // `/authors/<id>/index.html` lists that author's posts. Same opt-in
+    // discipline as taxonomies — missing layout = silent skip.
+    if (authorTerms.nonEmpty) {
+      findLayout(Nil, "author-list").foreach { tmpl =>
+        val outDir = dst1 / "authors"
+        outDir.createDirectories()
+        val data = Map[String, Any](
+          "site"    -> sitedata,
+          "authors" -> authorTerms,
+        )
+        val outFile = outDir / "index.html"
+        show(s"render $outFile using ${tmpl.path.relativeTo(src1)}")
+        outFile.writeText(renderToString(templateRenderer, data, tmpl.template))
+      }
+      findLayout(Nil, "author-page").foreach { tmpl =>
+        for (a <- authorTerms) {
+          val id     = a("id").asInstanceOf[String]
+          val outDir = dst1 / "authors" / id
+          outDir.createDirectories()
+          val data = Map[String, Any](
+            "site"   -> sitedata,
+            "author" -> a,
+          )
+          val outFile = outDir / "index.html"
+          show(s"render $outFile using ${tmpl.path.relativeTo(src1)}")
+          outFile.writeText(renderToString(templateRenderer, data, tmpl.template))
+        }
+      }
+    }
+
+    // ----- Aliases / redirects (Phase 2.5) -----
+    //
+    // Frontmatter `aliases: [/old/, /older/]` (or a single string) emits one
+    // small `<meta http-equiv="refresh">` page per listed URL pointing at
+    // the canonical page. Useful when restructuring URLs — old links keep
+    // working without server-side rewrite rules. The `alias.html` layout in
+    // `_default/` overrides the built-in HTML if you want custom redirect
+    // copy / styling.
+    val aliasLayout = findLayout(Nil, "alias")
+    for ((c, pageMap) <- pageEntries) {
+      val aliasesRaw = frontmatterMap(c.page).get("aliases")
+      val aliases: List[String] = aliasesRaw match {
+        case Some(s: String)   => List(s)
+        case Some(xs: List[?]) => xs.collect { case s: String => s }
+        case _                 => Nil
+      }
+      if (aliases.nonEmpty) {
+        val target    = pageMap("relPermalink").asInstanceOf[String]
+        val absTarget = pageMap("permalink").asInstanceOf[String]
+        for (alias <- aliases) {
+          // Normalise: strip leading/trailing slashes, then split into path
+          // segments. Empty / "/" alias is silently skipped — would land on
+          // top of the site root.
+          val trimmed = alias.stripPrefix("/").stripSuffix("/")
+          if (trimmed.nonEmpty) {
+            val base    = if (html != "") dst1 / html else dst1
+            val outDir  = trimmed.split('/').filter(_.nonEmpty).foldLeft(base)(_ / _)
+            outDir.createDirectories()
+            val outFile = outDir / "index.html"
+            aliasLayout match {
+              case Some(tmpl) =>
+                val data = Map[String, Any](
+                  "site"      -> sitedata,
+                  "page"      -> pageMap,
+                  "target"    -> target,
+                  "absTarget" -> absTarget,
+                )
+                show(s"render alias $outFile → $target")
+                outFile.writeText(renderToString(templateRenderer, data, tmpl.template))
+              case None =>
+                // Built-in fallback. Static HTML; no template engine needed
+                // so this works for any project even without a theme.
+                show(s"alias $outFile → $target")
+                outFile.writeText(
+                  s"""<!doctype html>
+                     |<html lang="en">
+                     |<head>
+                     |  <meta charset="UTF-8">
+                     |  <meta http-equiv="refresh" content="0; url=$target">
+                     |  <link rel="canonical" href="$absTarget">
+                     |  <title>Redirecting…</title>
+                     |</head>
+                     |<body>
+                     |  <p>This page has moved. Redirecting to <a href="$target">$target</a>.</p>
+                     |</body>
+                     |</html>
+                     |""".stripMargin,
+                )
+            }
+          }
+        }
+      }
+    }
+
+    // ----- Date archives (Phase 2.4) -----
+    //
+    // Site config `dateArchives = true` turns on `/<year>/` and
+    // `/<year>/<month>/` index pages. Both are gated by their respective
+    // layouts (`date-year.html` and `date-month.html`) — missing layout =
+    // silent skip, same convention as taxonomy archives.
+    //
+    // Only pages with an EXPLICIT `date:` frontmatter that parses are
+    // included. Pages whose date came from the mtime fallback are
+    // intentionally excluded so that pulling docs / about-page / etc.
+    // doesn't pollute the post archive.
+    val dateArchivesEnabled: Boolean =
+      confdoc.getBool("dateArchives").getOrElse(false)
+
+    if (dateArchivesEnabled) {
+      def hasExplicitDate(c: ContentFile): Boolean =
+        frontmatterMap(c.page).get("date").collect { case s: String => s }
+          .flatMap(parseDateString).isDefined
+
+      // Pair each dated page with its parsed instant once. Working off the
+      // enriched records (`pageEntries`) keeps the archive's `.pages` list
+      // shape identical to `.section.pages` / `.term.pages`.
+      val datedEntries: List[(java.time.OffsetDateTime, Map[String, Any])] =
+        pageEntries
+          .collect { case (c, m) if hasExplicitDate(c) => (pageInstant(c), m) }
+          .sortBy(-_._1.toEpochSecond)
+
+      if (datedEntries.nonEmpty) {
+        val byYear: List[(Int, List[(java.time.OffsetDateTime, Map[String, Any])])] =
+          datedEntries.groupBy(_._1.getYear).toList.sortBy(-_._1)
+
+        // Year-archive pages — `/<year>/index.html`.
+        findLayout(Nil, "date-year").foreach { tmpl =>
+          for ((year, entries) <- byYear) {
+            // Per-year month roll-up: one entry per month present, with
+            // its own URL, page count, and pages list. Sorted ascending by
+            // month number for natural reading order.
+            val months = entries.groupBy(_._1.getMonthValue).toList.sortBy(_._1)
+              .map { case (m, ms) =>
+                Map[String, Any](
+                  "month"     -> BigDecimal(m),
+                  "monthName" -> monthNames(m - 1),
+                  "url"       -> f"${if (baseURL.path == "/" || baseURL.path.isEmpty) "" else baseURL.path}/$year%04d/$m%02d/",
+                  "count"     -> BigDecimal(ms.size),
+                  "pages"     -> ms.map(_._2),
+                )
+              }
+            val data = Map[String, Any](
+              "site"   -> sitedata,
+              "year"   -> BigDecimal(year),
+              "pages"  -> entries.map(_._2),
+              "months" -> months,
+            )
+            val outDir = dst1 / f"$year%04d"
+            outDir.createDirectories()
+            val outFile = outDir / "index.html"
+            show(s"render $outFile using ${tmpl.path.relativeTo(src1)}")
+            outFile.writeText(renderToString(templateRenderer, data, tmpl.template))
+          }
+        }
+
+        // Month-archive pages — `/<year>/<month>/index.html`.
+        findLayout(Nil, "date-month").foreach { tmpl =>
+          for ((year, entries) <- byYear) {
+            val byMonth = entries.groupBy(_._1.getMonthValue).toList.sortBy(_._1)
+            for ((month, ms) <- byMonth) {
+              val data = Map[String, Any](
+                "site"      -> sitedata,
+                "year"      -> BigDecimal(year),
+                "month"     -> BigDecimal(month),
+                "monthName" -> monthNames(month - 1),
+                "pages"     -> ms.map(_._2),
+              )
+              val outDir = dst1 / f"$year%04d" / f"$month%02d"
+              outDir.createDirectories()
+              val outFile = outDir / "index.html"
+              show(s"render $outFile using ${tmpl.path.relativeTo(src1)}")
+              outFile.writeText(renderToString(templateRenderer, data, tmpl.template))
+            }
+          }
+        }
       }
     }
 
@@ -1078,6 +1829,63 @@ object App {
         "emojify",
         1,
         { case (con, Seq(s: String)) => io.github.edadma.emoji.Emoji(s) },
+      ),
+      // OpenGraph + Twitter card meta tags (Phase 2.7). Pass a page record
+      // (typically `.page`); returns a multi-line string of `<meta>`
+      // elements ready to drop into `<head>`. Resolves `image` from
+      // (frontmatter) `ogImage`, `image`, then site-wide `ogImage` or
+      // `image`. `description` falls through to `.page.summary`. URLs are
+      // promoted to absolute via the configured `baseURL`.
+      "ogTags" -> TemplateFunction(
+        "ogTags",
+        1,
+        { case (con, Seq(p: Map[?, ?])) =>
+          val page: Map[String, Any] =
+            p.collect { case (k: String, v) => k -> v }.toMap
+          // The renderer's STATIC `data` map only carries baseURL / i18n /
+          // defaultLang. The per-render scope `con.data` is the page's
+          // pagedata Map and that's where `.site` lives at this depth.
+          val site: Map[String, Any] = con.data match {
+            case m: Map[?, ?] =>
+              m.asInstanceOf[Map[Any, Any]].get("site") match {
+                case Some(s: Map[?, ?]) =>
+                  s.collect { case (k: String, v) => k -> v }.toMap
+                case _ => Map.empty[String, Any]
+              }
+            case _ => Map.empty[String, Any]
+          }
+          val base       = baseFromContext(con)
+          def asString(m: Map[String, Any], keys: String*): Option[String] =
+            keys.iterator.flatMap(k => m.get(k).collect { case s: String if s.nonEmpty => s }).nextOption()
+          val title      = asString(page, "ogTitle", "title").getOrElse("")
+          val descRaw    = asString(page, "ogDescription", "description", "summary").getOrElse("")
+          val pageUrl    = page.get("permalink").collect { case s: String => s }.getOrElse("")
+          val imageRaw   = asString(page, "ogImage", "image")
+            .orElse(asString(site, "ogImage", "image")).getOrElse("")
+          val image      =
+            if (imageRaw.isEmpty)        ""
+            else if (absoluteURL(imageRaw)) imageRaw
+            else                         base.base + joinUrlPath(base.path, imageRaw)
+          val siteName   = asString(site, "title").getOrElse("")
+          val twitterCard =
+            if (image.nonEmpty) "summary_large_image" else "summary"
+          val sb = new StringBuilder
+          def tag(prop: String, attr: String, value: String): Unit =
+            if (value.nonEmpty) {
+              sb.append(s"""<meta $prop="$attr" content="${escapeXml(value)}" />""").append('\n')
+            }
+          tag("property", "og:type", "article")
+          tag("property", "og:title",       title)
+          tag("property", "og:url",         pageUrl)
+          tag("property", "og:description", descRaw)
+          tag("property", "og:image",       image)
+          tag("property", "og:site_name",   siteName)
+          tag("name",     "twitter:card",        twitterCard)
+          tag("name",     "twitter:title",       title)
+          tag("name",     "twitter:description", descRaw)
+          tag("name",     "twitter:image",       image)
+          sb.toString
+        },
       ),
       // i18n string lookup — `{{ i18n .page.lang 'browse_docs' }}`. Falls
       // back to the site's default language, then to the literal key.

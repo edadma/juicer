@@ -1,0 +1,39 @@
+<!-- Single post — title, date+reading+tags meta, body, series sidebar, prev/next. -->
+{{ define content }}
+  <article class="juicerblog-post">
+    <h1 class="juicerblog-post-title">{{ .page.title }}</h1>
+    <div class="juicerblog-post-meta">
+      {{ partial 'post-meta' . }}
+    </div>
+    <div class="juicerblog-content">
+      {{ .content }}
+    </div>
+
+    {{ partial 'series-nav' . }}
+  </article>
+
+  {{ if .page.prev }}
+  <nav class="juicerblog-prev-next" aria-label="Post navigation">
+    <a class="juicerblog-prev-next-link juicerblog-prev-next-prev" href="{{ .page.prev.url }}">
+      <span class="juicerblog-prev-next-label">← Older</span>
+      <span class="juicerblog-prev-next-title">{{ .page.prev.title }}</span>
+    </a>
+    {{ if .page.next }}
+    <a class="juicerblog-prev-next-link juicerblog-prev-next-next" href="{{ .page.next.url }}">
+      <span class="juicerblog-prev-next-label">Newer →</span>
+      <span class="juicerblog-prev-next-title">{{ .page.next.title }}</span>
+    </a>
+    {{ else }}<span></span>{{ end }}
+  </nav>
+  {{ else }}
+    {{ if .page.next }}
+    <nav class="juicerblog-prev-next" aria-label="Post navigation">
+      <span></span>
+      <a class="juicerblog-prev-next-link juicerblog-prev-next-next" href="{{ .page.next.url }}">
+        <span class="juicerblog-prev-next-label">Newer →</span>
+        <span class="juicerblog-prev-next-title">{{ .page.next.title }}</span>
+      </a>
+    </nav>
+    {{ end }}
+  {{ end }}
+{{ end }}

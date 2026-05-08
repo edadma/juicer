@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tags — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerblog.css' }}">
+  <!-- tag-list / tag-page / 404 are rendered without going through baseof,
+       so they need their own <head> + topbar + footer. Keep them lean. -->
+</head>
+<body>
+  <div class="juicerblog-page">
+    <header class="juicerblog-topbar">
+      <div class="juicerblog-topbar-inner">
+        <a class="juicerblog-brand" href="{{ relURL '/' }}">{{ .site.title }}</a>
+        <nav class="juicerblog-nav" aria-label="Main">
+          <a href="{{ relURL '/' }}">Home</a>
+          <a href="{{ relURL '/tags/' }}">Tags</a>
+        </nav>
+      </div>
+    </header>
+    <main class="juicerblog-main">
+      <h1 class="juicerblog-archive-title">All tags</h1>
+      <p class="juicerblog-archive-sub">{{ .terms.length }} tags across the site.</p>
+      <div class="juicerblog-tag-cloud">
+        {{ for t <- .terms }}
+        <a class="juicerblog-tag" href="{{ t.url }}">{{ t.name }}<span class="juicerblog-tag-count"> · {{ t.count }}</span></a>
+        {{ end }}
+      </div>
+    </main>
+    <footer class="juicerblog-footer">
+      <div class="juicerblog-footer-inner">
+        <span>© {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

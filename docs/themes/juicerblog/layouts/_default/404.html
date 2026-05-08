@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Not found — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerblog.css' }}">
+</head>
+<body>
+  <div class="juicerblog-page">
+    <header class="juicerblog-topbar">
+      <div class="juicerblog-topbar-inner">
+        <a class="juicerblog-brand" href="{{ relURL '/' }}">{{ .site.title }}</a>
+      </div>
+    </header>
+    <main class="juicerblog-main">
+      <div class="juicerblog-404">
+        <h1>404</h1>
+        <p>Sorry, that page isn't here.</p>
+        <p><a href="{{ relURL '/' }}">← Back to {{ .site.title }}</a></p>
+      </div>
+    </main>
+    <footer class="juicerblog-footer">
+      <div class="juicerblog-footer-inner">
+        <span>© {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

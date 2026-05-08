@@ -1,0 +1,23 @@
+# Example blog site — exercises the juicerblog theme + Phase 1 blog features
+# (tags, pagination, parsed dates, reading time).
+#
+# Local preview:
+#   sbt 'juicerJVM/run serve -s examples/blog-site -L'
+# Build:
+#   sbt 'juicerJVM/run build -s examples/blog-site -d /tmp/blog-out'
+
+title    = "juicerblog demo"
+tagline  = "a blog theme for juicer"
+author   = "Ed Maxedon"
+baseURL  = "http://localhost:8080"
+
+# Resolve the theme via the repo's docs/themes/ directory. With
+# `themeDir = "../../docs/themes"` and `theme = "juicerblog"`, juicer
+# walks back two levels from `examples/blog-site/` to reach the theme.
+themeDir = "../../docs/themes"
+theme    = "juicerblog"
+
+# Blog defaults: smaller paginate size, sort by date.
+htmlDir  = ""
+paginate = 3
+sortBy   = "date"

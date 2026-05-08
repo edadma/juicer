@@ -16,9 +16,14 @@ package object juicer {
   def isDir(p: Path): Boolean     = p.exists && p.isDirectory && p.isReadable
   def canCreate(p: Path): Boolean = p.parent.exists(d => d.isDirectory && d.isWritable)
 
+  /** Build-time failure. Prints to stderr and throws — `sys.exit` would
+    * be conventional for a CLI but Scala.js can't link `java.lang.System.exit`,
+    * so going through an exception is the cross-platform path. The JVM /
+    * Native CLI entry points (Main.scala) leave the throw uncaught, which
+    * still produces a non-zero exit code; tests catch the exception. */
   def problem(msg: String): Nothing = {
     Console.err.println(msg)
-    sys.exit(1)
+    throw new RuntimeException(msg)
   }
 
   def list(dir: Path): List[Path] =
@@ -241,4 +246,122 @@ package object juicer {
   val absoluteURLRegex: Regex = "[a-z]+://.*".r
 
   def absoluteURL(url: String): Boolean = absoluteURLRegex.matches(url)
+
+  // ===== Slug computation =====
+  //
+  // Single helper used by tags, categories, future series/authors/permalinks.
+  // Don't reinvent five times.
+  //
+  // Pipeline: lowercase → fold common Latin diacritics to ASCII → replace runs
+  // of non-alphanumeric with `-` → strip leading/trailing `-`. The fold table
+  // is hand-rolled (rather than `java.text.Normalizer`) so the helper compiles
+  // identically on JVM / Scala.js / Native — `java.text.Normalizer` doesn't
+  // ship in scala-native's javalib stubs.
+
+  /** Map common Latin diacritics to ASCII. Covers the Latin-1 Supplement +
+    * Latin Extended-A characters most likely to appear in author-supplied
+    * tags or titles. Anything outside the table falls through unchanged and
+    * the slug step then strips it. */
+  private val diacriticFold: Map[Char, String] = Map(
+    'à' -> "a", 'á' -> "a", 'â' -> "a", 'ã' -> "a", 'ä' -> "a", 'å' -> "a", 'ā' -> "a", 'ą' -> "a",
+    'ç' -> "c", 'ć' -> "c", 'č' -> "c",
+    'ď' -> "d", 'đ' -> "d",
+    'è' -> "e", 'é' -> "e", 'ê' -> "e", 'ë' -> "e", 'ē' -> "e", 'ę' -> "e", 'ě' -> "e",
+    'ğ' -> "g",
+    'ì' -> "i", 'í' -> "i", 'î' -> "i", 'ï' -> "i", 'ī' -> "i",
+    'ł' -> "l", 'ľ' -> "l",
+    'ñ' -> "n", 'ń' -> "n", 'ň' -> "n",
+    'ò' -> "o", 'ó' -> "o", 'ô' -> "o", 'õ' -> "o", 'ö' -> "o", 'ø' -> "o", 'ō' -> "o", 'ő' -> "o",
+    'ŕ' -> "r", 'ř' -> "r",
+    'ś' -> "s", 'š' -> "s", 'ş' -> "s",
+    'ť' -> "t", 'ţ' -> "t",
+    'ù' -> "u", 'ú' -> "u", 'û' -> "u", 'ü' -> "u", 'ū' -> "u", 'ů' -> "u", 'ű' -> "u",
+    'ý' -> "y", 'ÿ' -> "y",
+    'ź' -> "z", 'ż' -> "z", 'ž' -> "z",
+    'ß' -> "ss", 'æ' -> "ae", 'œ' -> "oe", 'ð' -> "d", 'þ' -> "th",
+  )
+
+  /** ASCII-fold a string by mapping known Latin diacritics. Characters not in
+    * the table pass through; the slugify step decides what to do with them. */
+  def asciiFold(s: String): String = {
+    val sb = new StringBuilder(s.length)
+    var i = 0
+    while (i < s.length) {
+      val c = s.charAt(i)
+      diacriticFold.get(c) match {
+        case Some(repl) => sb.append(repl)
+        case None       => sb.append(c)
+      }
+      i += 1
+    }
+    sb.toString
+  }
+
+  /** Convert a free-form string into a URL-safe slug. Lowercases, ASCII-folds
+    * common Latin diacritics, replaces every run of non-alphanumeric ASCII
+    * with a single `-`, and trims leading/trailing dashes. Empty / all-symbol
+    * inputs collapse to `"-"` so the result is always a non-empty path
+    * segment.
+    *
+    * Examples:
+    *   slugify("Hello, World!")  == "hello-world"
+    *   slugify("Café au lait")   == "cafe-au-lait"
+    *   slugify("C++")            == "c"
+    *   slugify("___")            == "-"
+    */
+  def slugify(s: String): String = {
+    val folded = asciiFold(s.toLowerCase)
+    val sb     = new StringBuilder(folded.length)
+    var lastDash = false
+    var i = 0
+    while (i < folded.length) {
+      val c = folded.charAt(i)
+      if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+        sb.append(c)
+        lastDash = false
+      } else if (!lastDash && sb.nonEmpty) {
+        sb.append('-')
+        lastDash = true
+      }
+      i += 1
+    }
+    // Trim a trailing dash that the loop left behind. Leading dashes can't
+    // happen because we suppress dashes until at least one alnum has landed.
+    val out = if (sb.nonEmpty && sb.last == '-') sb.dropRight(1).toString else sb.toString
+    if (out.isEmpty) "-" else out
+  }
+
+  /** Parse a frontmatter `date:` value. Three input shapes are recognised
+    * (widest first so a fully-qualified timestamp doesn't lose precision
+    * by short-circuiting on the date prefix):
+    *
+    *   1. Full ISO-8601 with offset:           `2024-01-15T10:30:00Z` / `…+02:00`
+    *   2. Local ISO datetime (no offset):      `2024-01-15T10:30:00` → assumed UTC
+    *   3. Plain ISO date:                       `2024-01-15` → midnight UTC
+    *
+    * Returns `None` for any other shape (or empty input) so callers can
+    * fall back to filesystem mtime, skip the page, etc.
+    */
+  def parseDateString(s: String): Option[java.time.OffsetDateTime] = {
+    val trimmed = s.trim
+    if (trimmed.isEmpty) None
+    else {
+      try Some(java.time.OffsetDateTime.parse(trimmed))
+      catch {
+        case _: java.time.format.DateTimeParseException =>
+          try {
+            val ldt = java.time.LocalDateTime.parse(trimmed)
+            Some(ldt.atOffset(java.time.ZoneOffset.UTC))
+          } catch {
+            case _: java.time.format.DateTimeParseException =>
+              try {
+                val ld = java.time.LocalDate.parse(trimmed)
+                Some(ld.atStartOfDay(java.time.ZoneOffset.UTC).toOffsetDateTime)
+              } catch {
+                case _: java.time.format.DateTimeParseException => None
+              }
+          }
+      }
+    }
+  }
 }

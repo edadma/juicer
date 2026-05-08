@@ -1,0 +1,29 @@
+<!-- Home / section archive page. The section's _index.md content renders as
+     the intro; the paginated post list comes from .section.paginator.pages. -->
+{{ define content }}
+  {{ if .content }}
+    <div class="juicerblog-home-intro">
+      {{ if .page.title }}<h1>{{ .page.title }}</h1>{{ end }}
+      <div class="juicerblog-content">{{ .content }}</div>
+    </div>
+  {{ end }}
+
+  {{ if .section.paginator.pages }}
+    <ol class="juicerblog-postlist">
+      {{ for p <- .section.paginator.pages }}
+        <li>
+          <h2 class="juicerblog-postlist-title">
+            <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+          </h2>
+          <div class="juicerblog-postlist-meta">
+            {{ if p.date }}<time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time>{{ end }}
+            {{ if p.readingTime }}<span class="juicerblog-sep">·</span><span>{{ p.readingTime }} min read</span>{{ end }}
+          </div>
+          {{ if p.summary }}<p class="juicerblog-postlist-summary">{{ p.summary }}</p>{{ end }}
+        </li>
+      {{ end }}
+    </ol>
+
+    {{ partial 'pagination' . }}
+  {{ end }}
+{{ end }}

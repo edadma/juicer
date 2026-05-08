@@ -1321,4 +1321,1631 @@ class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach 
     out("html/a/b/index.html") shouldBe "B"
     out("html/a/b/c/index.html") shouldBe "C"
   }
+
+  // ----- Phase 1.2 — pagination -----
+
+  it should "slice a section's pages into page/N/index.html runs at the configured paginate size" in {
+    writeAt("site.toml", "title = \"Blog\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\nsortBy: title\n---\n\nHome.\n")
+    // 25 posts. With default paginate=10, expect 3 slices: 10/10/5.
+    for (i <- 1 to 25) {
+      val n = f"$i%02d"
+      writeAt(s"content/post-$n.md", s"---\ntitle: Post $n\n---\nBody $n.\n")
+    }
+    writeAt(
+      "layouts/_default/folder.html",
+      """T={{ .section.paginator.total }};C={{ .section.paginator.current }}
+        |{{ for p <- .section.paginator.pages }}P={{ p.title }};{{ end }}
+        |PREV={{ .section.paginator.prevURL }}
+        |NEXT={{ .section.paginator.nextURL }}
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val p1 = out("index.html")
+    p1 should include("T=3;C=1")
+    p1 should include("P=Post 01;")
+    p1 should include("P=Post 10;")
+    p1 should not include "P=Post 11;"
+    p1 should include("PREV=")          // empty on slice 1
+    p1 should include("NEXT=/page/2/")
+
+    val p2 = out("page/2/index.html")
+    p2 should include("T=3;C=2")
+    p2 should include("P=Post 11;")
+    p2 should include("P=Post 20;")
+    p2 should include("PREV=/")          // baseURL itself
+    p2 should include("NEXT=/page/3/")
+
+    val p3 = out("page/3/index.html")
+    p3 should include("T=3;C=3")
+    p3 should include("P=Post 21;")
+    p3 should include("P=Post 25;")
+    p3 should include("PREV=/page/2/")
+    p3 should include("NEXT=")          // empty on last slice
+  }
+
+  it should "respect a site-wide `paginate = N` override" in {
+    writeAt(
+      "site.toml",
+      """title = "Blog"
+        |baseURL = "http://x"
+        |paginate = 5
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: Home\nsortBy: title\n---\nHome.\n")
+    for (i <- 1 to 12) {
+      val n = f"$i%02d"
+      writeAt(s"content/post-$n.md", s"---\ntitle: Post $n\n---\nBody $n.\n")
+    }
+    writeAt(
+      "layouts/_default/folder.html",
+      """T={{ .section.paginator.total }};C={{ .section.paginator.current }}
+        |{{ for p <- .section.paginator.pages }}P={{ p.title }};{{ end }}
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    out("index.html")        should include("T=3;C=1")
+    out("page/2/index.html") should include("T=3;C=2")
+    out("page/3/index.html") should include("T=3;C=3")
+    out("page/3/index.html") should include("P=Post 11;")
+    out("page/3/index.html") should include("P=Post 12;")
+  }
+
+  it should "expose paginator.first/last anchoring slice 1 and slice N" in {
+    writeAt(
+      "site.toml",
+      """title = "Blog"
+        |baseURL = "http://x"
+        |paginate = 2
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: Home\nsortBy: title\n---\nHome.\n")
+    for (i <- 1 to 5) {
+      writeAt(s"content/post-$i.md", s"---\ntitle: Post $i\n---\nBody.\n")
+    }
+    writeAt(
+      "layouts/_default/folder.html",
+      """F={{ .section.paginator.first }}
+        |L={{ .section.paginator.last }}
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val p1 = out("index.html")
+    p1 should include("F=/")
+    p1 should include("L=/page/3/")
+  }
+
+  it should "sortBy = \"date\" puts newest posts on slice 1" in {
+    writeAt(
+      "site.toml",
+      """title = "Blog"
+        |baseURL = "http://x"
+        |paginate = 2
+        |sortBy = "date"
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: Home\n---\nHome.\n")
+    writeAt("content/old.md",    "---\ntitle: Old\ndate: 2024-01-01\n---\nOld.\n")
+    writeAt("content/mid.md",    "---\ntitle: Mid\ndate: 2024-06-01\n---\nMid.\n")
+    writeAt("content/new.md",    "---\ntitle: New\ndate: 2024-12-01\n---\nNew.\n")
+    writeAt(
+      "layouts/_default/folder.html",
+      """{{ for p <- .section.paginator.pages }}P={{ p.title }};{{ end }}
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val p1 = out("index.html")
+    p1 should include("P=New;")
+    p1 should include("P=Mid;")
+    p1 should not include "P=Old;"   // pushed to page 2
+
+    val p2 = out("page/2/index.html")
+    p2 should include("P=Old;")
+  }
+
+  // ----- Phase 1.1 — tag + category archives -----
+
+  it should "emit a /tags/<slug>/ archive page per tag" in {
+    writeAt("site.toml", "title = \"Blog\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/post-a.md",
+      """---
+        |title: A
+        |date: 2024-03-01
+        |tags: [scala, ssg]
+        |---
+        |Body A.
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/post-b.md",
+      """---
+        |title: B
+        |date: 2024-04-01
+        |tags: [scala]
+        |---
+        |Body B.
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/post-c.md",
+      """---
+        |title: C
+        |date: 2024-02-01
+        |tags: ssg
+        |---
+        |Body C.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "<title>{{ .page.title }}</title>")
+    writeAt(
+      "layouts/_default/tag-page.html",
+      """<title>{{ .term.name }} ({{ .term.count }})</title>
+        |<ul>
+        |{{ for p <- .term.pages }}<li>{{ p.title }}</li>{{ end }}
+        |</ul>
+        |""".stripMargin,
+    )
+
+    build()
+
+    val scalaArchive = out("tags/scala/index.html")
+    scalaArchive should include("<title>scala (2)</title>")
+    scalaArchive should include("<li>B</li>") // newest first
+    scalaArchive should include("<li>A</li>")
+
+    val ssgArchive = out("tags/ssg/index.html")
+    ssgArchive should include("<title>ssg (2)</title>") // post-a + post-c
+    ssgArchive should include("<li>A</li>")
+    ssgArchive should include("<li>C</li>")
+  }
+
+  it should "emit a /tags/index.html listing every tag with a count" in {
+    writeAt("site.toml", "title = \"Blog\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/post-a.md",
+      "---\ntitle: A\ndate: 2024-03-01\ntags: [scala, ssg]\n---\nA.\n",
+    )
+    writeAt(
+      "content/post-b.md",
+      "---\ntitle: B\ndate: 2024-04-01\ntags: [scala]\n---\nB.\n",
+    )
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/tag-list.html",
+      """{{ for t <- .terms }}{{ t.name }}={{ t.count }};{{ end }}
+        |""".stripMargin,
+    )
+
+    build()
+
+    val list = out("tags/index.html")
+    // Most-used first: scala (2), then ssg (1)
+    list should include("scala=2;")
+    list should include("ssg=1;")
+    list.indexOf("scala=2;") should be < list.indexOf("ssg=1;")
+  }
+
+  it should "treat categories as a separate axis from tags without collision" in {
+    writeAt("site.toml", "title = \"Blog\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/post-a.md",
+      """---
+        |title: A
+        |date: 2024-03-01
+        |tags: [scala]
+        |categories: [tutorial]
+        |---
+        |A.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/tag-page.html",
+      "TAG={{ .term.name }};COUNT={{ .term.count }}",
+    )
+    writeAt(
+      "layouts/_default/category-page.html",
+      "CAT={{ .term.name }};COUNT={{ .term.count }}",
+    )
+
+    build()
+
+    val tagPage = out("tags/scala/index.html")
+    tagPage should include("TAG=scala;COUNT=1")
+    val catPage = out("categories/tutorial/index.html")
+    catPage should include("CAT=tutorial;COUNT=1")
+  }
+
+  it should "skip tag/category archives when no matching layout is provided" in {
+    writeAt("site.toml", "title = \"Blog\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/post-a.md",
+      "---\ntitle: A\ndate: 2024-03-01\ntags: [scala]\n---\nA.\n",
+    )
+    writeAt("layouts/_default/file.html", "x")
+    // Intentionally NO tag-page.html / tag-list.html.
+    build()
+
+    (dst / "tags").exists shouldBe false
+  }
+
+  it should "expose .site.tags inside any rendered page even without archive layouts" in {
+    writeAt("site.toml", "title = \"Blog\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: Home
+        |---
+        |
+        |{{ for t <- .site.tags }}TAG={{ t.name }}({{ t.count }});{{ end }}
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/post-a.md",
+      "---\ntitle: A\ndate: 2024-03-01\ntags: [scala, ssg]\n---\nA.\n",
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      "{{ for t <- .site.tags }}T={{ t.name }};{{ end }}",
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val home = out("index.html")
+    home should include("T=scala;")
+    home should include("T=ssg;")
+  }
+
+  // ----- Phase 1.4 — parsed .page.date + dateISO / dateLong / dateShort -----
+
+  it should "parse a full ISO-8601 .page.date and expose format helpers" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: Post
+        |date: 2024-01-15T10:30:00Z
+        |---
+        |
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      """ISO={{ .page.dateISO }}
+        |LONG={{ .page.dateLong }}
+        |SHORT={{ .page.dateShort }}
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    html should include("ISO=2024-01-15T10:30:00Z")
+    html should include("LONG=January 15, 2024")
+    html should include("SHORT=2024-01-15")
+  }
+
+  it should "parse a plain YYYY-MM-DD .page.date as midnight UTC" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: Post
+        |date: 2024-03-08
+        |---
+        |
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      """ISO={{ .page.dateISO }}
+        |LONG={{ .page.dateLong }}
+        |SHORT={{ .page.dateShort }}
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    html should include("ISO=2024-03-08T00:00:00Z")
+    html should include("LONG=March 8, 2024")
+    html should include("SHORT=2024-03-08")
+  }
+
+  // ----- Slug helper (used by tags / categories / future series + permalinks) -----
+
+  "slugify" should "lowercase ASCII alphanumerics and dash-separate non-alnum runs" in {
+    slugify("Hello, World!") shouldBe "hello-world"
+  }
+
+  it should "fold common Latin diacritics to ASCII" in {
+    slugify("Café au lait")    shouldBe "cafe-au-lait"
+    slugify("Naïve approach")  shouldBe "naive-approach"
+    slugify("Über cool")       shouldBe "uber-cool"
+    slugify("ßeta")            shouldBe "sseta"
+  }
+
+  it should "collapse runs of symbols and trim leading/trailing dashes" in {
+    slugify("  --foo  bar--  ") shouldBe "foo-bar"
+    slugify("___")              shouldBe "-"
+  }
+
+  it should "keep ASCII digits" in {
+    slugify("Phase 1.4")        shouldBe "phase-1-4"
+  }
+
+  // ----- Phase 1.3 — word count + reading time -----
+
+  it should "expose .page.wordCount and .page.readingTime from rendered prose" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    // 250 single-token words → reading time = ceil(250 / 200) = 2 minutes.
+    val body = (1 to 250).map(i => s"word$i").mkString(" ")
+    writeAt(
+      "content/_index.md",
+      s"""---
+         |title: Post
+         |---
+         |
+         |$body
+         |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      """W={{ .page.wordCount }}
+        |R={{ .page.readingTime }}
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    html should include("W=250")
+    html should include("R=2")
+  }
+
+  it should "round .page.readingTime up and floor at 1 for non-empty pages" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: Stub
+        |---
+        |
+        |Just three words.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "W={{ .page.wordCount }};R={{ .page.readingTime }}")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    html should include("W=3")
+    html should include("R=1")
+  }
+
+  it should "fall back to filesystem mtime for .page.date when frontmatter has none" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: Post
+        |---
+        |
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      """ISO={{ .page.dateISO }}
+        |SHORT={{ .page.dateShort }}
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val html = out("index.html")
+    // Tmp file's mtime must be a valid ISO-8601 instant; we don't assert the
+    // exact value because actual mtime depends on test timing.
+    val isoLine = html.linesIterator.find(_.startsWith("ISO=")).getOrElse("")
+    isoLine should fullyMatch regex """ISO=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z""".r
+    val shortLine = html.linesIterator.find(_.startsWith("SHORT=")).getOrElse("")
+    shortLine should fullyMatch regex """SHORT=\d{4}-\d{2}-\d{2}""".r
+  }
+
+  // ----- Phase 2.6 — permalink templates -----
+
+  it should "route a post through a [permalinks] :year/:month/:slug pattern" in {
+    writeAt(
+      "site.toml",
+      """title   = "Blog"
+        |baseURL = "http://x"
+        |htmlDir = ""
+        |
+        |[permalinks]
+        |posts = ":year/:month/:slug/"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/posts/_index.md",
+      "---\ntitle: Posts\n---\nIndex.\n",
+    )
+    writeAt(
+      "content/posts/hello-world.md",
+      """---
+        |title: Hello world
+        |date: 2024-03-15
+        |---
+        |
+        |First post.
+        |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      """{{ for p <- .section.pages }}URL={{ p.url }};{{ end }}""",
+    )
+    writeAt(
+      "layouts/_default/file.html",
+      """<title>{{ .page.title }}</title>URL={{ .page.url }}""".stripMargin,
+    )
+
+    build()
+
+    // The post should land at /2024/03/hello-world/index.html — derived from
+    // the parsed date and the cleaned filename slug. The parent section
+    // index page (_index.md) is NEVER permalinked, so it stays at /posts/.
+    val post = out("2024/03/hello-world/index.html")
+    post should include("<title>Hello world</title>")
+    post should include("URL=/2024/03/hello-world/")
+
+    val sectionIndex = out("posts/index.html")
+    sectionIndex should include("URL=/2024/03/hello-world/")
+
+    // The legacy physical path must NOT exist — there's only one rendered
+    // copy of the post.
+    (dst / "posts" / "hello-world").exists shouldBe false
+  }
+
+  it should "expand :section, :title, :year, :month, :day, :slug tokens together" in {
+    writeAt(
+      "site.toml",
+      """title   = "Blog"
+        |baseURL = "http://x"
+        |htmlDir = ""
+        |
+        |[permalinks]
+        |notes = ":section/:year-:month-:day/:title/"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/notes/_index.md",
+      "---\ntitle: Notes\n---\n",
+    )
+    writeAt(
+      "content/notes/raw-slug.md",
+      """---
+        |title: A Verbose & Pretty Title!
+        |date: 2024-07-04
+        |---
+        |
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "URL={{ .page.url }}")
+
+    build()
+
+    // :title slugifies the frontmatter title, distinct from :slug (the
+    // cleaned filename). Both should be available; this test exercises
+    // :title rather than :slug.
+    val post = out("notes/2024-07-04/a-verbose-pretty-title/index.html")
+    post should include("URL=/notes/2024-07-04/a-verbose-pretty-title/")
+  }
+
+  it should "leave sections without a [permalinks] entry on the physical path" in {
+    writeAt(
+      "site.toml",
+      """title   = "Mix"
+        |baseURL = "http://x"
+        |htmlDir = ""
+        |
+        |[permalinks]
+        |posts = ":year/:slug/"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/posts/_index.md",
+      "---\ntitle: Posts\n---\n",
+    )
+    writeAt(
+      "content/posts/permalinked.md",
+      """---
+        |title: Permalinked
+        |date: 2024-03-15
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/about.md",
+      """---
+        |title: About
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/docs/_index.md",
+      "---\ntitle: Docs\n---\n",
+    )
+    writeAt(
+      "content/docs/install.md",
+      """---
+        |title: Install
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "URL={{ .page.url }}")
+
+    build()
+
+    // posts/ is permalinked — it lives at /2024/permalinked/.
+    out("2024/permalinked/index.html") should include("URL=/2024/permalinked/")
+    // about.md sits at the site root with no [permalinks] entry — stays
+    // at the physical /about/ URL.
+    out("about/index.html") should include("URL=/about/")
+    // docs/ has no [permalinks] entry either — keeps /docs/install/.
+    out("docs/install/index.html") should include("URL=/docs/install/")
+  }
+
+  it should "never permalink the section index (_index.md) itself" in {
+    writeAt(
+      "site.toml",
+      """title   = "Blog"
+        |baseURL = "http://x"
+        |htmlDir = ""
+        |
+        |[permalinks]
+        |posts = ":year/:slug/"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/posts/_index.md",
+      """---
+        |title: Posts
+        |date: 2024-01-01
+        |---
+        |Listing.
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/posts/sample.md",
+      """---
+        |title: Sample
+        |date: 2024-06-10
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "URL={{ .page.url }}")
+    writeAt("layouts/_default/file.html", "URL={{ .page.url }}")
+
+    build()
+
+    // The section index always lives at /posts/, even though :year/:slug/
+    // is configured. /2024/posts/ would be wrong: that URL is reserved for
+    // a post named "posts" whose date happened to be in 2024.
+    out("posts/index.html") should include("URL=/posts/")
+    (dst / "2024" / "posts").exists shouldBe false
+  }
+
+  // ----- Phase 2.4 — date archives -----
+
+  it should "emit /<year>/ archive pages when dateArchives = true" in {
+    writeAt(
+      "site.toml",
+      """title         = "Blog"
+        |baseURL       = "http://x"
+        |htmlDir       = ""
+        |dateArchives  = true
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/p1.md",
+      """---
+        |title: Post 1
+        |date: 2024-03-15
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/p2.md",
+      """---
+        |title: Post 2
+        |date: 2024-08-09
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/p3.md",
+      """---
+        |title: Post 3
+        |date: 2023-12-01
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/date-year.html",
+      """YEAR={{ .year }}
+        |COUNT={{ for p <- .pages }}{{ p.title }};{{ end }}
+        |MONTHS={{ for m <- .months }}{{ m.month }}:{{ m.monthName }}({{ m.count }}){{ end }}
+        |""".stripMargin,
+    )
+
+    build()
+
+    val y2024 = out("2024/index.html")
+    y2024 should include("YEAR=2024")
+    // Posts within a year are date-desc; March (3) sorts after August (8)
+    // since we sort overall, but the COUNT line just lists titles in
+    // descending date order — Aug 9 then Mar 15.
+    y2024 should include("Post 2;Post 1;")
+    // Months roll-up is ascending by month number — 3 then 8.
+    y2024 should include("MONTHS=3:March(1)8:August(1)")
+
+    val y2023 = out("2023/index.html")
+    y2023 should include("YEAR=2023")
+    y2023 should include("Post 3;")
+  }
+
+  it should "emit /<year>/<month>/ archive pages when date-month layout is present" in {
+    writeAt(
+      "site.toml",
+      """title         = "Blog"
+        |baseURL       = "http://x"
+        |htmlDir       = ""
+        |dateArchives  = true
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/p1.md",
+      """---
+        |title: Spring Post
+        |date: 2024-03-15
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/p2.md",
+      """---
+        |title: Another Spring Post
+        |date: 2024-03-20
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/p3.md",
+      """---
+        |title: Summer Post
+        |date: 2024-07-01
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/date-month.html",
+      """{{ .year }}-{{ .month }} {{ .monthName }}
+        |{{ for p <- .pages }}{{ p.title }};{{ end }}
+        |""".stripMargin,
+    )
+
+    build()
+
+    val mar = out("2024/03/index.html")
+    mar should include("2024-3 March")
+    // Both March posts present, descending by date
+    mar should include("Another Spring Post;Spring Post;")
+
+    val jul = out("2024/07/index.html")
+    jul should include("2024-7 July")
+    jul should include("Summer Post;")
+  }
+
+  it should "skip date archives entirely when dateArchives is unset / false" in {
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/p1.md",
+      """---
+        |title: Post 1
+        |date: 2024-03-15
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "x")
+    // Layouts present but the feature is off — must not emit.
+    writeAt("layouts/_default/date-year.html", "year")
+    writeAt("layouts/_default/date-month.html", "month")
+
+    build()
+
+    (dst / "2024").exists shouldBe false
+  }
+
+  it should "exclude pages without explicit date frontmatter from date archives" in {
+    writeAt(
+      "site.toml",
+      """title         = "Blog"
+        |baseURL       = "http://x"
+        |htmlDir       = ""
+        |dateArchives  = true
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    // Has date — should appear in the archive.
+    writeAt(
+      "content/dated.md",
+      """---
+        |title: Dated Post
+        |date: 2024-05-05
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    // No date — relies on mtime fallback for `.page.date`, but should NOT
+    // pollute the date archive (mtime is "today", not a real publication
+    // date set by the author).
+    writeAt(
+      "content/undated.md",
+      """---
+        |title: Undated Post
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/date-year.html",
+      """YEAR={{ .year }}
+        |TITLES={{ for p <- .pages }}{{ p.title }};{{ end }}
+        |""".stripMargin,
+    )
+
+    build()
+
+    // Only 2024 archive exists — the undated post's mtime year would land
+    // in the current year's archive if we DIDN'T filter.
+    val y = out("2024/index.html")
+    y should include("YEAR=2024")
+    y should include("TITLES=Dated Post;")
+    y should not include "Undated Post"
+  }
+
+  // ----- Phase 2.1 — future-dated posts -----
+
+  it should "skip future-dated posts by default" in {
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/past.md",
+      """---
+        |title: Past
+        |date: 2024-01-01
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/future.md",
+      """---
+        |title: Future
+        |date: 2999-12-31
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    // The page-list loop has to live in a LAYOUT, not in markdown
+    // content — markdown body is rendered to HTML before the template
+    // pass and `{{ … }}` inside it gets escaped, never evaluated.
+    writeAt(
+      "layouts/_default/folder.html",
+      "{{ for p <- .section.pages }}{{ p.title }};{{ end }}",
+    )
+    writeAt("layouts/_default/file.html", "{{ .page.title }}")
+
+    build()
+
+    // Past post is rendered. Future post is invisible — no file at the
+    // physical URL, no entry in `.section.pages`.
+    out("past/index.html") should include("Past")
+    (dst / "future").exists shouldBe false
+    val home = out("index.html")
+    home should include("Past;")
+    home should not include "Future"
+  }
+
+  it should "include future-dated posts when --future is passed" in {
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/future.md",
+      """---
+        |title: Future
+        |date: 2999-12-31
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "{{ .page.title }}")
+
+    // Build with future = true on the BuildCommand.
+    App.run(Args(cmd = Some(BuildCommand(src = src, dst = dst, future = true))))
+
+    out("future/index.html") should include("Future")
+  }
+
+  it should "never skip pages relying on mtime-fallback for .page.date" in {
+    // A page without explicit `date` frontmatter would never have an
+    // author-set future date — its mtime is always 'now or earlier'. The
+    // future filter must NOT skip such pages, even pessimistically.
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/no-date.md",
+      """---
+        |title: No date
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "{{ .page.title }}")
+
+    build()
+
+    out("no-date/index.html") should include("No date")
+  }
+
+  // ----- Phase 2.5 — aliases / redirects -----
+
+  it should "emit a meta-refresh redirect at each listed alias" in {
+    writeAt(
+      "site.toml",
+      """title    = "S"
+        |baseURL  = "https://example.com"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/new-name.md",
+      """---
+        |title: New name
+        |aliases: [/old-name/, /even-older/]
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "{{ .page.title }}")
+
+    build()
+
+    // Both alias URLs exist with redirect markup pointing at the canonical
+    // /new-name/ URL.
+    val a1 = out("old-name/index.html")
+    a1 should include("""http-equiv="refresh"""")
+    a1 should include("/new-name/")
+
+    val a2 = out("even-older/index.html")
+    a2 should include("/new-name/")
+  }
+
+  it should "accept a single-string alias as well as a list" in {
+    writeAt(
+      "site.toml",
+      """title    = "S"
+        |baseURL  = "https://example.com"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/about.md",
+      """---
+        |title: About
+        |aliases: /me/
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "{{ .page.title }}")
+
+    build()
+
+    val a = out("me/index.html")
+    a should include("/about/")
+  }
+
+  it should "use the alias.html layout when one is provided" in {
+    writeAt(
+      "site.toml",
+      """title    = "S"
+        |baseURL  = "https://example.com"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/page.md",
+      """---
+        |title: Page
+        |aliases: [/legacy/]
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "{{ .page.title }}")
+    writeAt(
+      "layouts/_default/alias.html",
+      """CUSTOM target={{ .target }} canonical={{ .page.permalink }}""",
+    )
+
+    build()
+
+    val a = out("legacy/index.html")
+    a should include("CUSTOM target=/page/")
+    // Custom layout has full access to the source page record, e.g. its
+    // permalink, so themes can drop in branded redirect pages.
+    a should include("canonical=https://example.com/page/")
+  }
+
+  it should "emit no alias pages for a page that doesn't declare aliases" in {
+    writeAt(
+      "site.toml",
+      """title    = "S"
+        |baseURL  = "https://example.com"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/quiet.md",
+      "---\ntitle: Quiet\n---\nBody.\n",
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "{{ .page.title }}")
+
+    build()
+
+    // No spurious top-level directories were created from a missing
+    // `aliases` frontmatter — the build pipeline tolerates the empty case.
+    out("quiet/index.html") should include("Quiet")
+  }
+
+  // ----- Phase 2.2 — series -----
+
+  it should "expose .page.series.name / .pages / .index / .total / .prev / .next" in {
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/p1.md",
+      """---
+        |title: P1
+        |series: OS Internals
+        |seriesOrder: 1
+        |date: 2024-01-01
+        |---
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/p2.md",
+      """---
+        |title: P2
+        |series: OS Internals
+        |seriesOrder: 2
+        |date: 2024-02-01
+        |---
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/p3.md",
+      """---
+        |title: P3
+        |series: OS Internals
+        |seriesOrder: 3
+        |date: 2024-03-01
+        |---
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt(
+      "layouts/_default/file.html",
+      """SERIES={{ .page.series.name }}
+        |INDEX={{ .page.series.index }}/{{ .page.series.total }}
+        |PREV={{ if .page.series.prev }}{{ .page.series.prev.title }}{{ else }}-{{ end }}
+        |NEXT={{ if .page.series.next }}{{ .page.series.next.title }}{{ else }}-{{ end }}
+        |LIST={{ for s <- .page.series.pages }}{{ s.title }};{{ end }}
+        |""".stripMargin,
+    )
+
+    build()
+
+    val p1 = out("p1/index.html")
+    p1 should include("SERIES=OS Internals")
+    p1 should include("INDEX=1/3")
+    p1 should include("PREV=-")
+    p1 should include("NEXT=P2")
+    p1 should include("LIST=P1;P2;P3;")
+
+    val p2 = out("p2/index.html")
+    p2 should include("INDEX=2/3")
+    p2 should include("PREV=P1")
+    p2 should include("NEXT=P3")
+
+    val p3 = out("p3/index.html")
+    p3 should include("INDEX=3/3")
+    p3 should include("PREV=P2")
+    p3 should include("NEXT=-")
+  }
+
+  it should "sort series pages by seriesOrder, falling back to date for unordered pages" in {
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    // Two pages share the series but have NO seriesOrder. Falls back to
+    // date asc — Older first, Newer second.
+    writeAt(
+      "content/older.md",
+      """---
+        |title: Older
+        |series: Notes
+        |date: 2024-01-15
+        |---
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/newer.md",
+      """---
+        |title: Newer
+        |series: Notes
+        |date: 2024-08-01
+        |---
+        |""".stripMargin,
+    )
+    // Third page has explicit seriesOrder = 1, putting it FIRST regardless
+    // of its date being even older than the first two.
+    writeAt(
+      "content/pinned.md",
+      """---
+        |title: Pinned First
+        |series: Notes
+        |seriesOrder: 1
+        |date: 2025-01-01
+        |---
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt(
+      "layouts/_default/file.html",
+      """LIST={{ for s <- .page.series.pages }}{{ s.title }};{{ end }}""",
+    )
+
+    build()
+
+    out("pinned/index.html") should include("LIST=Pinned First;Older;Newer;")
+  }
+
+  it should "leave .page.series unset on pages without a series frontmatter" in {
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/loose.md",
+      "---\ntitle: Loose\n---\n",
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt(
+      "layouts/_default/file.html",
+      """{{ if .page.series }}HAS={{ .page.series.name }}{{ else }}NONE{{ end }}""",
+    )
+
+    build()
+
+    out("loose/index.html") should include("NONE")
+  }
+
+  // ----- Phase 2.3 — author registry -----
+
+  it should "resolve frontmatter `author: <id>` to the [[authors]] registry entry" in {
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |
+        |[[authors]]
+        |id    = "ed"
+        |name  = "Edward A Maxedon"
+        |bio   = "Writes code."
+        |avatar = "/img/ed.jpg"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/post.md",
+      """---
+        |title: Post
+        |author: ed
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt(
+      "layouts/_default/file.html",
+      """NAME={{ .page.author.name }}
+        |BIO={{ .page.author.bio }}
+        |AVATAR={{ .page.author.avatar }}
+        |COUNT={{ for a <- .page.authors }}{{ a.name }};{{ end }}
+        |""".stripMargin,
+    )
+
+    build()
+
+    val p = out("post/index.html")
+    p should include("NAME=Edward A Maxedon")
+    p should include("BIO=Writes code.")
+    p should include("AVATAR=/img/ed.jpg")
+    p should include("COUNT=Edward A Maxedon;")
+  }
+
+  it should "support multi-author posts via authors: [a, b]" in {
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |
+        |[[authors]]
+        |id   = "ed"
+        |name = "Ed"
+        |
+        |[[authors]]
+        |id   = "alice"
+        |name = "Alice"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/co.md",
+      """---
+        |title: Co-authored
+        |authors: [ed, alice]
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt(
+      "layouts/_default/file.html",
+      """LIST={{ for a <- .page.authors }}{{ a.name }};{{ end }}""",
+    )
+
+    build()
+
+    out("co/index.html") should include("LIST=Ed;Alice;")
+  }
+
+  it should "emit /authors/<id>/ archive pages when author-page layout is provided" in {
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |
+        |[[authors]]
+        |id    = "ed"
+        |name  = "Ed"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/p1.md",
+      """---
+        |title: First
+        |author: ed
+        |date: 2024-03-01
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/p2.md",
+      """---
+        |title: Second
+        |author: ed
+        |date: 2024-08-01
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/author-page.html",
+      """ID={{ .author.id }}
+        |NAME={{ .author.name }}
+        |COUNT={{ .author.count }}
+        |LIST={{ for p <- .author.pages }}{{ p.title }};{{ end }}
+        |""".stripMargin,
+    )
+
+    build()
+
+    val a = out("authors/ed/index.html")
+    a should include("ID=ed")
+    a should include("NAME=Ed")
+    a should include("COUNT=2")
+    // Pages are date-desc within an author archive — newer first.
+    a should include("LIST=Second;First;")
+  }
+
+  it should "emit /authors/index.html when author-list layout is provided" in {
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |
+        |[[authors]]
+        |id   = "ed"
+        |name = "Ed"
+        |
+        |[[authors]]
+        |id   = "alice"
+        |name = "Alice"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/post.md",
+      """---
+        |title: Post
+        |author: ed
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/author-list.html",
+      """{{ for a <- .authors }}{{ a.id }}({{ a.count }});{{ end }}""",
+    )
+
+    build()
+
+    // Only authors with at least one referencing page appear. Alice has 0
+    // posts so she's omitted from the roster.
+    val list = out("authors/index.html")
+    list should include("ed(1);")
+    list should not include "alice("
+  }
+
+  it should "expose .site.authors filtered to authors with pages" in {
+    writeAt(
+      "site.toml",
+      """title    = "Blog"
+        |baseURL  = "http://x"
+        |htmlDir  = ""
+        |
+        |[[authors]]
+        |id   = "ed"
+        |name = "Ed"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/_index.md",
+      "---\ntitle: Home\n---\n",
+    )
+    writeAt(
+      "content/post.md",
+      """---
+        |title: Post
+        |author: ed
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      """{{ for a <- .site.authors }}A={{ a.name }};{{ end }}""",
+    )
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    out("index.html") should include("A=Ed;")
+  }
+
+  // ----- Phase 2.7 — OG / Twitter card helpers -----
+
+  it should "emit OG meta tags via {{ ogTags .page }}" in {
+    writeAt(
+      "site.toml",
+      """title    = "My Blog"
+        |baseURL  = "https://example.com"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/post.md",
+      """---
+        |title: Hello
+        |summary: A short summary.
+        |image: /img/hero.jpg
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt(
+      "layouts/_default/file.html",
+      """{{ ogTags .page }}""",
+    )
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n")
+
+    build()
+
+    val html = out("post/index.html")
+    html should include("""<meta property="og:title" content="Hello" />""")
+    html should include("""<meta property="og:type" content="article" />""")
+    html should include("""<meta property="og:url" content="https://example.com/post/" />""")
+    html should include("""<meta property="og:description" content="A short summary." />""")
+    // image is promoted to absolute via baseURL.
+    html should include("""<meta property="og:image" content="https://example.com/img/hero.jpg" />""")
+    html should include("""<meta property="og:site_name" content="My Blog" />""")
+    // Image present → twitter:card escalates to summary_large_image.
+    html should include("""<meta name="twitter:card" content="summary_large_image" />""")
+  }
+
+  it should "fall back to summary then site image when frontmatter lacks them" in {
+    writeAt(
+      "site.toml",
+      """title    = "Site"
+        |baseURL  = "https://example.com"
+        |htmlDir  = ""
+        |ogImage  = "/img/site-default.png"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/post.md",
+      """---
+        |title: No metadata
+        |---
+        |
+        |The first paragraph becomes the auto-summary.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt(
+      "layouts/_default/file.html",
+      """{{ ogTags .page }}""",
+    )
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n")
+
+    build()
+
+    val html = out("post/index.html")
+    // Auto-summary fallback chain: ogDescription/description not set, so
+    // the page's resolved `.summary` fills in.
+    html should include("og:description")
+    html should include("first paragraph")
+    // Site default ogImage.
+    html should include("https://example.com/img/site-default.png")
+  }
+
+  it should "downgrade twitter:card to summary when no image is available" in {
+    writeAt(
+      "site.toml",
+      """title    = "Site"
+        |baseURL  = "https://example.com"
+        |htmlDir  = ""
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/post.md",
+      """---
+        |title: Imageless
+        |summary: Short.
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt(
+      "layouts/_default/file.html",
+      """{{ ogTags .page }}""",
+    )
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n")
+
+    build()
+
+    val html = out("post/index.html")
+    html should include("""<meta name="twitter:card" content="summary" />""")
+    html should not include "og:image"
+  }
+
+  it should "respect the htmlDir prefix when writing permalinked output to disk" in {
+    // With htmlDir = "html" the URL still strips it (the user-facing /post/
+    // URL is unprefixed) but the filesystem path under dst keeps it. This
+    // is the same dual-layer convention that applies to non-permalinked
+    // content.
+    writeAt(
+      "site.toml",
+      """title   = "Blog"
+        |baseURL = "http://x"
+        |htmlDir = "html"
+        |
+        |[permalinks]
+        |posts = ":year/:slug/"
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/posts/_index.md",
+      "---\ntitle: Posts\n---\n",
+    )
+    writeAt(
+      "content/posts/p1.md",
+      """---
+        |title: P1
+        |date: 2024-05-05
+        |---
+        |Body.
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "URL={{ .page.url }}")
+
+    build()
+
+    // URL is htmlDir-stripped, file path is htmlDir-prefixed.
+    val post = out("html/2024/p1/index.html")
+    post should include("URL=/2024/p1/")
+  }
 }

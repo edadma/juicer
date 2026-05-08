@@ -1,0 +1,19 @@
+<!-- Numbered pager strip — render only when there's more than one slice.
+     Structure: ← Prev   |   page N of M   |   Next → -->
+{{ if .section.paginator }}
+{{ if .section.paginator.total }}
+{{ if .section.paginator.total > 1 }}
+<nav class="juicerblog-paginator" aria-label="Pagination">
+  <span>
+    {{ if .section.paginator.prevURL }}<a href="{{ .section.paginator.prevURL }}">← Newer</a>{{ end }}
+  </span>
+  <span class="juicerblog-paginator-pos">
+    Page {{ .section.paginator.current }} of {{ .section.paginator.total }}
+  </span>
+  <span>
+    {{ if .section.paginator.nextURL }}<a href="{{ .section.paginator.nextURL }}">Older →</a>{{ end }}
+  </span>
+</nav>
+{{ end }}
+{{ end }}
+{{ end }}

@@ -1,0 +1,15 @@
+<!-- "In this series" sidebar — renders ONLY when the current page is in
+     a series. Iterates `.page.series.pages`, marking the current entry. -->
+{{ if .page.series }}
+<aside class="juicerblog-series" aria-label="In this series">
+  <h2 class="juicerblog-series-title">In this series</h2>
+  <p class="juicerblog-series-name">{{ .page.series.name }}</p>
+  <ol class="juicerblog-series-list">
+    {{ for s <- .page.series.pages }}
+    <li class="juicerblog-series-item">
+      {{ if s.url }}<a href="{{ s.url }}">{{ s.title }}</a>{{ else }}{{ s.title }}{{ end }}
+    </li>
+    {{ end }}
+  </ol>
+</aside>
+{{ end }}

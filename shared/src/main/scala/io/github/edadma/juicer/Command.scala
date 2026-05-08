@@ -8,6 +8,8 @@ case class BuildCommand(
     src:    Path    = Path("."),
     dst:    Path    = null,
     drafts: Boolean = false,
+    /** Include posts whose parsed `date` is in the future. Phase 2.1. */
+    future: Boolean = false,
 ) extends Command
 
 case class ServeCommand(
@@ -16,6 +18,8 @@ case class ServeCommand(
     host:       String  = "localhost",
     port:       Int     = 8080,
     drafts:     Boolean = false,
+    /** Include posts whose parsed `date` is in the future. Phase 2.1. */
+    future:     Boolean = false,
     liveReload: Boolean = false,
 ) extends Command
 

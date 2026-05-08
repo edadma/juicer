@@ -1,0 +1,9 @@
+<footer class="juicerblog-footer">
+  <div class="juicerblog-footer-inner">
+    <span>© {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+    <span>
+      {{ if .site.feeds }}<a href="{{ relURL '/feed.xml' }}">RSS</a>{{ end }}
+      {{ if .site.tags }}<a href="{{ relURL '/tags/' }}">Tags</a>{{ end }}
+    </span>
+  </div>
+</footer>
