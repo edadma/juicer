@@ -1,0 +1,1092 @@
+/* juicerlanding — single-page product / SaaS landing theme for juicer.
+ *
+ * Conventions follow the rest of the bundled themes: CSS variables for
+ * tokens, [data-theme="dark"] overrides, semantic .juicerlanding-*
+ * class names. No utility framework, no JS framework. The only JS is a
+ * tiny pre-paint theme apply + a click-to-toggle in head.html/topbar.html.
+ *
+ * Palette is slate / indigo / amber: indigo for brand surfaces and
+ * primary affordances, amber for the secondary accent (CTAs that need
+ * to "pop" against the indigo wash), emerald for tertiary "alive" /
+ * checkmark moments, slate for ink and chrome. Deliberately tech-y —
+ * sister to juicerdocs but distinct (juicerdocs is teal/sage, more
+ * documentation-warm). */
+
+/* ============================================================
+   Tokens
+   ============================================================ */
+:root {
+  /* Brand */
+  --brand:        #4f46e5;          /* indigo-600 */
+  --brand-strong: #3730a3;          /* indigo-800 */
+  --brand-soft:   #eef2ff;          /* indigo-50 */
+  --accent:       #f59e0b;          /* amber-500 — CTAs */
+  --leaf:         #10b981;          /* emerald-500 — checks/success */
+
+  /* Surfaces */
+  --bg:           #ffffff;
+  --bg-soft:      #f8fafc;          /* slate-50 — alternating section bg */
+  --surface:      #ffffff;
+  --surface-soft: #f1f5f9;          /* slate-100 — cards on bg, code wells */
+  --ink:          #0f172a;          /* slate-900 — body */
+  --ink-soft:     #334155;          /* slate-700 — secondary */
+  --ink-faint:    #64748b;          /* slate-500 — meta */
+  --rule:         #e2e8f0;          /* slate-200 */
+  --rule-soft:    #f1f5f9;
+
+  /* Code */
+  --code-bg:      #0f172a;          /* slate-900 — dark frame even in light theme */
+  --code-bg-head: #1e293b;          /* slate-800 — frame header */
+  --code-border:  #1e293b;
+  --code-ink:     #e2e8f0;          /* slate-200 */
+  --code-comment: #94a3b8;          /* slate-400 */
+
+  /* Type */
+  --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:  'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Sizing */
+  --measure:    65ch;
+  --gutter:     1.5rem;
+  --max-w:      72rem;              /* container max-width */
+  --max-w-narrow: 56rem;            /* section copy width */
+
+  /* Radii + transitions + elevation */
+  --radius:      0.5rem;
+  --radius-lg:   1rem;
+  --radius-pill: 9999px;
+  --shadow-sm:   0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-md:   0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --shadow-lg:   0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+  --transition:  0.18s ease;
+}
+
+[data-theme="dark"] {
+  --brand:        #818cf8;          /* indigo-400 — lifted for dark */
+  --brand-strong: #c7d2fe;          /* indigo-200 */
+  --brand-soft:   rgba(129, 140, 248, 0.12);
+  --accent:       #fbbf24;          /* amber-400 */
+  --leaf:         #34d399;          /* emerald-400 */
+
+  --bg:           #0b1120;          /* slate-950-ish */
+  --bg-soft:      #0f172a;          /* slate-900 */
+  --surface:      #111c33;          /* slightly lifted from bg */
+  --surface-soft: #1e293b;          /* slate-800 */
+  --ink:          #e2e8f0;          /* slate-200 */
+  --ink-soft:     #cbd5e1;          /* slate-300 */
+  --ink-faint:    #94a3b8;          /* slate-400 */
+  --rule:         #1e293b;
+  --rule-soft:    #1a2333;
+
+  --code-bg:      #020617;          /* slate-950 — even darker than bg */
+  --code-bg-head: #0f172a;
+  --code-border:  #1e293b;
+  --code-ink:     #e2e8f0;
+  --code-comment: #64748b;
+
+  --shadow-sm:   0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md:   0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg:   0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 0 4px rgba(129, 140, 248, 0.18);
+}
+
+/* ============================================================
+   Reset + base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--brand);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+a:hover { color: var(--brand-strong); }
+
+img, video, svg { max-width: 100%; height: auto; display: block; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 0.5em 0;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+h1 { font-size: 2.25rem; }
+h2 { font-size: 1.875rem; }
+h3 { font-size: 1.25rem; }
+
+p { margin: 0 0 1em 0; }
+
+code, pre, kbd, samp {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+:not(pre) > code {
+  background: var(--surface-soft);
+  border: 1px solid var(--rule);
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  font-size: 0.875em;
+  color: var(--brand-strong);
+}
+
+/* ============================================================
+   Layout shell
+   ============================================================ */
+.juicerlanding-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.juicerlanding-main {
+  flex: 1;
+}
+
+/* ============================================================
+   Topbar
+   ============================================================ */
+.juicerlanding-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 1px solid var(--rule);
+}
+[data-theme="dark"] .juicerlanding-topbar {
+  background: rgba(11, 17, 32, 0.85);
+}
+
+.juicerlanding-topbar-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0.875rem var(--gutter);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.juicerlanding-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+.juicerlanding-brand:hover { color: var(--brand); }
+.juicerlanding-brand-logo {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.juicerlanding-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-left: auto;
+}
+.juicerlanding-nav a {
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+.juicerlanding-nav a:hover { color: var(--brand); }
+
+.juicerlanding-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+.juicerlanding-nav + .juicerlanding-topbar-actions { margin-left: 0; }
+
+.juicerlanding-icon-link,
+.juicerlanding-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.juicerlanding-icon-link:hover,
+.juicerlanding-theme-toggle:hover {
+  background: var(--surface-soft);
+  color: var(--brand);
+  border-color: var(--rule);
+}
+
+.juicerlanding-icon-sun { display: none; }
+.juicerlanding-icon-moon { display: block; }
+[data-theme="dark"] .juicerlanding-icon-sun { display: block; }
+[data-theme="dark"] .juicerlanding-icon-moon { display: none; }
+
+.juicerlanding-topbar-cta {
+  padding: 0.5rem 1rem;
+  background: var(--brand);
+  color: white;
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: background var(--transition), transform var(--transition);
+}
+.juicerlanding-topbar-cta:hover {
+  background: var(--brand-strong);
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   Buttons (used by hero, pricing, final-cta)
+   ============================================================ */
+.juicerlanding-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  white-space: nowrap;
+  line-height: 1;
+}
+.juicerlanding-btn:hover { transform: translateY(-1px); }
+
+.juicerlanding-btn--primary {
+  background: var(--brand);
+  color: white;
+}
+.juicerlanding-btn--primary:hover {
+  background: var(--brand-strong);
+  color: white;
+  box-shadow: var(--shadow-glow);
+}
+
+.juicerlanding-btn--secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--rule);
+}
+.juicerlanding-btn--secondary:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.juicerlanding-btn--inverse {
+  background: white;
+  color: var(--brand-strong);
+}
+.juicerlanding-btn--inverse:hover {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.juicerlanding-btn--ghost {
+  background: transparent;
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.juicerlanding-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================================
+   Section scaffolding shared across sections
+   ============================================================ */
+.juicerlanding-section-head {
+  max-width: var(--max-w-narrow);
+  margin: 0 auto 3rem;
+  text-align: center;
+}
+.juicerlanding-section-title {
+  font-size: 2.25rem;
+  margin-bottom: 0.75rem;
+}
+.juicerlanding-section-body {
+  font-size: 1.125rem;
+  color: var(--ink-soft);
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.juicerlanding-hero {
+  padding: 5rem var(--gutter) 4rem;
+  background: linear-gradient(180deg, var(--brand-soft) 0%, var(--bg) 100%);
+}
+[data-theme="dark"] .juicerlanding-hero {
+  background: linear-gradient(180deg, rgba(79, 70, 229, 0.12) 0%, var(--bg) 100%);
+}
+
+.juicerlanding-hero-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.juicerlanding-hero-eyebrow {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin: 0 0 1.25rem 0;
+  letter-spacing: -0.01em;
+}
+[data-theme="dark"] .juicerlanding-hero-eyebrow {
+  color: var(--brand);
+}
+
+.juicerlanding-hero-headline {
+  font-size: 3rem;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.25rem;
+}
+
+.juicerlanding-hero-subheadline {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin-bottom: 2rem;
+  max-width: 32rem;
+}
+
+.juicerlanding-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.juicerlanding-hero-shot img {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ============================================================
+   Code frame (used by hero + code section)
+   ============================================================ */
+.juicerlanding-code-frame {
+  background: var(--code-bg);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.juicerlanding-code-frame-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--code-bg-head);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.juicerlanding-code-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+.juicerlanding-code-dot:first-child { background: #ef4444cc; }
+.juicerlanding-code-dot:nth-child(2) { background: #f59e0bcc; }
+.juicerlanding-code-dot:nth-child(3) { background: #22c55ecc; }
+.juicerlanding-code-lang {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--code-comment);
+  text-transform: lowercase;
+}
+.juicerlanding-code-body {
+  margin: 0;
+  padding: 1.25rem 1.5rem;
+  background: var(--code-bg);
+  color: var(--code-ink);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* ============================================================
+   Trust bar
+   ============================================================ */
+.juicerlanding-trust {
+  padding: 3rem var(--gutter);
+  background: var(--bg-soft);
+  border-block: 1px solid var(--rule);
+}
+.juicerlanding-trust-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  text-align: center;
+}
+.juicerlanding-trust-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 1.5rem;
+}
+.juicerlanding-trust-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2.5rem;
+}
+.juicerlanding-trust-list img {
+  max-height: 2rem;
+  width: auto;
+  opacity: 0.7;
+  filter: grayscale(100%);
+  transition: opacity var(--transition), filter var(--transition);
+}
+.juicerlanding-trust-list a:hover img,
+.juicerlanding-trust-list li:hover img {
+  opacity: 1;
+  filter: none;
+}
+
+/* ============================================================
+   Features
+   ============================================================ */
+.juicerlanding-features {
+  padding: 5rem var(--gutter);
+}
+.juicerlanding-features-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+.juicerlanding-feature-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+.juicerlanding-feature-card {
+  padding: 1.75rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+.juicerlanding-feature-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.juicerlanding-feature-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-soft);
+  color: var(--brand);
+  border-radius: var(--radius);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+.juicerlanding-feature-title {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+.juicerlanding-feature-body {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  font-size: 0.9375rem;
+}
+
+/* ============================================================
+   Code section (separate from hero code)
+   ============================================================ */
+.juicerlanding-code-section {
+  padding: 5rem var(--gutter);
+  background: var(--bg-soft);
+}
+.juicerlanding-code-section-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 3rem;
+  align-items: center;
+}
+.juicerlanding-code-section-copy .juicerlanding-section-title {
+  text-align: left;
+  font-size: 1.875rem;
+}
+.juicerlanding-code-section-copy .juicerlanding-section-body {
+  text-align: left;
+  margin-left: 0;
+  margin-bottom: 1.25rem;
+}
+
+/* ============================================================
+   Checklist (used by code section, pricing tiers)
+   ============================================================ */
+.juicerlanding-checklist {
+  list-style: none;
+  margin: 0 0 1.25rem 0;
+  padding: 0;
+}
+.juicerlanding-checklist li {
+  position: relative;
+  padding: 0.375rem 0 0.375rem 1.75rem;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+.juicerlanding-checklist li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  background: var(--leaf);
+  border-radius: 50%;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='white'%3E%3Cpath d='M16.7 5.3a1 1 0 0 1 0 1.4l-7 7a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.3-6.3a1 1 0 0 1 1.4 0z'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='white'%3E%3Cpath d='M16.7 5.3a1 1 0 0 1 0 1.4l-7 7a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.3-6.3a1 1 0 0 1 1.4 0z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* ============================================================
+   Showcase
+   ============================================================ */
+.juicerlanding-showcase {
+  padding: 5rem var(--gutter);
+}
+.juicerlanding-showcase-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 3rem;
+  align-items: center;
+}
+.juicerlanding-showcase.is-reverse .juicerlanding-showcase-inner {
+  grid-template-columns: 1.25fr 1fr;
+}
+.juicerlanding-showcase.is-reverse .juicerlanding-showcase-figure {
+  order: -1;
+}
+.juicerlanding-showcase-copy .juicerlanding-section-title {
+  text-align: left;
+  font-size: 1.875rem;
+}
+.juicerlanding-showcase-copy .juicerlanding-section-body {
+  text-align: left;
+  margin-left: 0;
+}
+.juicerlanding-showcase-figure {
+  margin: 0;
+}
+.juicerlanding-showcase-figure img {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--rule);
+}
+.juicerlanding-showcase-figure figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+/* ============================================================
+   Pricing
+   ============================================================ */
+.juicerlanding-pricing {
+  padding: 5rem var(--gutter);
+  background: var(--bg-soft);
+}
+.juicerlanding-pricing-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+.juicerlanding-pricing-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  align-items: stretch;
+}
+.juicerlanding-pricing-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.75rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.juicerlanding-pricing-card:hover { border-color: var(--brand); }
+.juicerlanding-pricing-card.is-featured {
+  border-color: var(--brand);
+  border-width: 2px;
+  box-shadow: var(--shadow-glow);
+  transform: scale(1.02);
+}
+.juicerlanding-pricing-badge {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--brand);
+  color: white;
+  padding: 0.25rem 0.875rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.juicerlanding-pricing-tier {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+.juicerlanding-pricing-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  margin-bottom: 0.5rem;
+}
+.juicerlanding-pricing-amount {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.juicerlanding-pricing-cadence {
+  font-size: 0.9375rem;
+  color: var(--ink-faint);
+}
+.juicerlanding-pricing-tagline {
+  margin: 0 0 1.25rem 0;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+.juicerlanding-pricing-card .juicerlanding-checklist {
+  flex: 1;
+}
+.juicerlanding-pricing-card .juicerlanding-btn {
+  margin-top: auto;
+  width: 100%;
+}
+
+/* ============================================================
+   Testimonials
+   ============================================================ */
+.juicerlanding-testimonials {
+  padding: 5rem var(--gutter);
+}
+.juicerlanding-testimonials-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+.juicerlanding-testimonial-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+.juicerlanding-testimonial-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.75rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+}
+.juicerlanding-testimonial-quote {
+  margin: 0 0 1.25rem 0;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink);
+  flex: 1;
+}
+.juicerlanding-testimonial-quote::before { content: "\201C"; color: var(--brand); margin-right: 0.125rem; }
+.juicerlanding-testimonial-quote::after { content: "\201D"; color: var(--brand); margin-left: 0.125rem; }
+.juicerlanding-testimonial-byline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.juicerlanding-testimonial-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--brand-soft);
+}
+.juicerlanding-testimonial-name {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+.juicerlanding-testimonial-role {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+}
+
+/* ============================================================
+   FAQ
+   ============================================================ */
+.juicerlanding-faq {
+  padding: 5rem var(--gutter);
+  background: var(--bg-soft);
+}
+.juicerlanding-faq-inner {
+  max-width: 48rem;
+  margin: 0 auto;
+}
+.juicerlanding-faq-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.juicerlanding-faq-item {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.juicerlanding-faq-item[open] { border-color: var(--brand); }
+.juicerlanding-faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ink);
+  list-style: none;
+  user-select: none;
+}
+.juicerlanding-faq-q::-webkit-details-marker { display: none; }
+.juicerlanding-faq-q::after {
+  content: "";
+  width: 0.75rem;
+  height: 0.75rem;
+  border-right: 2px solid var(--ink-faint);
+  border-bottom: 2px solid var(--ink-faint);
+  transform: rotate(45deg);
+  margin-top: -0.25rem;
+  transition: transform var(--transition);
+  flex-shrink: 0;
+}
+.juicerlanding-faq-item[open] .juicerlanding-faq-q::after {
+  transform: rotate(-135deg);
+  margin-top: 0.25rem;
+}
+.juicerlanding-faq-a {
+  padding: 0 1.25rem 1.25rem;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+.juicerlanding-faq-a p:last-child { margin-bottom: 0; }
+
+/* ============================================================
+   Final CTA
+   ============================================================ */
+.juicerlanding-final-cta {
+  padding: 5rem var(--gutter);
+  background: linear-gradient(135deg, var(--brand-strong) 0%, var(--brand) 100%);
+  color: white;
+  text-align: center;
+}
+.juicerlanding-final-cta-inner {
+  max-width: 42rem;
+  margin: 0 auto;
+}
+.juicerlanding-final-cta-title {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: white;
+  letter-spacing: -0.025em;
+}
+.juicerlanding-final-cta-body {
+  font-size: 1.1875rem;
+  margin-bottom: 2rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+.juicerlanding-final-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.juicerlanding-footer {
+  background: var(--bg-soft);
+  border-top: 1px solid var(--rule);
+  padding: 3.5rem var(--gutter) 1.5rem;
+}
+.juicerlanding-footer-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: 3rem;
+  margin-bottom: 2.5rem;
+}
+.juicerlanding-footer-brand .juicerlanding-brand {
+  margin-bottom: 0.75rem;
+}
+.juicerlanding-footer-tagline {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--ink-faint);
+  max-width: 22rem;
+}
+.juicerlanding-footer-col h3 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+}
+.juicerlanding-footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+.juicerlanding-footer-col a {
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+.juicerlanding-footer-col a:hover { color: var(--brand); }
+.juicerlanding-footer-fine {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+}
+.juicerlanding-footer-credit a {
+  color: var(--ink-faint);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+}
+.juicerlanding-footer-credit a:hover { color: var(--brand); }
+
+/* ============================================================
+   Generic page (file.html / folder.html)
+   ============================================================ */
+.juicerlanding-page-wrap {
+  max-width: var(--max-w-narrow);
+  margin: 0 auto;
+  padding: 4rem var(--gutter);
+}
+.juicerlanding-page-title {
+  font-size: 2.5rem;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.5rem;
+}
+.juicerlanding-page-summary {
+  font-size: 1.125rem;
+  color: var(--ink-soft);
+  margin-bottom: 2rem;
+}
+.juicerlanding-content {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.juicerlanding-content > * + * { margin-top: 1rem; }
+.juicerlanding-content h2 {
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+.juicerlanding-content h3 {
+  font-size: 1.1875rem;
+  margin-top: 2rem;
+}
+.juicerlanding-content a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.juicerlanding-content blockquote {
+  margin: 1.5rem 0;
+  padding: 0.5rem 1.25rem;
+  border-left: 3px solid var(--brand);
+  background: var(--brand-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--ink-soft);
+}
+.juicerlanding-content pre {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.juicerlanding-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9375rem;
+}
+.juicerlanding-content th,
+.juicerlanding-content td {
+  text-align: left;
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--rule);
+}
+.juicerlanding-content th { font-weight: 600; color: var(--ink); }
+
+.juicerlanding-postlist {
+  list-style: none;
+  margin: 2rem 0 0 0;
+  padding: 0;
+}
+.juicerlanding-postlist li {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.juicerlanding-postlist-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+.juicerlanding-postlist-title a { color: var(--ink); }
+.juicerlanding-postlist-title a:hover { color: var(--brand); }
+.juicerlanding-postlist-meta {
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+  margin-bottom: 0.5rem;
+}
+.juicerlanding-postlist-summary {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 960px) {
+  h1 { font-size: 1.875rem; }
+  h2 { font-size: 1.5rem; }
+
+  .juicerlanding-hero { padding: 3rem var(--gutter) 2.5rem; }
+  .juicerlanding-hero-inner { grid-template-columns: 1fr; gap: 2rem; }
+  .juicerlanding-hero-headline { font-size: 2.25rem; }
+  .juicerlanding-hero-subheadline { font-size: 1.0625rem; }
+
+  .juicerlanding-feature-grid { grid-template-columns: repeat(2, 1fr); }
+  .juicerlanding-pricing-grid { grid-template-columns: 1fr; }
+  .juicerlanding-pricing-card.is-featured { transform: none; }
+  .juicerlanding-testimonial-grid { grid-template-columns: 1fr; }
+
+  .juicerlanding-code-section-inner,
+  .juicerlanding-showcase-inner {
+    grid-template-columns: 1fr;
+  }
+  .juicerlanding-showcase.is-reverse .juicerlanding-showcase-inner { grid-template-columns: 1fr; }
+  .juicerlanding-showcase.is-reverse .juicerlanding-showcase-figure { order: 0; }
+
+  .juicerlanding-section-title { font-size: 1.75rem; }
+  .juicerlanding-final-cta-title { font-size: 1.875rem; }
+
+  .juicerlanding-footer-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  .juicerlanding-footer-brand { grid-column: 1 / -1; }
+
+  .juicerlanding-nav { display: none; }
+}
+
+@media (max-width: 560px) {
+  .juicerlanding-feature-grid { grid-template-columns: 1fr; }
+  .juicerlanding-trust-list { gap: 1.5rem; }
+  .juicerlanding-footer-inner { grid-template-columns: 1fr; }
+  .juicerlanding-topbar-cta { display: none; }
+}
+
+/* ============================================================
+   Scrollbar — match the slate palette
+   ============================================================ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }

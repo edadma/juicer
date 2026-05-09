@@ -1,0 +1,47 @@
+<!-- Pricing tiers. site.toml:
+       [pricingHead]
+       title = "Simple pricing, honest defaults"
+       body  = "Cancel any time. Free tier stays free."
+
+       [[pricing]]
+       tier     = "Free"
+       price    = "$0"
+       cadence  = "self-hosted"
+       features = ["Unlimited sites", "30-day retention", "Community support"]
+       cta      = { label = "Get the source", url = "/docs/install/" }
+       featured = false
+
+     One row per tier; the row marked `featured = true` gets the
+     highlighted column treatment. Order in site.toml is order on screen
+     left-to-right. -->
+{{ if .site.pricing }}
+<section class="juicerlanding-pricing">
+  <div class="juicerlanding-pricing-inner">
+    {{ if .site.pricingHead }}
+    <header class="juicerlanding-section-head">
+      {{ if .site.pricingHead.title }}<h2 class="juicerlanding-section-title">{{ .site.pricingHead.title }}</h2>{{ end }}
+      {{ if .site.pricingHead.body }}<p class="juicerlanding-section-body">{{ .site.pricingHead.body }}</p>{{ end }}
+    </header>
+    {{ end }}
+    <ul class="juicerlanding-pricing-grid">
+      {{ for p <- .site.pricing }}
+      <li class="juicerlanding-pricing-card{{ if p.featured }} is-featured{{ end }}">
+        {{ if p.featured }}<span class="juicerlanding-pricing-badge">Most popular</span>{{ end }}
+        {{ if p.tier }}<h3 class="juicerlanding-pricing-tier">{{ p.tier }}</h3>{{ end }}
+        <div class="juicerlanding-pricing-price">
+          {{ if p.price }}<span class="juicerlanding-pricing-amount">{{ p.price }}</span>{{ end }}
+          {{ if p.cadence }}<span class="juicerlanding-pricing-cadence">{{ p.cadence }}</span>{{ end }}
+        </div>
+        {{ if p.tagline }}<p class="juicerlanding-pricing-tagline">{{ p.tagline }}</p>{{ end }}
+        {{ if p.features }}
+        <ul class="juicerlanding-checklist">
+          {{ for feat <- p.features }}<li>{{ feat }}</li>{{ end }}
+        </ul>
+        {{ end }}
+        {{ if p.cta }}<a class="juicerlanding-btn{{ if p.featured }} juicerlanding-btn--primary{{ else }} juicerlanding-btn--secondary{{ end }}" href="{{ p.cta.url }}">{{ p.cta.label }}</a>{{ end }}
+      </li>
+      {{ end }}
+    </ul>
+  </div>
+</section>
+{{ end }}

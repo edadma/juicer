@@ -1,0 +1,36 @@
+<!-- Landing-theme footer: a four-column block (brand blurb · product
+     links · resource links · legal links), then a fine-print row.
+     All four column headings + lists come from site.toml so a site
+     can adjust without touching the theme. Each column gates on its
+     data; a fully empty footer collapses to just the fine-print row. -->
+<footer class="juicerlanding-footer">
+  <div class="juicerlanding-footer-inner">
+    <div class="juicerlanding-footer-brand">
+      <a class="juicerlanding-brand" href="{{ relURL '/' }}">
+        {{ if .site.juicerlanding.logo }}<img class="juicerlanding-brand-logo" src="{{ relURL .site.juicerlanding.logo }}" alt="">{{ end }}
+        <span class="juicerlanding-brand-name">{{ .site.title }}</span>
+      </a>
+      {{ if .site.tagline }}<p class="juicerlanding-footer-tagline">{{ .site.tagline }}</p>{{ end }}
+    </div>
+
+    {{ if .site.footerColumns }}
+    {{ for col <- .site.footerColumns }}
+    <div class="juicerlanding-footer-col">
+      {{ if col.title }}<h3>{{ col.title }}</h3>{{ end }}
+      {{ if col.links }}
+      <ul>
+        {{ for l <- col.links }}<li><a href="{{ relURL l.url }}">{{ l.label }}</a></li>{{ end }}
+      </ul>
+      {{ end }}
+    </div>
+    {{ end }}
+    {{ end }}
+  </div>
+
+  <div class="juicerlanding-footer-fine">
+    <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+    {{ if not .site.hideJuicerCredit }}
+    <span class="juicerlanding-footer-credit">Built with <a href="https://github.com/edadma/juicer">juicer</a></span>
+    {{ end }}
+  </div>
+</footer>

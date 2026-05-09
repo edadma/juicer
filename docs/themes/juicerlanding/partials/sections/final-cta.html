@@ -1,0 +1,22 @@
+<!-- Final CTA panel. site.toml:
+       [finalCta]
+       title        = "Ready to ship?"
+       body         = "Get analytics that respects your visitors. Two minutes to install."
+       primaryCta   = { label = "Start free", url = "/signup/" }
+       secondaryCta = { label = "Read the docs", url = "/docs/" }
+
+     The "last chance" panel above the footer. Wide, brand-coloured,
+     centered copy with two buttons. Stage-1 ships this so even a
+     bare-minimum site has a strong close. -->
+{{ if .site.finalCta }}
+<section class="juicerlanding-final-cta">
+  <div class="juicerlanding-final-cta-inner">
+    {{ if .site.finalCta.title }}<h2 class="juicerlanding-final-cta-title">{{ .site.finalCta.title }}</h2>{{ end }}
+    {{ if .site.finalCta.body }}<p class="juicerlanding-final-cta-body">{{ .site.finalCta.body }}</p>{{ end }}
+    <div class="juicerlanding-final-cta-actions">
+      {{ if .site.finalCta.primaryCta }}<a class="juicerlanding-btn juicerlanding-btn--primary juicerlanding-btn--inverse" href="{{ .site.finalCta.primaryCta.url }}">{{ .site.finalCta.primaryCta.label }}</a>{{ end }}
+      {{ if .site.finalCta.secondaryCta }}<a class="juicerlanding-btn juicerlanding-btn--ghost" href="{{ .site.finalCta.secondaryCta.url }}">{{ .site.finalCta.secondaryCta.label }}</a>{{ end }}
+    </div>
+  </div>
+</section>
+{{ end }}

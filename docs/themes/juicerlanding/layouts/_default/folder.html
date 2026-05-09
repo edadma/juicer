@@ -1,0 +1,29 @@
+<!-- Generic section index — used when a landing site adds a sub-section
+     like /blog/, /changelog/. Section intro from _index.md content,
+     then a list of child pages with date and summary. -->
+{{ define content }}
+  <article class="juicerlanding-page-wrap">
+    {{ if .page.title }}<h1 class="juicerlanding-page-title">{{ .page.title }}</h1>{{ end }}
+    {{ if .content }}
+    <div class="juicerlanding-content">
+      {{ .content }}
+    </div>
+    {{ end }}
+
+    {{ if .section.pages }}
+      <ol class="juicerlanding-postlist">
+        {{ for p <- .section.pages }}
+        <li>
+          <h2 class="juicerlanding-postlist-title">
+            <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+          </h2>
+          <div class="juicerlanding-postlist-meta">
+            {{ if p.date }}<time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time>{{ end }}
+          </div>
+          {{ if p.summary }}<p class="juicerlanding-postlist-summary">{{ p.summary }}</p>{{ end }}
+        </li>
+        {{ end }}
+      </ol>
+    {{ end }}
+  </article>
+{{ end }}

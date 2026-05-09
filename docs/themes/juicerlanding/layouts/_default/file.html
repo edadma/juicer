@@ -1,0 +1,13 @@
+<!-- Generic single-page layout — used by /changelog/, /privacy/,
+     /about/, etc. Long-form prose with a constrained measure for
+     comfortable reading. Title above content; no surrounding chrome
+     beyond the topbar/footer. -->
+{{ define content }}
+  <article class="juicerlanding-page-wrap">
+    {{ if .page.title }}<h1 class="juicerlanding-page-title">{{ .page.title }}</h1>{{ end }}
+    {{ if .page.summary }}<p class="juicerlanding-page-summary">{{ .page.summary }}</p>{{ end }}
+    <div class="juicerlanding-content">
+      {{ .content }}
+    </div>
+  </article>
+{{ end }}

@@ -1,0 +1,26 @@
+<!-- Single-page landing layout. Stack of conditional sections, each one
+     its own partial. Section order is fixed by the theme; site authors
+     control which sections render by including/omitting the matching
+     frontmatter block in site.toml. Missing block = section silently
+     omitted (each section partial gates on its own data).
+
+     Section files live under `partials/sections/` for tidy organisation,
+     but juicer's partial loader keys by basename only, so the calls
+     here use the bare basename. (No name collisions because chrome
+     partials are head/topbar/footer.)
+
+     Order: hero → trust → features → code → showcase → pricing →
+     testimonials → faq → final-cta. Adjust this stack only when
+     redesigning the theme's narrative; site authors should never need
+     to touch the home layout. -->
+{{ define content }}
+  {{ partial 'hero' . }}
+  {{ partial 'trust' . }}
+  {{ partial 'features' . }}
+  {{ partial 'code-section' . }}
+  {{ partial 'showcase' . }}
+  {{ partial 'pricing' . }}
+  {{ partial 'testimonials' . }}
+  {{ partial 'faq' . }}
+  {{ partial 'final-cta' . }}
+{{ end }}

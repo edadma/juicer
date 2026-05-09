@@ -1,0 +1,26 @@
+<!-- Screenshot showcase. site.toml:
+       [showcase]
+       title   = "..."
+       body    = "..."
+       image   = "/img/screenshots/dashboard.png"
+       caption = "Optional figcaption"
+       reverse = true   # flip image to the left, copy to the right
+
+     A figure-with-caption pattern — the image is the hero and the copy
+     contextualises it. -->
+{{ if .site.showcase }}
+<section class="juicerlanding-showcase{{ if .site.showcase.reverse }} is-reverse{{ end }}">
+  <div class="juicerlanding-showcase-inner">
+    <div class="juicerlanding-showcase-copy">
+      {{ if .site.showcase.title }}<h2 class="juicerlanding-section-title">{{ .site.showcase.title }}</h2>{{ end }}
+      {{ if .site.showcase.body }}<p class="juicerlanding-section-body">{{ .site.showcase.body }}</p>{{ end }}
+    </div>
+    {{ if .site.showcase.image }}
+    <figure class="juicerlanding-showcase-figure">
+      <img src="{{ relURL .site.showcase.image }}" alt="{{ if .site.showcase.alt }}{{ .site.showcase.alt }}{{ else }}{{ .site.showcase.title }}{{ end }}" loading="lazy">
+      {{ if .site.showcase.caption }}<figcaption>{{ .site.showcase.caption }}</figcaption>{{ end }}
+    </figure>
+    {{ end }}
+  </div>
+</section>
+{{ end }}

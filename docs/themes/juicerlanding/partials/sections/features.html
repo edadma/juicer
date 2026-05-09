@@ -1,0 +1,34 @@
+<!-- Features grid. site.toml:
+       [featuresHead]
+       title = "Everything you need, nothing you don't"
+       body  = "Optional intro paragraph above the grid."
+
+       [[features]]
+       title = "..."
+       body  = "..."
+       icon  = "✨"          # any emoji OR url to an svg
+
+     3-up at desktop, 2-up at tablet, 1-up at mobile. Icon is rendered
+     inline; if the value looks like a URL (contains "/"), it's emitted
+     as <img>, otherwise as text (emoji-as-icon). -->
+{{ if .site.features }}
+<section class="juicerlanding-features">
+  <div class="juicerlanding-features-inner">
+    {{ if .site.featuresHead }}
+    <header class="juicerlanding-section-head">
+      {{ if .site.featuresHead.title }}<h2 class="juicerlanding-section-title">{{ .site.featuresHead.title }}</h2>{{ end }}
+      {{ if .site.featuresHead.body }}<p class="juicerlanding-section-body">{{ .site.featuresHead.body }}</p>{{ end }}
+    </header>
+    {{ end }}
+    <ul class="juicerlanding-feature-grid">
+      {{ for f <- .site.features }}
+      <li class="juicerlanding-feature-card">
+        {{ if f.icon }}<div class="juicerlanding-feature-icon">{{ f.icon }}</div>{{ end }}
+        {{ if f.title }}<h3 class="juicerlanding-feature-title">{{ f.title }}</h3>{{ end }}
+        {{ if f.body }}<p class="juicerlanding-feature-body">{{ f.body }}</p>{{ end }}
+      </li>
+      {{ end }}
+    </ul>
+  </div>
+</section>
+{{ end }}

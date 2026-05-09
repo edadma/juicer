@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="{{ if .page.lang }}{{ .page.lang }}{{ else }}en{{ end }}">
+<head>
+  {{ partial 'head' . }}
+</head>
+<body>
+  <div class="juicerlanding-page">
+    {{ partial 'topbar' . }}
+    <main class="juicerlanding-main">
+      {{ block content . }}{{ end }}
+    </main>
+    {{ partial 'footer' . }}
+  </div>
+</body>
+</html>

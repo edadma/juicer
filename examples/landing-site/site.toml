@@ -1,0 +1,180 @@
+# Example landing-site — exercises the juicerlanding theme. Stage-1
+# demo: hero, six-feature grid, final CTA, footer. Stage-2 will add
+# pricing, testimonials, FAQ, screenshot showcase. Stage-3 adds the
+# trust bar, secondary pages (changelog/about/privacy), and dark-mode
+# polish.
+#
+# Demo product: "Tally" — a fictional privacy-first analytics tool
+# for indie devs. Picked because every section of the theme has
+# something concrete to render against it.
+#
+# Local preview:
+#   sbt 'juicerJVM/run serve -s examples/landing-site -L'
+
+title       = "Tally"
+tagline     = "Web analytics that respects your visitors."
+author      = "Tally"
+baseURL     = "http://localhost:8080"
+description = "Privacy-first web analytics for indie developers. One line of code, zero cookies, GDPR-clean by default."
+
+themeDir = "../../docs/themes"
+theme    = "juicerlanding"
+
+htmlDir = ""
+sortBy  = "date"
+
+# Optional engine keys, all themes read these.
+# favicon          = "/favicon.svg"
+# hideJuicerCredit = true
+repoURL = "https://github.com/example/tally"
+
+# Topbar CTA — surfaced on every page so the "start free" path is
+# always one click away. Falls back to nothing if unset.
+[topbarCta]
+label = "Start free"
+url   = "#pricing"
+
+# Topbar nav links. Order is left-to-right. NOTE: keyed `topnav`, not
+# `nav` — top-level `nav` is the juicer engine's reserved key for
+# table-of-contents configuration.
+[[topnav]]
+label = "Features"
+url   = "#features"
+
+[[topnav]]
+label = "Pricing"
+url   = "#pricing"
+
+[[topnav]]
+label = "Docs"
+url   = "/docs/"
+
+# ============================================================
+# Hero — single [hero] block. The home layout silently omits the
+# section if this block is absent.
+# ============================================================
+[hero]
+eyebrow      = "v1.0 · privacy-first"
+headline     = "Web analytics that respects your visitors."
+subheadline  = "One line of code, zero cookies, GDPR-clean by default. See where your traffic comes from without compromising the people who give it to you."
+codeLang     = "html"
+codeSnippet  = """<script defer
+  src="https://tally.dev/t.js"
+  data-site="YOUR_KEY">
+</script>"""
+
+[hero.primaryCta]
+label = "Start free"
+url   = "#pricing"
+
+[hero.secondaryCta]
+label = "View on GitHub"
+url   = "https://github.com/example/tally"
+
+# ============================================================
+# Features — grid section heading is optional; six cards.
+# ============================================================
+[featuresHead]
+title = "Everything you need, nothing you don't"
+body  = "Modern analytics shouldn't require a privacy compromise or a cookie banner. Tally is the smallest possible thing that gives you the answers."
+
+[[features]]
+icon  = "🍪"
+title = "No cookies, no banners"
+body  = "Visitors are counted by hashing IP + user-agent into a daily-rotated salt. Nothing persists across days, nothing identifies a person."
+
+[[features]]
+icon  = "⚡"
+title = "Less than 1 KB"
+body  = "The tracker script is gzipped to under 900 bytes. No frameworks, no bundlers, no third-party requests after the initial pixel."
+
+[[features]]
+icon  = "🛣️"
+title = "SPA-aware"
+body  = "Detects History API navigation automatically. React Router, SvelteKit, Next.js — virtual page views just work, no manual instrumentation."
+
+[[features]]
+icon  = "📊"
+title = "Real-time dashboard"
+body  = "Live visitor count + page-view stream that updates as people land. No 24-hour delay, no aggregation lag."
+
+[[features]]
+icon  = "📁"
+title = "Exportable everything"
+body  = "Download raw events as CSV any time. Your data, your laptop, no vendor lock-in. Pipe it into DuckDB and slice however you like."
+
+[[features]]
+icon  = "🐳"
+title = "Self-hostable"
+body  = "Single Docker container, SQLite by default, Postgres if you outgrow it. Same code as the cloud product. MIT licensed."
+
+# ============================================================
+# Final CTA — closes the page above the footer.
+# ============================================================
+[finalCta]
+title = "Stop spying on your users."
+body  = "Two minutes to install. Free forever for self-hosted. No credit card to try the cloud."
+
+[finalCta.primaryCta]
+label = "Start free"
+url   = "#pricing"
+
+[finalCta.secondaryCta]
+label = "Read the docs"
+url   = "/docs/"
+
+# ============================================================
+# Footer — four-column layout: brand blurb (auto) + three link
+# columns. Each column: title + array of {label, url, external?}.
+# ============================================================
+[[footerColumns]]
+title = "Product"
+
+[[footerColumns.links]]
+label = "Features"
+url   = "#features"
+
+[[footerColumns.links]]
+label = "Pricing"
+url   = "#pricing"
+
+[[footerColumns.links]]
+label = "Changelog"
+url   = "/changelog/"
+
+[[footerColumns]]
+title = "Resources"
+
+[[footerColumns.links]]
+label = "Docs"
+url   = "/docs/"
+
+[[footerColumns.links]]
+label = "GitHub"
+url   = "https://github.com/example/tally"
+
+[[footerColumns.links]]
+label = "Status"
+url   = "https://status.tally.dev"
+
+[[footerColumns]]
+title = "Company"
+
+[[footerColumns.links]]
+label = "About"
+url   = "/about/"
+
+[[footerColumns.links]]
+label = "Privacy"
+url   = "/privacy/"
+
+[[footerColumns.links]]
+label = "Contact"
+url   = "mailto:hi@tally.dev"
+
+# Per-site palette overrides. The defaults are slate / indigo / amber.
+# Uncomment to retune; see docs/content/reference/theming.md.
+#
+# [juicerlanding]
+# brand  = "#0f766e"   # teal-700
+# accent = "#dc2626"   # red-600

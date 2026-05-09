@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Not found — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerlanding.css' }}">
+</head>
+<body>
+  <div class="juicerlanding-page">
+    <header class="juicerlanding-topbar">
+      <div class="juicerlanding-topbar-inner">
+        <a class="juicerlanding-brand" href="{{ relURL '/' }}">{{ .site.title }}</a>
+      </div>
+    </header>
+    <main class="juicerlanding-main">
+      <article class="juicerlanding-page-wrap" style="text-align: center;">
+        <h1 class="juicerlanding-page-title">404</h1>
+        <p>That page doesn't exist. Try the <a href="{{ relURL '/' }}">home page</a>.</p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!-- FAQ section. site.toml:
+       [faqHead]
+       title = "Frequently asked"
+       body  = "Optional intro paragraph."
+
+       [[faqs]]
+       q = "..."
+       a = "..."
+
+     Rendered as native <details>/<summary> — no JS, browser handles
+     the open/close. CSS animates the disclosure. Site authors who
+     want to open the first item by default can set `open = true` on
+     that row. -->
+{{ if .site.faqs }}
+<section class="juicerlanding-faq">
+  <div class="juicerlanding-faq-inner">
+    {{ if .site.faqHead }}
+    <header class="juicerlanding-section-head">
+      {{ if .site.faqHead.title }}<h2 class="juicerlanding-section-title">{{ .site.faqHead.title }}</h2>{{ end }}
+      {{ if .site.faqHead.body }}<p class="juicerlanding-section-body">{{ .site.faqHead.body }}</p>{{ end }}
+    </header>
+    {{ end }}
+    <ul class="juicerlanding-faq-list">
+      {{ for f <- .site.faqs }}
+      <li>
+        <details class="juicerlanding-faq-item"{{ if f.open }} open{{ end }}>
+          <summary class="juicerlanding-faq-q">{{ f.q }}</summary>
+          <div class="juicerlanding-faq-a">{{ f.a }}</div>
+        </details>
+      </li>
+      {{ end }}
+    </ul>
+  </div>
+</section>
+{{ end }}

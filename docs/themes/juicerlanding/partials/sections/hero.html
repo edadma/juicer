@@ -1,0 +1,46 @@
+<!-- Hero section. site.toml:
+       [hero]
+       headline      = "..."
+       subheadline   = "..."
+       primaryCta    = { label = "Start free", url = "/signup/" }
+       secondaryCta  = { label = "View on GitHub", url = "https://..." }
+       codeSnippet   = "..."   # rendered in a <pre><code>
+       codeLang      = "html"  # for the language tag chip
+       screenshot    = "/img/screenshots/dashboard.png"
+       eyebrow       = "v1.0 — privacy-first analytics"
+
+     If [hero] is absent, the section is silently omitted. Body text
+     and primaryCta are the only really-required fields; the rest
+     gracefully drop out. -->
+{{ if .site.hero }}
+<section class="juicerlanding-hero">
+  <div class="juicerlanding-hero-inner">
+    <div class="juicerlanding-hero-copy">
+      {{ if .site.hero.eyebrow }}<p class="juicerlanding-hero-eyebrow">{{ .site.hero.eyebrow }}</p>{{ end }}
+      {{ if .site.hero.headline }}<h1 class="juicerlanding-hero-headline">{{ .site.hero.headline }}</h1>{{ end }}
+      {{ if .site.hero.subheadline }}<p class="juicerlanding-hero-subheadline">{{ .site.hero.subheadline }}</p>{{ end }}
+      <div class="juicerlanding-hero-actions">
+        {{ if .site.hero.primaryCta }}<a class="juicerlanding-btn juicerlanding-btn--primary" href="{{ .site.hero.primaryCta.url }}">{{ .site.hero.primaryCta.label }}</a>{{ end }}
+        {{ if .site.hero.secondaryCta }}<a class="juicerlanding-btn juicerlanding-btn--secondary" href="{{ .site.hero.secondaryCta.url }}">{{ .site.hero.secondaryCta.label }}</a>{{ end }}
+      </div>
+    </div>
+    {{ if .site.hero.codeSnippet }}
+    <div class="juicerlanding-hero-code">
+      <div class="juicerlanding-code-frame">
+        <div class="juicerlanding-code-frame-head">
+          <span class="juicerlanding-code-dot"></span>
+          <span class="juicerlanding-code-dot"></span>
+          <span class="juicerlanding-code-dot"></span>
+          {{ if .site.hero.codeLang }}<span class="juicerlanding-code-lang">{{ .site.hero.codeLang }}</span>{{ end }}
+        </div>
+        <pre class="juicerlanding-code-body"><code>{{ .site.hero.codeSnippet }}</code></pre>
+      </div>
+    </div>
+    {{ else }}{{ if .site.hero.screenshot }}
+    <div class="juicerlanding-hero-shot">
+      <img src="{{ relURL .site.hero.screenshot }}" alt="{{ if .site.hero.screenshotAlt }}{{ .site.hero.screenshotAlt }}{{ else }}{{ .site.title }} screenshot{{ end }}">
+    </div>
+    {{ end }}{{ end }}
+  </div>
+</section>
+{{ end }}

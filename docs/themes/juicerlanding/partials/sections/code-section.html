@@ -1,0 +1,40 @@
+<!-- Code showcase section (separate from the hero's code snippet).
+     site.toml:
+       [code]
+       title   = "..."
+       body    = "..."
+       lang    = "javascript"
+       snippet = "const tally = ..."
+       bullets = ["Bullet one", "Bullet two", "Bullet three"]
+
+     Two-column at desktop: code on one side, headline + bullets on
+     the other. Bullets are rendered as a checklist — emerald check
+     icons bias the eye toward "yes, you get this for free". -->
+{{ if .site.code }}
+<section class="juicerlanding-code-section">
+  <div class="juicerlanding-code-section-inner">
+    <div class="juicerlanding-code-section-copy">
+      {{ if .site.code.title }}<h2 class="juicerlanding-section-title">{{ .site.code.title }}</h2>{{ end }}
+      {{ if .site.code.body }}<p class="juicerlanding-section-body">{{ .site.code.body }}</p>{{ end }}
+      {{ if .site.code.bullets }}
+      <ul class="juicerlanding-checklist">
+        {{ for b <- .site.code.bullets }}<li>{{ b }}</li>{{ end }}
+      </ul>
+      {{ end }}
+    </div>
+    {{ if .site.code.snippet }}
+    <div class="juicerlanding-code-section-frame">
+      <div class="juicerlanding-code-frame">
+        <div class="juicerlanding-code-frame-head">
+          <span class="juicerlanding-code-dot"></span>
+          <span class="juicerlanding-code-dot"></span>
+          <span class="juicerlanding-code-dot"></span>
+          {{ if .site.code.lang }}<span class="juicerlanding-code-lang">{{ .site.code.lang }}</span>{{ end }}
+        </div>
+        <pre class="juicerlanding-code-body"><code>{{ .site.code.snippet }}</code></pre>
+      </div>
+    </div>
+    {{ end }}
+  </div>
+</section>
+{{ end }}
