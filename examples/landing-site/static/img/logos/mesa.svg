@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 36" width="140" height="36">
+  <g fill="#0f172a">
+    <path d="M3 26 L13 8 L23 26 Z"/>
+    <text x="30" y="24" font-family="Inter, sans-serif" font-size="16" font-weight="700" letter-spacing="0.04em">MESA</text>
+    <text x="78" y="24" font-family="Inter, sans-serif" font-size="14" font-weight="300" letter-spacing="0.04em">cloud</text>
+  </g>
+</svg>

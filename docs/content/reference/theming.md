@@ -5,9 +5,9 @@ weight: 50
 ---
 
 The bundled themes (`juicerdocs`, `juicerblog`, `juicerchurch`,
-`juicercafe`) are designed so a site can rebrand and retune them
-without touching theme source. There are three layers of override —
-use whichever fits the change you want to make.
+`juicercafe`, `juicerlanding`) are designed so a site can rebrand and
+retune them without touching theme source. There are three layers of
+override — use whichever fits the change you want to make.
 
 ## Layer 1 — palette and token overrides via `[juicerXxx]`
 
@@ -41,7 +41,7 @@ light mode.
 | Key         | CSS variable    | What |
 |-------------|-----------------|------|
 | `fontSans`  | `--font-sans`   | Body / UI sans stack |
-| `fontSerif` | `--font-serif`  | Serif stack (cafe / church / blog only — juicerdocs is sans-only) |
+| `fontSerif` | `--font-serif`  | Serif stack (cafe / church / blog only — juicerdocs and juicerlanding are sans-only) |
 | `fontMono`  | `--font-mono`   | Code / monospace stack |
 
 Pass a full CSS font stack including fallbacks — e.g.
@@ -52,11 +52,11 @@ Pass a full CSS font stack including fallbacks — e.g.
 The chrome-sizing surface differs by theme — each exposes the tokens
 it actually uses.
 
-For `juicercafe`, `juicerchurch`, `juicerblog`:
+For `juicercafe`, `juicerchurch`, `juicerblog`, `juicerlanding`:
 
 | Key        | CSS variable    | What |
 |------------|-----------------|------|
-| `measure`  | `--measure`     | Prose column max-width (default `38rem`) |
+| `measure`  | `--measure`     | Prose column max-width (default `38rem`; juicerlanding default `65ch`) |
 | `gutter`   | `--gutter`      | Outer padding around content blocks |
 | `radiusLg` | `--radius-lg`   | Large border-radius (cards, hero panels) |
 

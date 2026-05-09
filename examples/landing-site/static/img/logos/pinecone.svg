@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 36" width="140" height="36">
+  <g fill="#0f172a">
+    <path d="M14 5 L24 11 L24 23 L14 29 L4 23 L4 11 Z" opacity="0.9"/>
+    <path d="M14 12 L19 15 L19 21 L14 24 L9 21 L9 15 Z" fill="#fff" opacity="0.9"/>
+    <text x="32" y="24" font-family="Inter, sans-serif" font-size="15" font-weight="600" letter-spacing="-0.01em">Pinecone Labs</text>
+  </g>
+</svg>

@@ -71,6 +71,37 @@ label = "View on GitHub"
 url   = "https://github.com/example/tally"
 
 # ============================================================
+# Trust bar — small monochrome logos. Heading text is optional;
+# defaults to "Trusted by teams at" if `trustLabel` is not set.
+# ============================================================
+trustLabel = "In production at"
+
+[[trust]]
+logo = "/img/logos/loomline.svg"
+alt  = "Loomline"
+url  = "https://example.com/loomline"
+
+[[trust]]
+logo = "/img/logos/bramble.svg"
+alt  = "Bramble Co."
+url  = "https://example.com/bramble"
+
+[[trust]]
+logo = "/img/logos/mesa.svg"
+alt  = "Mesa Cloud"
+url  = "https://example.com/mesa"
+
+[[trust]]
+logo = "/img/logos/pinecone.svg"
+alt  = "Pinecone Labs"
+url  = "https://example.com/pinecone"
+
+[[trust]]
+logo = "/img/logos/halftone.svg"
+alt  = "Halftone"
+url  = "https://example.com/halftone"
+
+# ============================================================
 # Features — grid section heading is optional; six cards.
 # ============================================================
 [featuresHead]

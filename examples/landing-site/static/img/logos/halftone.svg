@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 36" width="140" height="36">
+  <g fill="#0f172a">
+    <circle cx="14" cy="18" r="11"/>
+    <path d="M14 7 A11 11 0 0 1 14 29 Z" fill="#fff"/>
+    <text x="32" y="24" font-family="Inter, sans-serif" font-size="16" font-weight="700" letter-spacing="-0.03em">halftone</text>
+  </g>
+</svg>
