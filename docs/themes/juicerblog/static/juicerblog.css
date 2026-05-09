@@ -264,6 +264,86 @@ blockquote {
 .juicerblog-postlist-meta .juicerblog-sep { color: var(--rule); }
 
 /* ============================================================
+   Single-post byline + series badge
+   ============================================================
+   The byline lives between the title and the post-meta line. Avatars
+   stack with a small negative margin when multi-author so they read as
+   "the people behind this" without taking three rows of vertical space.
+   The series badge — when the post is part of one — sits below the
+   byline as a soft pill that names the series and the position. */
+.juicerblog-byline {
+  max-width: var(--measure);
+  margin: 0 auto 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+.juicerblog-byline-avatars {
+  display: flex;
+  flex-shrink: 0;
+}
+.juicerblog-byline-avatar-link {
+  display: inline-block;
+  line-height: 0;            /* kill the inline-baseline gap under <img> */
+  border-radius: 9999px;
+  transition: transform var(--transition);
+}
+.juicerblog-byline-avatar-link:hover {
+  transform: translateY(-1px);
+}
+.juicerblog-byline-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  border: 2px solid var(--bg);
+  object-fit: cover;
+  background: var(--rule-soft);
+}
+/* Multi-author overlap — second avatar slides left over the first, etc. */
+.juicerblog-byline-avatar-link + .juicerblog-byline-avatar-link {
+  margin-left: -0.625rem;
+}
+.juicerblog-byline-line { margin: 0; }
+.juicerblog-byline-name {
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+}
+.juicerblog-byline-name:hover {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.juicerblog-series-badge {
+  max-width: var(--measure);
+  margin: 0 auto 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background: var(--brand-soft);
+  border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--brand-strong);
+  width: fit-content;
+}
+.juicerblog-series-badge-name { font-weight: 600; }
+.juicerblog-series-badge-sep { color: color-mix(in srgb, var(--brand) 40%, transparent); }
+.juicerblog-series-badge-pos { font-variant-numeric: tabular-nums; }
+
+[data-theme="dark"] .juicerblog-series-badge {
+  /* The amber-soft token is already a low-alpha overlay in dark mode;
+     just bump the brand-strong text color so it sits above it cleanly. */
+  color: var(--brand-strong);
+}
+
+/* ============================================================
    Single post
    ============================================================ */
 .juicerblog-post {

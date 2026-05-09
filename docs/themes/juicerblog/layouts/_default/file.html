@@ -15,6 +15,7 @@
     <h1 class="juicerblog-post-title">{{ .page.title }}</h1>
 
     {{ if not .page.static }}
+    {{ partial 'post-byline' . }}
     <div class="juicerblog-post-meta">
       {{ partial 'post-meta' . }}
     </div>
