@@ -1,8 +1,7 @@
-# Example landing-site — exercises the juicerlanding theme. Stage-1
-# demo: hero, six-feature grid, final CTA, footer. Stage-2 will add
-# pricing, testimonials, FAQ, screenshot showcase. Stage-3 adds the
-# trust bar, secondary pages (changelog/about/privacy), and dark-mode
-# polish.
+# Example landing-site — exercises the juicerlanding theme. Stage-2
+# demo: hero, features, code section, screenshot showcase, pricing,
+# testimonials, FAQ, final CTA, footer. Stage-3 will add the trust
+# bar, secondary pages (changelog/about/privacy), and dark-mode polish.
 #
 # Demo product: "Tally" — a fictional privacy-first analytics tool
 # for indie devs. Picked because every section of the theme has
@@ -107,6 +106,161 @@ body  = "Download raw events as CSV any time. Your data, your laptop, no vendor 
 icon  = "🐳"
 title = "Self-hostable"
 body  = "Single Docker container, SQLite by default, Postgres if you outgrow it. Same code as the cloud product. MIT licensed."
+
+# ============================================================
+# Code section — separate from the hero's install one-liner; this
+# one shows the "more interesting" custom-events API to make the
+# point that Tally isn't just a pageview counter.
+# ============================================================
+[code]
+title   = "Track what matters, not who's clicking"
+body    = "Custom events are one function call. No SDK, no schema, no consent dance — just a name and an optional dict of properties."
+lang    = "javascript"
+bullets = [
+  "First-party only — events POST to your own /tally endpoint",
+  "Properties are aggregated server-side; no per-user history",
+  "Same API in the browser, in service workers, in Node",
+]
+snippet = """tally('signup', {
+  plan: 'pro',
+  source: 'docs',
+})
+
+tally('export.csv', {
+  rows: 12_400,
+})"""
+
+# ============================================================
+# Screenshot showcase — figure with side-by-side copy. Single
+# [showcase] block; the demo SVG lives at static/img/screenshots/.
+# ============================================================
+[showcase]
+title   = "A dashboard you can read at a glance"
+body    = "Today's visitors, top pages, top referrers, conversion funnel — the things you actually look at every day, on one page. No drilldowns required, no time spent learning a query language."
+image   = "/img/screenshots/dashboard.svg"
+alt     = "Tally dashboard showing today's visitors, top pages, top referrers, and a conversion funnel"
+caption = "The dashboard. No, there isn't a second tab."
+reverse = true
+
+# ============================================================
+# Pricing — three tiers, middle one featured. Order in this file
+# is left-to-right on the page.
+# ============================================================
+[pricingHead]
+title = "Simple pricing, honest defaults"
+body  = "The free tier stays free, the cloud tiers are flat-rate, and the source code is the same across all three. Cancel any time."
+
+[[pricing]]
+tier     = "Self-hosted"
+price    = "Free"
+cadence  = "forever, MIT-licensed"
+tagline  = "Run it on a $5 VPS."
+features = [
+  "Unlimited sites",
+  "Unlimited events",
+  "Forever retention (you control the DB)",
+  "Community support on GitHub",
+]
+featured = false
+cta      = { label = "Get the source", url = "/docs/install/" }
+
+[[pricing]]
+tier     = "Cloud"
+price    = "$9"
+cadence  = "/ month, billed monthly"
+tagline  = "Hosted, managed, fully indistinguishable from the OSS build."
+features = [
+  "Up to 10 sites",
+  "Up to 1M events / month",
+  "5-year retention",
+  "Email support, 24h response",
+  "Daily off-site backups",
+]
+featured = true
+cta      = { label = "Start free 14-day trial", url = "/signup/" }
+
+[[pricing]]
+tier     = "Agency"
+price    = "$49"
+cadence  = "/ month, billed monthly"
+tagline  = "Multi-tenant dashboards for client work."
+features = [
+  "Unlimited sites",
+  "Up to 10M events / month",
+  "Per-client subdomains + branding",
+  "Single sign-on",
+  "Priority support, 4h response",
+]
+featured = false
+cta      = { label = "Talk to sales", url = "/contact/" }
+
+# ============================================================
+# Testimonials — three quotes. Avatars are small SVGs in
+# static/img/avatars/ (initial-badge style placeholders).
+# ============================================================
+[testimonialsHead]
+title = "What devs are saying"
+body  = "Early users put it nicely:"
+
+[[testimonials]]
+quote   = "Replaced GA4 + Cookiebot with Tally in an afternoon. Bundle dropped 38 KB, page-view counts went UP because nobody opted out, and I deleted three privacy-policy paragraphs."
+name    = "Maya Okonkwo"
+role    = "Founder"
+company = "Coffeescript Studio"
+avatar  = "/img/avatars/maya.svg"
+
+[[testimonials]]
+quote   = "I host my own. The Docker compose file is 11 lines. The dashboard answers every question I had about my side project's traffic in five minutes flat."
+name    = "Jonas Becker"
+role    = "Indie dev · maintainer of slug-cli"
+avatar  = "/img/avatars/jonas.svg"
+
+[[testimonials]]
+quote   = "We use Tally for client sites because we don't have to renegotiate consent flows for every project. Drop the script in, go."
+name    = "Priya Raman"
+role    = "Tech lead"
+company = "Quill & Bramble"
+avatar  = "/img/avatars/priya.svg"
+
+# ============================================================
+# FAQ — native <details>/<summary>; first item open by default.
+# ============================================================
+[faqHead]
+title = "Frequently asked"
+body  = "If you have a question that isn't here, mail hi@tally.dev — we like the long ones."
+
+[[faqs]]
+open = true
+q    = "Is Tally really GDPR-compliant out of the box?"
+a    = "Yes. We don't set cookies, we don't fingerprint, and we don't retain anything that would let us re-identify a visitor across days. The salt that hashes IP+UA into a daily visitor ID is rotated every 24h and never persisted. The European Data Protection Board's 2024 guidance on cookie-less analytics covers exactly this design."
+
+[[faqs]]
+q = "How does Tally handle single-page apps?"
+a = "It listens for History API navigations (pushState / replaceState / popstate) and emits a virtual page view automatically. React Router, SvelteKit, Next.js App Router, Vue Router, Astro view transitions — anything that uses History API works without configuration."
+
+[[faqs]]
+q = "Can I self-host?"
+a = "Yes — that's the free tier. Single Docker container, SQLite by default, Postgres if you scale past a few sites. Same image as the cloud product, MIT licensed. The full source is on GitHub."
+
+[[faqs]]
+q = "How long is data retained?"
+a = "Forever on self-hosted (your database, your call). 5 years on Cloud and Agency. Raw events expire after 90 days; everything older is rolled up into daily aggregates so you can keep dashboards meaningful without holding visitor-resolution data."
+
+[[faqs]]
+q = "How does Tally compare to Google Analytics 4?"
+a = "GA4 is a 280 KB tag, requires a consent banner in most jurisdictions, and ships your visitors' data through Google's ads stack. Tally is under 1 KB, requires no consent banner because it doesn't process personal data, and never leaves your domain. The trade-off is that GA4 has more dimensions to slice by — Tally is intentionally a small set of the questions most projects need answers to."
+
+[[faqs]]
+q = "Will it slow my site down?"
+a = "The script is async and defer-loaded, so it never blocks rendering. The single POST per page-view fires after the load event. Typical Lighthouse score impact: zero."
+
+[[faqs]]
+q = "What about ad-blockers?"
+a = "If you serve the script from your own domain (the recommended setup — we provide a /docs/proxy guide), uBlock Origin and AdBlock Plus do not block it. The default tally.dev-hosted script is on most blocklists; first-party hosting solves it."
+
+[[faqs]]
+q = "Can I export my data?"
+a = "Yes, any time, no charge. Raw events as CSV from the dashboard, full database snapshot via the API. We mean it about no lock-in."
 
 # ============================================================
 # Final CTA — closes the page above the footer.

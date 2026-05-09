@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <defs>
+    <linearGradient id="j" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+  </defs>
+  <circle cx="40" cy="40" r="40" fill="url(#j)"/>
+  <text x="40" y="51" font-family="Inter, system-ui, sans-serif" font-size="32" font-weight="600" fill="#fff" text-anchor="middle" letter-spacing="-0.02em">JB</text>
+</svg>
