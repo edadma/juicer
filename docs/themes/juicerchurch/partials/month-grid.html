@@ -1,0 +1,50 @@
+<!-- One month of the calendar grid. The data passed in is one entry from
+     `.site.calendar`: `{year, month, monthName, label, weeks}`.
+     `weeks` is always 6 rows of 7 cells (Sunday-first). Cells with
+     `day == null` are out-of-month padding; in-month cells carry
+     `{day, isToday, events}` where `events` is a list of basic page
+     records (linkable to the canonical event detail page).
+
+     Rendered inside the calendar layout for each month in turn. -->
+<section class="juicerchurch-month" id="cal-{{ .year }}-{{ .month }}">
+  <header class="juicerchurch-month-head">
+    <h2 class="juicerchurch-month-title">{{ .label }}</h2>
+  </header>
+
+  <div class="juicerchurch-month-grid" role="grid" aria-label="{{ .label }}">
+    <div class="juicerchurch-month-dow" role="row">
+      <span role="columnheader">Sun</span>
+      <span role="columnheader">Mon</span>
+      <span role="columnheader">Tue</span>
+      <span role="columnheader">Wed</span>
+      <span role="columnheader">Thu</span>
+      <span role="columnheader">Fri</span>
+      <span role="columnheader">Sat</span>
+    </div>
+    {{ for w <- .weeks }}
+    <div class="juicerchurch-month-week" role="row">
+      {{ for c <- w }}
+      {{ if c.day }}
+      <div class="juicerchurch-month-cell{{ if c.isToday }} is-today{{ end }}{{ if c.events }} has-events{{ end }}" role="gridcell">
+        <span class="juicerchurch-month-cell-day">{{ c.day }}</span>
+        {{ if c.events }}
+        <ul class="juicerchurch-month-cell-events">
+          {{ for e <- c.events }}
+          <li class="juicerchurch-month-cell-event{{ if e.recurring }} is-recurring{{ end }}">
+            <a href="{{ e.url }}">
+              {{ if e.eventTime }}<time class="juicerchurch-month-cell-time">{{ e.eventTime }}</time>{{ end }}
+              <span class="juicerchurch-month-cell-title">{{ e.title }}</span>
+            </a>
+          </li>
+          {{ end }}
+        </ul>
+        {{ end }}
+      </div>
+      {{ else }}
+      <div class="juicerchurch-month-cell juicerchurch-month-cell--pad" role="gridcell" aria-hidden="true"></div>
+      {{ end }}
+      {{ end }}
+    </div>
+    {{ end }}
+  </div>
+</section>

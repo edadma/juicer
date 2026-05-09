@@ -1,7 +1,7 @@
 ---
 title: "Men's Breakfast"
 layout: event
-date: 2025-05-03
+date: 2026-08-01
 eventTime: "8:00 AM"
 eventLocation: "Fellowship Hall"
 summary: "First-Saturday-of-the-month breakfast for the men of the church. Eggs, sausage, conversation, a short devotional, prayer."

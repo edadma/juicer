@@ -102,6 +102,135 @@ class SitedataSpec extends AnyFlatSpec with Matchers with JuicerTestSupport {
     rendered should include regex s"""long=[A-Z][a-z]+ \\d{1,2}, $year"""
   }
 
+  it should "expose .site.events as the dated event-section pages, sorted ascending — including future dates" in {
+    // Mix of past + future dates. Events are exempt from the future-post
+    // filter (they're announced *before* they happen) so all four dated
+    // event pages should surface, sorted ascending. The non-event page
+    // (`news/elsewhere.md`) is a regular post and DOES get future-skipped
+    // — but we use a past date for it here so it'd survive on its own;
+    // the assertion is that it's filtered by the *section* check, not by
+    // future-skip.
+    val past1   = "2024-03-15"
+    val past2   = "2024-09-01"
+    val future1 = java.time.LocalDate.now(java.time.ZoneOffset.UTC).plusMonths(3L).toString
+    val future2 = java.time.LocalDate.now(java.time.ZoneOffset.UTC).plusYears(1L).toString
+    writeAt(
+      "site.toml",
+      "title = \"S\"\nbaseURL = \"http://x\"\n",
+    )
+    writeAt("content/_index.md", "---\ntitle: H\n---\n")
+    writeAt("content/events/_index.md", "---\ntitle: Events\n---\n")
+    writeAt("content/events/early.md",  s"---\ntitle: Early\ndate: $past1\n---\n")
+    writeAt("content/events/middle.md", s"---\ntitle: Middle\ndate: $past2\n---\n")
+    writeAt("content/events/soon.md",   s"---\ntitle: Soon\ndate: $future1\n---\n")
+    writeAt("content/events/farout.md", s"---\ntitle: Farout\ndate: $future2\n---\n")
+    writeAt("content/events/undated.md", "---\ntitle: Undated\n---\n")
+    writeAt("content/news/elsewhere.md", s"---\ntitle: Elsewhere\ndate: $past1\n---\n")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/folder.html",
+      "{{ for e <- .site.events }}[{{ e.title }}]{{ end }}",
+    )
+
+    build()
+
+    out("index.html").trim shouldBe "[Early][Middle][Soon][Farout]"
+  }
+
+  it should "still emit detail pages for future-dated events" in {
+    // Regression guard for the future-filter exemption: a future-dated
+    // *event* must render its own detail page. Future-dated *posts*
+    // continue to be future-skipped (FuturePostsSpec covers that).
+    val future = java.time.LocalDate.now(java.time.ZoneOffset.UTC).plusMonths(6L).toString
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: H\n---\n")
+    writeAt("content/events/_index.md", "---\ntitle: E\n---\n")
+    writeAt("content/events/upcoming.md", s"---\ntitle: Upcoming\ndate: $future\n---\nbody\n")
+    writeAt("content/blog/draft.md",      s"---\ntitle: Draft\ndate: $future\n---\nbody\n")
+    writeAt("layouts/_default/file.html", "{{ .page.title }}")
+    writeAt("layouts/_default/folder.html", "x")
+
+    build()
+
+    // The default `htmlDir = "html"` puts rendered pages under `html/`.
+    out("html/events/upcoming/index.html").trim shouldBe "Upcoming"
+    // Posts continue to be future-skipped — the draft's detail page must not exist.
+    val draftPath = (((dst / "html") / "blog") / "draft") / "index.html"
+    draftPath.exists shouldBe false
+  }
+
+  it should "honour eventsSection override" in {
+    writeAt(
+      "site.toml",
+      "title = \"S\"\nbaseURL = \"http://x\"\neventsSection = \"calendar\"\n",
+    )
+    writeAt("content/_index.md", "---\ntitle: H\n---\n")
+    writeAt("content/calendar/_index.md", "---\ntitle: C\n---\n")
+    writeAt(
+      "content/calendar/x.md",
+      "---\ntitle: X\ndate: 2024-04-01\n---\n",
+    )
+    writeAt(
+      "content/events/y.md",
+      "---\ntitle: Y\ndate: 2024-05-01\n---\n",
+    )
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/folder.html",
+      "{{ for e <- .site.events }}[{{ e.title }}]{{ end }}",
+    )
+
+    build()
+
+    out("index.html").trim shouldBe "[X]"
+  }
+
+  it should "expose .site.calendar as 12 months from current, each with six 7-day weeks" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: H\n---\n")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/folder.html",
+      """months={{ count := 0 }}{{ for m <- .site.calendar }}{{ count := count + 1 }}{{ end }}{{ count }}|""" +
+        """firstWeeks={{ wcount := 0 }}{{ for w <- .site.calendar[0].weeks }}{{ wcount := wcount + 1 }}{{ end }}{{ wcount }}|""" +
+        """firstWeekCells={{ ccount := 0 }}{{ for c <- .site.calendar[0].weeks[0] }}{{ ccount := ccount + 1 }}{{ end }}{{ ccount }}""",
+    )
+
+    build()
+
+    out("index.html").trim shouldBe "months=12|firstWeeks=6|firstWeekCells=7"
+  }
+
+  it should "expand a weekly recurring event onto every matching weekday in .site.calendar" in {
+    // Past start date so the event isn't future-filtered. We don't know
+    // which calendar month "now" lands in, so just count Wednesdays across
+    // the whole 12-month surface — any way you slice it, 12 months contain
+    // 52 or 53 Wednesdays, but the recurring event's start clips the count
+    // to whatever lies between the start month and the end of the surface.
+    // Easier assertion: at least 50 occurrences (well below either ceiling
+    // but well above zero).
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: H\n---\n")
+    writeAt("content/events/_index.md", "---\ntitle: E\n---\n")
+    writeAt(
+      "content/events/weekly.md",
+      // 2020-01-01 (a Wednesday). Far enough in the past that the
+      // recurring event has been "ongoing" for all 12 months we render.
+      "---\ntitle: Weekly\ndate: 2020-01-01\nrecurring: weekly\nrecurringDay: Wednesday\n---\n",
+    )
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/folder.html",
+      """{{ wedCount := 0 }}{{ for m <- .site.calendar }}{{ for w <- m.weeks }}{{ for c <- w }}{{ for e <- c.events }}{{ if e.title = "Weekly" }}{{ wedCount := wedCount + 1 }}{{ end }}{{ end }}{{ end }}{{ end }}{{ end }}wedCount={{ wedCount }}""",
+    )
+
+    build()
+
+    val s = out("index.html").trim
+    val n = s.stripPrefix("wedCount=").toInt
+    n should (be >= 50 and be <= 53)
+  }
+
   it should "expose .site.pagesByYear grouping the same posts list by year, year descending" in {
     writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
     writeAt("content/_index.md", "---\ntitle: H\n---\n")

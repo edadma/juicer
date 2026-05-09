@@ -1126,3 +1126,205 @@ pre {
   .juicerchurch-staff-avatar--lg { width: 4rem; height: 4rem; }
   .juicerchurch-staff-name--lg { font-size: 1.5rem; }
 }
+
+/* ============================================================
+   Calendar — Stage 3 additions
+   ============================================================ */
+.juicerchurch-calendar-wrap {
+  max-width: 60rem;
+}
+
+.juicerchurch-calendar-intro {
+  margin-bottom: 1.5rem;
+}
+
+/* Sticky strip of "Jul · Aug · Sep …" links. Lets the visitor jump to
+   any month without scrolling through every grid above it. */
+.juicerchurch-calendar-jump {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0 -0.75rem 1.5rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+}
+.juicerchurch-calendar-jump a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+.juicerchurch-calendar-jump a:hover {
+  color: var(--brand-strong);
+  background: var(--brand-soft);
+}
+
+.juicerchurch-calendar-tower {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.juicerchurch-month {
+  scroll-margin-top: 4rem;
+}
+
+.juicerchurch-month-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.juicerchurch-month-title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--brand-strong);
+  margin: 0;
+}
+
+/* The grid: 7 equal columns. The day-of-week header reuses the same
+   grid-template-columns so headers align with cells underneath. */
+.juicerchurch-month-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.juicerchurch-month-dow,
+.juicerchurch-month-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.juicerchurch-month-dow {
+  background: var(--brand-soft);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--brand-strong);
+}
+.juicerchurch-month-dow span {
+  padding: 0.5rem;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.juicerchurch-month-dow span:last-child { border-right: none; }
+
+.juicerchurch-month-week {
+  border-top: 1px solid var(--border);
+}
+
+.juicerchurch-month-cell {
+  position: relative;
+  min-height: 5.5rem;
+  padding: 0.375rem;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.juicerchurch-month-cell:last-child { border-right: none; }
+
+.juicerchurch-month-cell--pad {
+  background: var(--brand-soft);
+  opacity: 0.4;
+}
+
+.juicerchurch-month-cell.is-today {
+  background: linear-gradient(180deg, var(--brand-soft), var(--surface) 60%);
+}
+.juicerchurch-month-cell.is-today .juicerchurch-month-cell-day {
+  background: var(--brand-strong);
+  color: var(--surface);
+  border-radius: 999px;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.juicerchurch-month-cell-day {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  align-self: flex-start;
+}
+
+.juicerchurch-month-cell-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.125rem;
+}
+
+.juicerchurch-month-cell-event a {
+  display: block;
+  padding: 0.125rem 0.375rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.25;
+  text-decoration: none;
+  color: var(--surface);
+  background: var(--brand);
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.juicerchurch-month-cell-event a:hover {
+  background: var(--brand-strong);
+  color: var(--surface);
+}
+.juicerchurch-month-cell-event.is-recurring a {
+  background: var(--leaf);
+}
+.juicerchurch-month-cell-event.is-recurring a:hover {
+  background: var(--accent);
+}
+
+.juicerchurch-month-cell-time {
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+.juicerchurch-month-cell-title {
+  font-weight: 400;
+}
+
+@media (max-width: 720px) {
+  /* The 7-col grid never collapses (it'd lose all calendar meaning), but
+     cells get tighter and event chips abbreviate. */
+  .juicerchurch-month-cell {
+    min-height: 4rem;
+    padding: 0.25rem;
+  }
+  .juicerchurch-month-cell-day { font-size: 0.75rem; }
+  .juicerchurch-month-cell-event a {
+    padding: 0.0625rem 0.25rem;
+    font-size: 0.6875rem;
+  }
+  .juicerchurch-month-cell-time { display: none; }
+  .juicerchurch-month-dow span {
+    padding: 0.375rem 0.125rem;
+    font-size: 0.625rem;
+  }
+}

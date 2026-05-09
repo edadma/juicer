@@ -1,7 +1,7 @@
 ---
 title: "Easter Sunday Service"
 layout: event
-date: 2025-04-20
+date: 2027-03-28
 eventTime: "10:30 AM"
 eventLocation: "Sanctuary"
 summary: "The high point of the church year. Extended liturgy, the choir leads worship, the Lord's Supper. Bring friends and family."

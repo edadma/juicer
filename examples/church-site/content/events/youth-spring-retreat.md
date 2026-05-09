@@ -1,7 +1,7 @@
 ---
 title: "Youth Spring Retreat"
 layout: event
-date: 2025-05-23
+date: 2027-04-23
 eventTime: "Friday 5 PM through Sunday 1 PM"
 eventLocation: "Camp Hawthorne, Bloomington IL"
 summary: "Three days at camp for grades 6–12. Bible study, games, hiking, late-night talks, Sunday-morning worship before heading home."

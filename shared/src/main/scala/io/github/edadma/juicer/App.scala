@@ -101,6 +101,14 @@ object App {
       base + ("baseURL" -> baseURLstr)
     }
 
+    // Hoisted up early so the future-post filter (next stage) can exempt
+    // event-section pages — events are inherently announced *before* they
+    // happen, so future-skip would silently drop both `.site.events` entries
+    // AND the corresponding event detail pages from the build. Default
+    // `"events"`; override via `eventsSection = "..."` in `site.toml`.
+    val eventsSection: String =
+      confdoc.getString("eventsSection").getOrElse("events")
+
     // ----- Permalink templates (Phase 2.6) -----
     //
     // `[permalinks]` table in `site.toml` maps a section name to a URL
@@ -186,9 +194,31 @@ object App {
     // listings, taxonomy archives, etc. Pages without a `date:` (mtime
     // fallback) are never future-skipped: only authored future-dating
     // counts.
+    //
+    // Event-section pages are exempt: events are announced *before* they
+    // happen, so future-filtering would silently eat them — both their
+    // detail pages and their `.site.events` entries — exactly the wrong
+    // behaviour for a calendar-driven section. The exemption keys off the
+    // `eventsSection` config (default `"events"`); themes that don't ship
+    // an events section are unaffected because nothing matches.
     val site = if (future) unfilteredSite
     else {
       val now = java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC)
+      // dst1 is the *output* root, not the content root, so we can't use
+      // `c.outdir.relativeTo(dst1)` to detect section here without first
+      // computing the source-relative path. The simpler check: does the
+      // ContentFile's source path live under `<src>/content/<eventsSection>/`?
+      // src1 is available in the enclosing scope via `Process(src1, ...)`.
+      val contentRoot = (src1 / "content").normalize.toAbsolutePath
+      val eventsRoot  = (contentRoot / eventsSection).normalize.toAbsolutePath
+      def isInEventsSection(c: ContentFile): Boolean = {
+        if (c.srcPath eq null) false
+        else {
+          val p = c.srcPath.normalize.toAbsolutePath
+          p.toString.startsWith(eventsRoot.toString + java.io.File.separator) ||
+          p.toString == eventsRoot.toString
+        }
+      }
       def fmStr(c: ContentFile): Option[String] = c.page match {
         case m: Map[?, ?] => m.asInstanceOf[Map[Any, Any]].get("date").collect { case s: String => s }
         case _ => None
@@ -197,12 +227,14 @@ object App {
         fmStr(c).flatMap(parseDateString).exists(_.isAfter(now))
       val filteredContent = unfilteredSite.content.filterNot {
         case c: ContentFile =>
-          val skip = isFuture(c)
+          val skip = isFuture(c) && !isInEventsSection(c)
           if (skip) show(s"skipping future-dated: ${c.name}")
           skip
         case _ => false
       }
-      val filteredMap = unfilteredSite.map.filterNot { case (_, c) => isFuture(c) }
+      val filteredMap = unfilteredSite.map.filterNot { case (_, c) =>
+        isFuture(c) && !isInEventsSection(c)
+      }
       unfilteredSite.copy(content = filteredContent, map = filteredMap)
     }
 
@@ -1155,6 +1187,149 @@ object App {
       "year" -> BigDecimal(nowInst.getYear),
     )
 
+    // ----- Events view -----
+    //
+    // `eventsSection = "events"` (default) names the content section that
+    // holds calendar events. An event is a non-`_index` page in that
+    // section with an explicit `date:` frontmatter. Surfaced as
+    // `.site.events`, sorted ascending — forward-looking views (calendars,
+    // "next 3 events" widgets) iterate this in natural order.
+    //
+    // Recurring events are included as their canonical page record (one
+    // entry per event, not per occurrence). Calendar pre-computation
+    // expands them to occurrences; everywhere else the canonical record
+    // is what theme code wants.
+    //
+    // `eventsSection` is hoisted to the top of `apply` because the future-
+    // post filter needs it too (events must not be future-skipped).
+    val datedEventEntries: List[(java.time.OffsetDateTime, ContentFile, Map[String, Any])] =
+      pageEntries.collect {
+        case (c, m)
+            if c.name != folderContent
+              && sectionName(c) == eventsSection
+              && hasExplicitDateFM(c) =>
+          (pageInstant(c), c, m)
+      }
+    val eventsList: List[Map[String, Any]] =
+      datedEventEntries.sortBy(_._1.toEpochSecond).map(_._3)
+
+    // ----- Calendar grid (Phase 4-ish) -----
+    //
+    // Pre-computed N months (default 12) starting at the current month.
+    // Each month is a record with `weeks: [[ {day, isToday, events} ]]`
+    // where `weeks` is always six 7-day rows (top/bottom padded with
+    // `day=null` cells so templates don't have to special-case month
+    // boundaries). Week starts on Sunday.
+    //
+    // Recurring events expand to every matching weekday from their start
+    // date forward. `recurring: weekly` honours `recurringDay:`; absent
+    // that key, the event recurs on the start date's day-of-week.
+    // Non-recurring events appear once on their `date`.
+    val calendarMonths: Int =
+      confdoc.getLong("calendarMonths").map(_.toInt).getOrElse(12)
+
+    val calendarData: List[Map[String, Any]] = {
+      val today      = nowInst.toLocalDate
+      val firstMonth = today.withDayOfMonth(1)
+
+      // Resolve the recurring weekday for an event. Returns `None` if the
+      // event is non-recurring, or an unrecognised day name.
+      def recurringDayOf(c: ContentFile, start: java.time.LocalDate): Option[java.time.DayOfWeek] = {
+        val fm = frontmatterMap(c.page)
+        val isRecurring = fm.get("recurring") match {
+          case Some(s: String)  => s.nonEmpty
+          case Some(b: Boolean) => b
+          case _                => false
+        }
+        if (!isRecurring) None
+        else fm.get("recurringDay") match {
+          case Some(s: String) =>
+            try Some(java.time.DayOfWeek.valueOf(s.trim.toUpperCase)) catch { case _: IllegalArgumentException => Some(start.getDayOfWeek) }
+          case _ => Some(start.getDayOfWeek)
+        }
+      }
+
+      // Pre-classify each event as (startLocalDate, optionalRecurringDay,
+      // basicRecord). Built once outside the month loop so we don't re-walk
+      // frontmatter for every cell.
+      val classified: List[(java.time.LocalDate, Option[java.time.DayOfWeek], Map[String, Any])] =
+        datedEventEntries.map { case (inst, c, m) =>
+          val start = inst.toLocalDate
+          (start, recurringDayOf(c, start), m)
+        }
+
+      (0 until calendarMonths).toList.map { offset =>
+        val monthStart = firstMonth.plusMonths(offset.toLong)
+        val year       = monthStart.getYear
+        val monthVal   = monthStart.getMonthValue
+        val daysIn     = monthStart.lengthOfMonth
+        val monthEnd   = monthStart.withDayOfMonth(daysIn)
+        val monthName  = monthStart.format(java.time.format.DateTimeFormatter.ofPattern("MMMM"))
+
+        // Sunday-first leading padding. Java's DayOfWeek is Mon=1..Sun=7;
+        // convert to Sun=0..Sat=6.
+        val firstDow   = monthStart.getDayOfWeek.getValue % 7
+        // Always emit six 7-day rows (42 cells) so the template's grid is
+        // uniform; trailing padding fills whatever's left.
+        val totalCells = 42
+
+        // Events that touch this month — either a one-off whose date
+        // falls in [monthStart, monthEnd], or a recurring event whose
+        // start date is on or before monthEnd.
+        val cellEvents: Map[Int, List[Map[String, Any]]] = {
+          val acc = scala.collection.mutable.LongMap.empty[List[Map[String, Any]]]
+          for ((start, recur, rec) <- classified) {
+            recur match {
+              case None =>
+                if (!start.isBefore(monthStart) && !start.isAfter(monthEnd))
+                  acc.update(start.getDayOfMonth.toLong, rec :: acc.getOrElse(start.getDayOfMonth.toLong, Nil))
+              case Some(dow) =>
+                // First in-month occurrence: walk forward from
+                // max(monthStart, start) until we hit the matching
+                // weekday, then step by 7 days through monthEnd.
+                val begin =
+                  if (start.isBefore(monthStart)) monthStart
+                  else start
+                var cur = begin
+                while (cur.getDayOfWeek != dow && !cur.isAfter(monthEnd))
+                  cur = cur.plusDays(1L)
+                while (!cur.isAfter(monthEnd)) {
+                  acc.update(cur.getDayOfMonth.toLong, rec :: acc.getOrElse(cur.getDayOfMonth.toLong, Nil))
+                  cur = cur.plusDays(7L)
+                }
+            }
+          }
+          // Reverse so events render in their original (date-asc) order.
+          acc.iterator.map { case (k, v) => k.toInt -> v.reverse }.toMap
+        }
+
+        val cells: List[Map[String, Any]] = (0 until totalCells).toList.map { idx =>
+          val day = idx - firstDow + 1
+          if (day < 1 || day > daysIn)
+            Map[String, Any]("day" -> null, "isToday" -> false, "events" -> List.empty[Map[String, Any]])
+          else {
+            val isToday =
+              today.getYear == year && today.getMonthValue == monthVal && today.getDayOfMonth == day
+            Map[String, Any](
+              "day"     -> BigDecimal(day),
+              "isToday" -> isToday,
+              "events"  -> cellEvents.getOrElse(day, Nil),
+            )
+          }
+        }
+
+        val weeks: List[List[Map[String, Any]]] = cells.grouped(7).toList
+
+        Map[String, Any](
+          "year"      -> BigDecimal(year),
+          "month"     -> BigDecimal(monthVal),
+          "monthName" -> monthName,
+          "label"     -> s"$monthName $year",
+          "weeks"     -> weeks,
+        )
+      }
+    }
+
     val sitedata = confdata +
       ("toc"             -> sitetoc.toList) +
       ("start"           -> start) +
@@ -1170,7 +1345,9 @@ object App {
       ("categories"      -> categoryTerms.map(termToMap)) +
       ("authors"         -> authorTerms) +
       ("authorRegistry"  -> authorRegistryList) +
-      ("now"             -> nowMap)
+      ("now"             -> nowMap) +
+      ("events"          -> eventsList) +
+      ("calendar"        -> calendarData)
 
     def findLayout(folders: List[String], name: String): Option[TemplateFile] =
       site.layoutTemplates
