@@ -1,0 +1,28 @@
+<!-- Per-album detail page — title + intro paragraph + the photo grid
+     itself + a back-link to the photos section index.
+
+     Picked via `layout: album` on individual album pages under the
+     photos section (e.g., `content/photos/christmas-eve-2024.md`). -->
+{{ define content }}
+  <article class="juicerchurch-page-wrap juicerchurch-album-wrap">
+    <header class="juicerchurch-album-header">
+      <p class="juicerchurch-album-back">
+        <a href="{{ if .page.parent }}{{ .page.parent.url }}{{ else }}{{ relURL '/photos/' }}{{ end }}">← All albums</a>
+      </p>
+      <h1 class="juicerchurch-page-title">{{ .page.title }}</h1>
+      {{ if .page.dateLong }}<p class="juicerchurch-album-date">{{ .page.dateLong }}</p>{{ end }}
+    </header>
+
+    {{ if .content }}
+    <div class="juicerchurch-content juicerchurch-album-intro">
+      {{ .content }}
+    </div>
+    {{ end }}
+
+    {{ if .page.photos }}
+    {{ partial 'photo-grid' .page.photos }}
+    {{ else }}
+    <p class="juicerchurch-empty">No photos in this album yet.</p>
+    {{ end }}
+  </article>
+{{ end }}

@@ -74,11 +74,11 @@ label = "Email"
 url   = "mailto:tom@gracecommunity.example"
 
 [[authors]]
-id     = "pastor-rachel"
-name   = "Rachel Inouye"
+id     = "pastor-mark"
+name   = "Mark Inouye"
 role   = "Associate Pastor — Discipleship"
-bio    = "Rachel oversees small groups and adult education. Joined the staff in 2020 after ten years overseas in Japan."
-avatar = "/img/pastor-rachel.png"
+bio    = "Mark oversees small groups and adult education. Joined the staff in 2020 after ten years overseas in Japan."
+avatar = "/img/pastor-mark.png"
 
 [[authors]]
 id     = "ben"

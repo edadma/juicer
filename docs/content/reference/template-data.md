@@ -17,10 +17,17 @@ The merged site config (`site.toml` overlaid on the baseline) plus a few compute
 | `.site.start`    | `String?`           | URL of the conventional landing page |
 | `.site.pages`    | `List[Map]`         | Every page's enriched record |
 | `.site.pagesByPath` | `Map[String, Map]`  | Same records, keyed by `relPermalink` |
+| `.site.posts`    | `List[Map]`         | Dated, non-section, non-`static` pages, newest first (see below) |
+| `.site.pagesByYear` | `List[Map]`      | Same posts grouped by year, year descending (see below) |
 | `.site.root`     | `Map?`              | The root section's `_index` record (or `null`) |
 | `.site.tags`     | `List[Term]`        | Every distinct tag used in the site (see below) |
 | `.site.categories` | `List[Term]`      | Same shape as `.site.tags`, for the categories axis |
-| `.site.authors`  | `List[Map]`         | Every author with at least one referencing post — registry record + `id`, `url`, `count`, `pages` |
+| `.site.authors`  | `List[Map]`         | Every author with at least one referencing page — registry record + `id`, `url`, `count`, `pages` |
+| `.site.authorRegistry` | `List[Map]`   | The raw `[[authors]]` table from `site.toml` in declaration order — includes authors with zero referencing pages, useful for staff-directory layouts (see below) |
+| `.site.now`      | `Map`               | Build-time "now" timestamp in four shapes (see below) |
+| `.site.events`   | `List[Map]`         | Pages in the configured `eventsSection` with explicit `date:` frontmatter, sorted ascending. Includes future-dated events (see below) |
+| `.site.calendar` | `List[Map]`         | Pre-computed N months of calendar grid starting at the current month, with weekly recurring events expanded onto every matching weekday (see below) |
+| `.site.photos`   | `List[Map]`         | Aggregated `photos:` frontmatter entries from every page, sorted by parent-page date descending (see below) |
 
 ### `Term` shape
 
@@ -34,6 +41,127 @@ templates, the elements of `.terms`) has these fields:
 | `url`     | `String`    | Site-relative archive URL — `/tags/<slug>/` or `/categories/<slug>/` |
 | `count`   | `Int`       | How many pages reference this term |
 | `pages`   | `List[Map]` | The pages themselves, each in the same shape as a `.site.pages` entry |
+
+### `.site.posts` and `.site.pagesByYear`
+
+Curated views of the post stream — the same data, sliced two ways.
+
+`.site.posts` is the flat list, newest first. A page is included if it
+has an explicit parsed `date:` in frontmatter, is not a section index
+(`_index.md`), and is not flagged `static: true`. Filesystem-mtime
+fallback dates do **not** count — only authored dates make it in. The
+result is exactly the set of pages a blog or news site would call "the
+posts."
+
+`.site.pagesByYear` groups the same list by calendar year, with years
+descending and pages within each year still newest-first:
+
+| Key     | Type        | What |
+|---------|-------------|------|
+| `year`  | `Int`       | The 4-digit year |
+| `count` | `Int`       | Posts in this year |
+| `pages` | `List[Map]` | The posts themselves, each shaped like a `.site.pages` entry |
+
+Useful for chronological archive pages (`<h2>2024</h2>` then a list).
+
+### `.site.authorRegistry`
+
+The raw `[[authors]]` table from `site.toml`, preserved in declaration
+order. Each entry is the verbatim TOML table — `id`, `name`, `role`,
+`bio`, `avatar`, `email`, plus any custom fields you've added.
+
+Distinct from `.site.authors`, which is filtered to authors who have at
+least one referencing page and is augmented with `count`, `url`, and
+`pages`. Use `.site.authorRegistry` for staff-directory layouts that
+should show every team member regardless of how many sermons or posts
+they've authored; use `.site.authors` for "browse by author" archives.
+
+### `.site.now`
+
+Build-time timestamp captured once per build, in four shapes so the
+right one is always at hand:
+
+| Key    | Type     | What |
+|--------|----------|------|
+| `iso`  | `String` | Full ISO offset — `2026-05-09T14:00:00Z` |
+| `date` | `String` | `YYYY-MM-DD`, lex-comparable with `.page.dateShort` for past/future filters |
+| `long` | `String` | `May 9, 2026`, same formatter as `.page.dateLong` |
+| `year` | `Int`    | Useful for footer copyright |
+
+The static-site model means "now" is legitimately frozen at build time.
+Live-reload re-runs the build on every change, so the value stays fresh
+during local preview.
+
+### `.site.events`
+
+Pages in the configured events section (`eventsSection` in `site.toml`,
+default `"events"`) with an explicit `date:` frontmatter, sorted
+ascending. Each entry is shaped like a `.site.pages` record — `title`,
+`url`, `date`, `dateShort`, `summary`, plus any frontmatter the event
+page declares (`eventTime`, `eventLocation`, `recurring`, etc.).
+
+Includes future-dated events: events are announced *before* they happen,
+and the engine's site-wide future-post filter is exempted for pages in
+the events section so both `.site.events` entries and the corresponding
+event detail pages survive the build. Future-dated *posts* (anything
+outside the events section) continue to be future-skipped — see the
+`--future` CLI flag to override per build.
+
+Recurring events appear once each (the canonical page record); use
+`.site.calendar` for occurrence-by-occurrence expansion.
+
+### `.site.calendar`
+
+Pre-computed N months (default 12, override via `calendarMonths` in
+`site.toml`) starting at the current month. Each month is:
+
+| Key         | Type            | What |
+|-------------|-----------------|------|
+| `year`      | `Int`           | 4-digit year |
+| `month`     | `Int`           | 1–12 |
+| `monthName` | `String`        | `"May"` |
+| `label`     | `String`        | `"May 2026"` |
+| `weeks`     | `List[List[Cell]]` | Always six 7-day rows, Sunday-first |
+
+Each cell:
+
+| Key       | Type        | What |
+|-----------|-------------|------|
+| `day`     | `Int?`      | 1–31, or `null` for out-of-month padding cells |
+| `isToday` | `Boolean`   | `true` for the cell whose year/month/day matches `.site.now` |
+| `events`  | `List[Map]` | Basic page records for events on this day (empty list when none) |
+
+Recurring weekly events (`recurring: weekly` + optional `recurringDay:`)
+are expanded onto every matching weekday from their start date forward.
+A recurring event with no `recurringDay:` defaults to its start-date's
+day of the week. Non-recurring events appear once on their `date`.
+
+The grid is always 6×7 = 42 cells per month so calendar templates don't
+have to special-case month boundaries; out-of-month cells render as
+`day=null` padding.
+
+### `.site.photos`
+
+Aggregated `photos:` frontmatter entries from every page on the site,
+sorted by the parent page's date descending. Each entry:
+
+| Key       | Type     | What |
+|-----------|----------|------|
+| `src`     | `String` | Image URL (absolute or site-relative) |
+| `caption` | `String` | Display caption — empty string when not provided |
+| `alt`     | `String` | Accessibility text — falls back to `caption` when absent |
+| `page`    | `Map`    | Basic page record of the parent page (lets templates link the photo back to its event/album/sermon) |
+
+Frontmatter shape — either a list of strings (URLs only) or a list of
+maps with `src` / `caption` / `alt` keys:
+
+```yaml
+photos:
+  - "/img/picnic-01.jpg"
+  - { src: "/img/picnic-02.jpg", caption: "The pie table" }
+```
+
+Pages without a `photos:` frontmatter contribute nothing.
 
 ## Alias pages
 

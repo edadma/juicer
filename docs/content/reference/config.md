@@ -85,6 +85,25 @@ per page on `/posts/` but 30 short notes per page on `/notes/` puts
 10.
 [= /note =]
 
+### Calendar / events features
+
+Juicer surfaces a curated events list (`.site.events`) and a 12-month
+calendar grid (`.site.calendar`) for any site that has a section of
+event pages. See
+[Template data → `.site.events`](../template-data/#siteevents) and
+[`.site.calendar`](../template-data/#sitecalendar).
+
+| Key              | Default     | What |
+|------------------|-------------|------|
+| `eventsSection`  | `"events"`  | Name of the content section juicer treats as events. Pages in this section with explicit `date:` frontmatter populate `.site.events` and `.site.calendar`. The site-wide future-post filter is also exempted for pages in this section so future-dated event detail pages still render to disk. |
+| `calendarMonths` | `12`        | How many months `.site.calendar` pre-computes, starting at the current month. Higher values cost build time and HTML size; lower values mean the calendar runs out sooner. |
+
+Recurring events are theme-and-template territory — the engine
+recognizes `recurring: weekly` plus an optional `recurringDay:`
+frontmatter on event pages and expands the event onto every matching
+weekday in `.site.calendar`. Without `recurringDay:`, the recurrence
+defaults to the start date's day of the week.
+
 ## `[permalinks]` — URL templates per section
 
 A TOML sub-table that overrides a section's URL pattern. Each key is a

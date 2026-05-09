@@ -17,7 +17,7 @@ Springfield, IL 62701
 | | |
 |---|---|
 | **Pastor Tom Whitfield** (Lead Pastor) | [tom@gracecommunity.example](mailto:tom@gracecommunity.example) |
-| **Pastor Rachel Inouye** (Discipleship) | [rachel@gracecommunity.example](mailto:rachel@gracecommunity.example) |
+| **Pastor Mark Inouye** (Discipleship) | [mark@gracecommunity.example](mailto:mark@gracecommunity.example) |
 | **Ben Carter** (Children & Youth) | [ben@gracecommunity.example](mailto:ben@gracecommunity.example) |
 | **Miriam Olesinski** (Music) | [music@gracecommunity.example](mailto:music@gracecommunity.example) |
 | **Office** | [office@gracecommunity.example](mailto:office@gracecommunity.example) · (217) 555-0142 |
@@ -30,4 +30,4 @@ Grace is supported entirely by the freewill offerings of its members and friends
 
 ## Prayer requests
 
-Email Pastor Tom or Pastor Rachel directly, or use the prayer-request cards in the foyer on Sunday mornings. Requests stay between the pastors and the small prayer team unless you ask us to share them with the congregation.
+Email Pastor Tom or Pastor Mark directly, or use the prayer-request cards in the foyer on Sunday mornings. Requests stay between the pastors and the small prayer team unless you ask us to share them with the congregation.

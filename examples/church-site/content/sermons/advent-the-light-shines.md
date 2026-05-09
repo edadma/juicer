@@ -2,7 +2,7 @@
 title: "The Light Shines in the Darkness"
 layout: sermon
 date: 2024-12-15
-author: pastor-rachel
+author: pastor-mark
 scripture: "John 1:1–14"
 videoURL: "https://www.youtube.com/embed/dQw4w9WgXcQ"
 videoDuration: "28:42"

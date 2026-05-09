@@ -1328,3 +1328,399 @@ pre {
     font-size: 0.625rem;
   }
 }
+
+/* ============================================================
+   Home strips — Stage 4 additions
+   Latest sermon, upcoming events, recent photos, "I'm new" CTA.
+   ============================================================ */
+.juicerchurch-home-strip {
+  max-width: 64rem;
+  margin: 2rem auto 0;
+  padding: 0 var(--gutter);
+}
+
+.juicerchurch-home-strip-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.juicerchurch-home-strip-title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--brand-strong);
+  margin: 0;
+}
+
+.juicerchurch-home-strip-more {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--brand);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.juicerchurch-home-strip-more:hover { color: var(--brand-strong); }
+
+/* --- Latest sermon --- */
+.juicerchurch-latest-sermon {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  border-left: 4px solid var(--brand);
+}
+
+.juicerchurch-latest-sermon-date {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 0.25rem;
+}
+
+.juicerchurch-latest-sermon-title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem;
+}
+.juicerchurch-latest-sermon-title a { color: var(--ink); text-decoration: none; }
+.juicerchurch-latest-sermon-title a:hover { color: var(--brand-strong); }
+
+.juicerchurch-latest-sermon-scripture {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0 0 0.25rem;
+}
+
+.juicerchurch-latest-sermon-speaker {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin: 0 0 0.75rem;
+}
+
+.juicerchurch-latest-sermon-summary {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.juicerchurch-latest-sermon-audio {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* --- Upcoming events --- */
+.juicerchurch-home-events-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.juicerchurch-home-event {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  border-left: 3px solid var(--brand);
+}
+.juicerchurch-home-event.is-recurring { border-left-color: var(--leaf); }
+
+.juicerchurch-home-event-when {
+  font-family: var(--font-sans);
+  display: grid;
+  align-content: center;
+  text-align: center;
+  background: var(--brand-soft);
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+}
+.juicerchurch-home-event.is-recurring .juicerchurch-home-event-when {
+  background: rgba(101, 163, 13, 0.12);
+}
+.juicerchurch-home-event-month {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--brand-strong);
+}
+.juicerchurch-home-event.is-recurring .juicerchurch-home-event-month { color: var(--leaf); }
+.juicerchurch-home-event-day {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin-top: 0.125rem;
+}
+
+.juicerchurch-home-event-meta { align-self: center; }
+.juicerchurch-home-event-title {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  margin: 0 0 0.25rem;
+}
+.juicerchurch-home-event-title a { color: var(--ink); text-decoration: none; }
+.juicerchurch-home-event-title a:hover { color: var(--brand-strong); }
+.juicerchurch-home-event-loc {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* --- Recent photos strip --- */
+.juicerchurch-home-photo-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.5rem;
+}
+.juicerchurch-home-photo {
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 0.375rem;
+  background: var(--brand-soft);
+}
+.juicerchurch-home-photo img,
+.juicerchurch-home-photo a {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.juicerchurch-home-photo img {
+  object-fit: cover;
+  transition: transform 200ms ease;
+}
+.juicerchurch-home-photo a:hover img { transform: scale(1.04); }
+
+/* --- I'm new CTA --- */
+.juicerchurch-home-imnew {
+  margin-bottom: 3rem;
+}
+.juicerchurch-imnew-inner {
+  background:
+    linear-gradient(135deg, var(--brand-strong) 0%, var(--brand) 60%, var(--leaf) 130%);
+  color: var(--surface);
+  padding: 2.5rem 2rem;
+  border-radius: 1rem;
+  text-align: center;
+}
+.juicerchurch-imnew-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-style: italic;
+  margin: 0 0 0.75rem;
+  color: var(--surface);
+}
+.juicerchurch-imnew-body {
+  font-size: 1.0625rem;
+  max-width: 36rem;
+  margin: 0 auto 1.5rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+.juicerchurch-imnew-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.juicerchurch-imnew-cta {
+  display: inline-block;
+  padding: 0.625rem 1.25rem;
+  background: var(--surface);
+  color: var(--brand-strong);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0.375rem;
+  transition: transform 120ms ease;
+}
+.juicerchurch-imnew-cta:hover {
+  color: var(--brand-strong);
+  transform: translateY(-1px);
+}
+.juicerchurch-imnew-cta--secondary {
+  background: transparent;
+  color: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+.juicerchurch-imnew-cta--secondary:hover {
+  color: var(--surface);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================
+   Photo gallery — Stage 4 additions
+   ============================================================ */
+.juicerchurch-photos-wrap { max-width: 64rem; }
+.juicerchurch-photos-intro { margin-bottom: 1.5rem; }
+
+.juicerchurch-album-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1.5rem;
+}
+
+.juicerchurch-album-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.juicerchurch-album-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+.juicerchurch-album-card a {
+  display: block;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.juicerchurch-album-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  background: var(--brand-soft);
+}
+.juicerchurch-album-cover--empty {
+  background:
+    linear-gradient(135deg, var(--brand-soft), var(--brand));
+}
+
+.juicerchurch-album-meta { padding: 1rem 1.25rem 1.25rem; }
+.juicerchurch-album-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  margin: 0 0 0.25rem;
+}
+.juicerchurch-album-date {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 0.5rem;
+}
+.juicerchurch-album-summary {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+/* Per-album page */
+.juicerchurch-album-wrap { max-width: 64rem; }
+.juicerchurch-album-header { margin-bottom: 1.5rem; }
+.juicerchurch-album-back {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+.juicerchurch-album-back a {
+  color: var(--brand);
+  text-decoration: none;
+}
+.juicerchurch-album-back a:hover { color: var(--brand-strong); }
+.juicerchurch-album-intro { margin-bottom: 2rem; }
+
+/* Reusable photo grid (album page + per-event/per-ministry inline use) */
+.juicerchurch-photo-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.juicerchurch-photo-tile {
+  position: relative;
+  margin: 0;
+  background: var(--brand-soft);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+}
+.juicerchurch-photo-tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.juicerchurch-photo-tile.has-caption .juicerchurch-photo-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.625rem 0.75rem;
+  background:
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.7) 90%);
+  color: var(--surface);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.juicerchurch-photo-tile.has-caption:hover .juicerchurch-photo-caption,
+.juicerchurch-photo-tile.has-caption:focus-within .juicerchurch-photo-caption {
+  opacity: 1;
+}
+
+/* Inline photo block on event detail pages */
+.juicerchurch-event-photos {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.juicerchurch-event-photos-head {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  color: var(--brand-strong);
+  margin: 0 0 1rem;
+}
+
+@media (max-width: 640px) {
+  .juicerchurch-home-event {
+    grid-template-columns: 6rem 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+  .juicerchurch-imnew-title { font-size: 1.625rem; }
+  .juicerchurch-imnew-inner { padding: 1.75rem 1.25rem; }
+  .juicerchurch-album-grid {
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 1rem;
+  }
+  .juicerchurch-photo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  }
+  /* Captions stay visible on touch — no hover state. */
+  .juicerchurch-photo-tile.has-caption .juicerchurch-photo-caption {
+    opacity: 1;
+  }
+}

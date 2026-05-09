@@ -1,0 +1,18 @@
+<!-- Photo grid partial. The data passed in MUST be a list of
+     `{src, caption, alt}` maps (the same shape that lives in
+     `.page.photos` frontmatter and in `.site.photos` engine output).
+
+     The grid is masonry-ish: a CSS grid with `auto-fill, minmax(...)`,
+     so it handles arbitrary counts without per-tile coordination. Each
+     tile is a clickable image when it has no caption, and an image plus
+     caption row when it does. -->
+{{ if . }}
+<ul class="juicerchurch-photo-grid">
+  {{ for p <- . }}
+  <li class="juicerchurch-photo-tile{{ if p.caption }} has-caption{{ end }}">
+    <img src="{{ p.src }}" alt="{{ if p.alt }}{{ p.alt }}{{ else }}{{ if p.caption }}{{ p.caption }}{{ else }}Photo{{ end }}{{ end }}" loading="lazy">
+    {{ if p.caption }}<figcaption class="juicerchurch-photo-caption">{{ p.caption }}</figcaption>{{ end }}
+  </li>
+  {{ end }}
+</ul>
+{{ end }}

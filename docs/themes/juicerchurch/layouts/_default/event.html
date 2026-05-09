@@ -45,6 +45,13 @@
       {{ .content }}
     </div>
 
+    {{ if .page.photos }}
+    <section class="juicerchurch-event-photos">
+      <h2 class="juicerchurch-event-photos-head">Photos from past years</h2>
+      {{ partial 'photo-grid' .page.photos }}
+    </section>
+    {{ end }}
+
     <p class="juicerchurch-event-back">
       <a href="{{ relURL '/events/' }}">← All events</a>
     </p>

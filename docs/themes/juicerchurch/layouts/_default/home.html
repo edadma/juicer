@@ -1,11 +1,15 @@
 <!-- Visitor-first homepage. Hero with site title + tagline + welcome
      paragraph, then THE service-times widget (the universal "when does
-     church meet?" answer), then a "Plan your visit" CTA, then a strip
-     of recent sermons + upcoming events.
+     church meet?" answer), then four "what's happening" strips:
+       1. Latest sermon (the most recent dated page using `layout: sermon`)
+       2. Upcoming events (next three from .site.events)
+       3. Recent photos (six newest from .site.photos)
+       4. "I'm new" CTA panel
+     Closing visit CTA at the bottom of the hero.
 
-     Stage 1 has the hero, services widget, and visit CTA. Stage 2 will
-     add the recent-sermons and upcoming-events strips with proper
-     filtering. -->
+     Each strip is gated on data availability — empty surfaces silently
+     omit the section so a fresh site (no sermons yet, no events on the
+     calendar) doesn't render skeletons. -->
 {{ define content }}
   <section class="juicerchurch-hero">
     <div class="juicerchurch-hero-inner">
@@ -29,4 +33,92 @@
     {{ end }}
   </section>
   {{ end }}
+
+  {{ sermons := .site.posts | filter `.layout = "sermon"` }}
+  {{ if sermons }}
+  <section class="juicerchurch-home-strip juicerchurch-home-latest">
+    <div class="juicerchurch-home-strip-head">
+      <h2 class="juicerchurch-home-strip-title">Latest sermon</h2>
+      <a class="juicerchurch-home-strip-more" href="{{ relURL '/sermons/' }}">All sermons →</a>
+    </div>
+    {{ for s, i <- sermons }}{{ if i = 0 }}
+    <article class="juicerchurch-latest-sermon">
+      <div class="juicerchurch-latest-sermon-meta">
+        {{ if s.dateLong }}<p class="juicerchurch-latest-sermon-date"><time datetime="{{ s.dateISO }}">{{ s.dateLong }}</time></p>{{ end }}
+        <h3 class="juicerchurch-latest-sermon-title"><a href="{{ s.url }}">{{ s.title }}</a></h3>
+        {{ if s.scripture }}<p class="juicerchurch-latest-sermon-scripture">{{ s.scripture }}</p>{{ end }}
+        {{ if s.author }}<p class="juicerchurch-latest-sermon-speaker">{{ s.author.name }}{{ if s.author.role }} · {{ s.author.role }}{{ end }}</p>{{ end }}
+        {{ if s.summary }}<p class="juicerchurch-latest-sermon-summary">{{ s.summary }}</p>{{ end }}
+      </div>
+      {{ if s.audioURL }}
+      <audio class="juicerchurch-latest-sermon-audio" controls preload="none" src="{{ s.audioURL }}"></audio>
+      {{ end }}
+    </article>
+    {{ end }}{{ end }}
+  </section>
+  {{ end }}
+
+  {{ if .site.events }}
+  {{ upcomingAll := .site.events | filter `.recurring or .dateShort >= $.site.now.date` }}
+  {{ if upcomingAll }}
+  <section class="juicerchurch-home-strip juicerchurch-home-events">
+    <div class="juicerchurch-home-strip-head">
+      <h2 class="juicerchurch-home-strip-title">Upcoming events</h2>
+      <a class="juicerchurch-home-strip-more" href="{{ relURL '/calendar/' }}">Full calendar →</a>
+    </div>
+    <ol class="juicerchurch-home-events-list">
+      {{ shown := 0 }}
+      {{ for e <- upcomingAll }}{{ if shown < 3 }}{{ shown := shown + 1 }}
+      <li class="juicerchurch-home-event{{ if e.recurring }} is-recurring{{ end }}">
+        <div class="juicerchurch-home-event-when">
+          {{ if e.recurring }}
+          <span class="juicerchurch-home-event-month">Every</span>
+          <span class="juicerchurch-home-event-day">{{ if e.recurringDay }}{{ e.recurringDay }}{{ else }}week{{ end }}</span>
+          {{ else }}{{ if e.dateLong }}
+          <span class="juicerchurch-home-event-month">{{ e.dateLong }}</span>
+          {{ if e.eventTime }}<span class="juicerchurch-home-event-day">{{ e.eventTime }}</span>{{ end }}
+          {{ end }}{{ end }}
+        </div>
+        <div class="juicerchurch-home-event-meta">
+          <h3 class="juicerchurch-home-event-title"><a href="{{ e.url }}">{{ e.title }}</a></h3>
+          {{ if e.eventLocation }}<p class="juicerchurch-home-event-loc">{{ e.eventLocation }}</p>{{ end }}
+        </div>
+      </li>
+      {{ end }}{{ end }}
+    </ol>
+  </section>
+  {{ end }}
+  {{ end }}
+
+  {{ if .site.photos }}
+  <section class="juicerchurch-home-strip juicerchurch-home-photos">
+    <div class="juicerchurch-home-strip-head">
+      <h2 class="juicerchurch-home-strip-title">Recent photos</h2>
+      <a class="juicerchurch-home-strip-more" href="{{ relURL '/photos/' }}">All albums →</a>
+    </div>
+    <ul class="juicerchurch-home-photo-strip">
+      {{ shown := 0 }}
+      {{ for p <- .site.photos }}{{ if shown < 6 }}{{ shown := shown + 1 }}
+      <li class="juicerchurch-home-photo">
+        {{ if p.page }}<a href="{{ p.page.url }}">{{ end }}
+          <img src="{{ p.src }}" alt="{{ if p.alt }}{{ p.alt }}{{ else }}{{ p.caption }}{{ end }}" loading="lazy">
+        {{ if p.page }}</a>{{ end }}
+      </li>
+      {{ end }}{{ end }}
+    </ul>
+  </section>
+  {{ end }}
+
+  <section class="juicerchurch-home-strip juicerchurch-home-imnew">
+    <div class="juicerchurch-imnew-inner">
+      <h2 class="juicerchurch-imnew-title">First time visiting?</h2>
+      <p class="juicerchurch-imnew-body">
+        We'd love to meet you. Sundays at 10:30 — traditional liturgy, a real sermon, free coffee, no awkward "stand up if you're new" moments. Childcare for ages 0–4.
+      </p>
+      <div class="juicerchurch-imnew-actions">
+        <a class="juicerchurch-imnew-cta" href="{{ relURL '/visit/' }}">What to expect →</a>
+        <a class="juicerchurch-imnew-cta juicerchurch-imnew-cta--secondary" href="{{ relURL '/contact/' }}">Get in touch</a>
+      </div>
+    </div>
+  </section>
 {{ end }}

@@ -231,6 +231,35 @@ class SitedataSpec extends AnyFlatSpec with Matchers with JuicerTestSupport {
     n should (be >= 50 and be <= 53)
   }
 
+  it should "aggregate `photos:` frontmatter into .site.photos sorted newest-first" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: H\n---\n")
+    writeAt(
+      "content/older.md",
+      "---\ntitle: Older\ndate: 2024-03-15\nphotos:\n" +
+        "  - \"/img/a1.svg\"\n" +
+        "  - { src: \"/img/a2.svg\", caption: \"At the picnic\" }\n" +
+        "---\n",
+    )
+    writeAt(
+      "content/newer.md",
+      "---\ntitle: Newer\ndate: 2024-09-01\nphotos:\n" +
+        "  - \"/img/b1.svg\"\n" +
+        "---\n",
+    )
+    writeAt("content/no-photos.md", "---\ntitle: NoPhotos\ndate: 2024-06-01\n---\n")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/folder.html",
+      "{{ for p <- .site.photos }}[{{ p.src }}|{{ p.caption }}|{{ p.page.title }}]{{ end }}",
+    )
+
+    build()
+
+    // Newer's photos first (b1), then Older's (a1, a2 in declaration order).
+    out("index.html").trim shouldBe "[/img/b1.svg||Newer][/img/a1.svg||Older][/img/a2.svg|At the picnic|Older]"
+  }
+
   it should "expose .site.pagesByYear grouping the same posts list by year, year descending" in {
     writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
     writeAt("content/_index.md", "---\ntitle: H\n---\n")

@@ -1330,6 +1330,56 @@ object App {
       }
     }
 
+    // ----- Photos view -----
+    //
+    // `.site.photos` aggregates `photos:` frontmatter lists from every page
+    // in the site into one flat surface, sorted newest-first by the page's
+    // date. Each entry:
+    //   {src, caption, alt, page}
+    //   - `src`     — image URL, copied verbatim from the frontmatter list
+    //   - `caption` — display caption (optional, may be empty)
+    //   - `alt`     — accessibility text (optional, falls back to caption)
+    //   - `page`    — basic record of the parent page (lets templates link
+    //                 the photo back to its event/album/sermon)
+    //
+    // Frontmatter shape — either a list of strings (just URLs) or a list
+    // of maps with optional `src` / `caption` / `alt` keys:
+    //   photos:
+    //     - "/img/photos/picnic-01.jpg"
+    //     - { src: "/img/photos/picnic-02.jpg", caption: "The pie table" }
+    //
+    // The string shape is shorthand for `{src: "..."}`. Pages without a
+    // `photos:` frontmatter contribute nothing.
+    val photosList: List[Map[String, Any]] = {
+      def normalizeOne(any: Any, pageRec: Map[String, Any], inst: java.time.OffsetDateTime)
+          : Option[(java.time.OffsetDateTime, Map[String, Any])] = any match {
+        case s: String =>
+          Some(inst -> Map[String, Any](
+            "src" -> s, "caption" -> "", "alt" -> "", "page" -> pageRec,
+          ))
+        case m: Map[?, ?] =>
+          val sm = m.asInstanceOf[Map[Any, Any]].collect { case (k: String, v) => k -> v }.toMap
+          sm.get("src").collect { case s: String => s }.map { src =>
+            val caption = sm.get("caption").collect { case s: String => s }.getOrElse("")
+            val alt     = sm.get("alt").collect { case s: String => s }.getOrElse(caption)
+            inst -> Map[String, Any](
+              "src" -> src, "caption" -> caption, "alt" -> alt, "page" -> pageRec,
+            )
+          }
+        case _ => None
+      }
+      val acc = scala.collection.mutable.ListBuffer.empty[(java.time.OffsetDateTime, Map[String, Any])]
+      for ((c, m) <- pageEntries) {
+        frontmatterMap(c.page).get("photos") match {
+          case Some(xs: List[?]) =>
+            val inst = pageInstant(c)
+            xs.foreach(x => normalizeOne(x, m, inst).foreach(acc += _))
+          case _ => // nothing
+        }
+      }
+      acc.toList.sortBy(-_._1.toEpochSecond).map(_._2)
+    }
+
     val sitedata = confdata +
       ("toc"             -> sitetoc.toList) +
       ("start"           -> start) +
@@ -1347,7 +1397,8 @@ object App {
       ("authorRegistry"  -> authorRegistryList) +
       ("now"             -> nowMap) +
       ("events"          -> eventsList) +
-      ("calendar"        -> calendarData)
+      ("calendar"        -> calendarData) +
+      ("photos"          -> photosList)
 
     def findLayout(folders: List[String], name: String): Option[TemplateFile] =
       site.layoutTemplates

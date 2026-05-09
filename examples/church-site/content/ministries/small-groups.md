@@ -1,8 +1,8 @@
 ---
 title: "Small Groups"
 layout: ministry
-leader: pastor-rachel
-contact: rachel@gracecommunity.example
+leader: pastor-mark
+contact: mark@gracecommunity.example
 meets: "Various weeknights; groups of 8–12 in members' homes"
 summary: "Mid-size groups for fellowship, study, and prayer. Currently 6 active groups across Springfield. New groups form each fall."
 ---
@@ -19,8 +19,8 @@ Two hours, roughly: a shared meal or dessert, a chapter or passage of study (gro
 
 We re-form the small-group rosters each fall — there's a sign-up Sunday in late August where members and friends of the church indicate which night of the week works best, what neighborhood they live in, and any preferences (a group with kids about the same age, a group focused on a particular kind of study, etc.). We try to honor preferences but the matching also accounts for group balance and host capacity.
 
-If you've joined the church mid-year and want to be part of a group before the fall reset, [email Rachel](mailto:rachel@gracecommunity.example) — most groups have room for one or two additions.
+If you've joined the church mid-year and want to be part of a group before the fall reset, [email Mark](mailto:mark@gracecommunity.example) — most groups have room for one or two additions.
 
 ## Hosting a group
 
-A new group needs a host home (someone whose space can fit 12 adults around a table) and a leader (typically a couple, but not always). If you've been at Grace for at least a year and feel ready to host or lead, talk to Rachel.
+A new group needs a host home (someone whose space can fit 12 adults around a table) and a leader (typically a couple, but not always). If you've been at Grace for at least a year and feel ready to host or lead, talk to Mark.

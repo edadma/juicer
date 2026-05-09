@@ -1,0 +1,40 @@
+<!-- Photos section index. Renders one card per album page in the
+     `/photos/` section, each linking to the album's detail page. The
+     card's cover image is the first photo from the album's `photos:`
+     frontmatter; if the album has no photos yet, the card still renders
+     with a placeholder.
+
+     Section _index.md picks this layout via `layout: photo-album`. -->
+{{ define content }}
+  <article class="juicerchurch-page-wrap juicerchurch-photos-wrap">
+    <h1 class="juicerchurch-page-title">{{ .page.title }}</h1>
+    {{ if .content }}
+    <div class="juicerchurch-content juicerchurch-photos-intro">
+      {{ .content }}
+    </div>
+    {{ end }}
+
+    {{ if .section.pages }}
+    <ul class="juicerchurch-album-grid">
+      {{ for a <- .section.pages }}
+      <li class="juicerchurch-album-card">
+        <a href="{{ a.url }}">
+          {{ if a.photos }}
+          <img class="juicerchurch-album-cover" src="{{ a.photos[0].src }}" alt="{{ a.title }}" loading="lazy">
+          {{ else }}
+          <div class="juicerchurch-album-cover juicerchurch-album-cover--empty" aria-hidden="true"></div>
+          {{ end }}
+          <div class="juicerchurch-album-meta">
+            <h2 class="juicerchurch-album-title">{{ a.title }}</h2>
+            {{ if a.dateLong }}<p class="juicerchurch-album-date">{{ a.dateLong }}</p>{{ end }}
+            {{ if a.summary }}<p class="juicerchurch-album-summary">{{ a.summary }}</p>{{ end }}
+          </div>
+        </a>
+      </li>
+      {{ end }}
+    </ul>
+    {{ else }}
+    <p class="juicerchurch-empty">No photo albums yet. Check back soon.</p>
+    {{ end }}
+  </article>
+{{ end }}

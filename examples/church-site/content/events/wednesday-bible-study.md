@@ -12,7 +12,7 @@ summary: "Hymn sing, extended Bible study, closing prayer. About an hour. All ag
 A weekly midweek gathering — about an hour from start to finish. The shape:
 
 - Twenty minutes of hymn-singing, accompanied by Miriam at the piano.
-- Thirty minutes of Bible study, led by Pastor Tom or Pastor Rachel. We're typically working through a different book of the Bible than the Sunday morning series — currently the book of James.
+- Thirty minutes of Bible study, led by Pastor Tom or Pastor Mark. We're typically working through a different book of the Bible than the Sunday morning series — currently the book of James.
 - Ten minutes of corporate and conversational prayer to close.
 
 No preparation required. Bring a Bible if you have one; we'll have extras at the door if you don't. Coffee and tea are out from 6:30.
