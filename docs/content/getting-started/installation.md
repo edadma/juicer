@@ -14,7 +14,7 @@ cd juicer
 sbt 'juicerJVM/run --help'
 ```
 
-You'll see the usage banner. If sbt prints anything other than the help output, see [Troubleshooting](/getting-started/troubleshooting/) (TODO).
+You'll see the usage banner. If sbt prints anything other than the help output, see [Troubleshooting](/getting-started/troubleshooting/).
 
 ## sbt dependency (library use)
 

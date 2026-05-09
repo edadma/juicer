@@ -804,49 +804,15 @@ partial.
 
 ## The `juicerblog` theme
 
-Juicer ships a default blog theme under `themes/juicerblog/` that exercises every feature on this page. If you want a working blog in one minute, copy the example demo:
+Juicer ships a default blog theme under `themes/juicerblog/` that exercises every feature on this page — plus server-side syntax highlighting, author bylines, series progress badges, a reading-progress hairline, code-block copy buttons, and a homepage / archive layout pair. The full theme reference lives in its own section: see [juicerblog](/juicerblog/) for the overview and [juicerblog · Configuration](/juicerblog/configuration/) for the full config knobs, frontmatter conventions, syntax-highlighting setup, and override patterns.
 
-```
-examples/blog-site/
-├── site.toml
-└── content/
-    └── posts/
-        ├── _index.md
-        ├── 2024-03-12-first-post.md
-        ├── 2024-03-15-second-post.md
-        └── ...
+The fastest way to see every blog feature working together is the bundled demo:
+
+```bash
+sbt 'juicerJVM/run serve -s examples/blog-site -L'
 ```
 
-`site.toml`:
-
-```toml
-title = "My blog"
-author = "Me"
-baseURL = "https://example.com"
-
-themeDir = "../../docs/themes"
-theme = "juicerblog"
-
-paginate = 5
-sortBy = "date"
-```
-
-The theme provides:
-
-| Layout                          | What |
-|---------------------------------|------|
-| `_default/baseof.html`          | Outer shell — head, topbar, footer |
-| `_default/folder.html`          | Section index — the post list with pagination |
-| `_default/file.html`            | Single post — title, meta, body, prev/next nav |
-| `_default/tag-list.html`        | The `/tags/` directory |
-| `_default/tag-page.html`        | A single tag's archive |
-| `_default/404.html`             | Error page |
-
-Plus `partials/` for `head`, `topbar`, `footer`, `post-meta`, `pagination`. The whole theme is hand-coded CSS — no Tailwind, no build step. To customize colors, override `static/juicerblog.css` from your site's `static/`; site assets win on collision.
-
-[= tip =]
-The bundled palette is warm-neutral (amber-ish brand, indigo accents, serif body). Dark mode is automatic via `[data-theme="dark"]` overrides — set `data-theme="dark"` on `<html>` from your own theme switcher and the theme follows.
-[= /tip =]
+That spins up a live preview of `examples/blog-site/` — 9 dated posts spanning Jul–Dec 2024, three authors with a multi-author co-byline, a 3-post series, dateArchives + permalinks + aliases, syntax highlighting, the works. Touch any markdown file in the source and the page reloads in under a second.
 
 ## Where each feature lives
 
