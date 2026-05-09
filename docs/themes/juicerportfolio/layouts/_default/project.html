@@ -70,6 +70,27 @@
       </div>
     </div>
 
+    {{ partial 'project-gallery' . }}
+
+    {{ if .page.prev or .page.next }}
+    <nav class="juicerportfolio-project-nav" aria-label="Project navigation">
+      <div class="juicerportfolio-project-nav-inner">
+        {{ if .page.prev }}
+        <a class="juicerportfolio-project-nav-prev" href="{{ .page.prev.url }}">
+          <span class="juicerportfolio-project-nav-label">Previous</span>
+          <span class="juicerportfolio-project-nav-title">← {{ .page.prev.title }}</span>
+        </a>
+        {{ else }}<span></span>{{ end }}
+        {{ if .page.next }}
+        <a class="juicerportfolio-project-nav-next" href="{{ .page.next.url }}">
+          <span class="juicerportfolio-project-nav-label">Next</span>
+          <span class="juicerportfolio-project-nav-title">{{ .page.next.title }} →</span>
+        </a>
+        {{ else }}<span></span>{{ end }}
+      </div>
+    </nav>
+    {{ end }}
+
     <nav class="juicerportfolio-project-back">
       <a href="{{ relURL '/' }}">← All work</a>
     </nav>

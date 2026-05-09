@@ -1,6 +1,7 @@
 ---
 title: Tobias Lounge
 layout: project
+category: furniture
 date: 2024-09-15
 year: "2024"
 tagline: Bent-ash lounge chair
@@ -14,6 +15,16 @@ tools:
 hero: /img/work/tobias-lounge.svg
 heroAlt: Tobias lounge chair viewed from a three-quarter angle
 caption: Tobias Lounge, finished in oil and wax. Photographed in the studio, October 2024.
+gallery:
+  - src: /img/work/tobias-lounge-detail-joinery.svg
+    alt: Close-up of the steam-bent ash joinery at the back of the chair
+    caption: Pinned ash joint at the back of the loop. Brass pin countersunk and capped with a matching plug.
+  - src: /img/work/tobias-lounge-detail-sling.svg
+    alt: Detail of the canvas sling and brass grommet
+    caption: The sling threads through internal channels routed into the frame. Brass grommets at each suspension point.
+  - src: /img/work/tobias-lounge-context.svg
+    alt: Tobias Lounge in situ next to the Bramble side table
+    caption: In situ, with a Bramble side table within easy reach.
 ---
 
 The Tobias Lounge began as a request for a chair "to read a long book

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <!-- Bramble — plan view of the cantilevered top, showing how much
+       overhangs the base. Top down with the base footprint dashed. -->
+  <rect width="800" height="600" fill="#efeae0"/>
+
+  <!-- the top -->
+  <rect x="120" y="200" width="560" height="200" fill="#dcb87f" stroke="#3a2f24" stroke-width="4"/>
+
+  <!-- wood-grain on the top -->
+  <g stroke="#a3865a" stroke-width="1" opacity="0.55">
+    <path d="M140 220 Q400 210 660 220"/>
+    <path d="M140 260 Q400 250 660 260"/>
+    <path d="M140 300 Q400 290 660 300"/>
+    <path d="M140 340 Q400 330 660 340"/>
+    <path d="M140 380 Q400 370 660 380"/>
+  </g>
+
+  <!-- base footprint, dashed (it's underneath, not visible) -->
+  <rect x="440" y="240" width="180" height="120" fill="none" stroke="#3a2f24" stroke-width="2" stroke-dasharray="6 6" opacity="0.6"/>
+  <text x="530" y="305" font-family="Georgia, serif" font-size="13" fill="#3a2f24" font-style="italic" text-anchor="middle" opacity="0.7">base below</text>
+
+  <!-- dimension lines top -->
+  <g stroke="#8a3f22" stroke-width="1.5" fill="none">
+    <line x1="120" y1="170" x2="440" y2="170"/>
+    <path d="M126 164 L120 170 L126 176"/>
+    <path d="M434 164 L440 170 L434 176"/>
+  </g>
+  <text x="280" y="160" font-family="Georgia, serif" font-size="13" fill="#8a3f22" font-style="italic" text-anchor="middle">cantilever — 320 mm</text>
+
+  <g stroke="#8a3f22" stroke-width="1.5" fill="none">
+    <line x1="440" y1="170" x2="620" y2="170"/>
+    <path d="M446 164 L440 170 L446 176"/>
+    <path d="M614 164 L620 170 L614 176"/>
+  </g>
+  <text x="530" y="160" font-family="Georgia, serif" font-size="13" fill="#8a3f22" font-style="italic" text-anchor="middle">base — 180 mm</text>
+</svg>

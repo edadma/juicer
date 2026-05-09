@@ -1,0 +1,26 @@
+<!-- Project gallery. Reads `.page.gallery`, a list of {src, caption,
+     alt} entries from frontmatter:
+       gallery:
+         - src: /img/work/x-detail.svg
+           alt: "Close-up of the joinery"
+           caption: "Hand-cut mortise where the cantilever meets the base."
+         - src: /img/work/x-context.svg
+           alt: "..."
+
+     Two-up at desktop, one-up at mobile. Captions sit under each
+     image; without a caption the image fills the slot cleanly.
+     Renders nothing if `.page.gallery` is absent. -->
+{{ if .page.gallery }}
+<section class="juicerportfolio-gallery" aria-label="Gallery">
+  <ul class="juicerportfolio-gallery-grid">
+    {{ for g <- .page.gallery }}
+    <li class="juicerportfolio-gallery-item">
+      <figure class="juicerportfolio-gallery-figure">
+        <img src="{{ relURL g.src }}" alt="{{ if g.alt }}{{ g.alt }}{{ else }}{{ if g.caption }}{{ g.caption }}{{ else }}Gallery image{{ end }}{{ end }}" loading="lazy">
+        {{ if g.caption }}<figcaption>{{ g.caption }}</figcaption>{{ end }}
+      </figure>
+    </li>
+    {{ end }}
+  </ul>
+</section>
+{{ end }}

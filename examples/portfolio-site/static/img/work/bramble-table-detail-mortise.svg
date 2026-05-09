@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <!-- Bramble — mortise joint detail. Cross-section showing the deep
+       mortise running through the base block. -->
+  <rect width="800" height="600" fill="#efeae0"/>
+
+  <!-- base block cross-section -->
+  <g stroke="#3a2f24" stroke-width="4" stroke-linejoin="round">
+    <path d="M180 200 L620 200 L620 500 L180 500 Z" fill="#c8a777"/>
+  </g>
+
+  <!-- the deep mortise — empty rectangular slot through the top -->
+  <path d="M340 200 L460 200 L460 380 L340 380 Z" fill="#5a4a3a" stroke="#3a2f24" stroke-width="3"/>
+
+  <!-- top piece tenon — sits in the mortise, half engaged -->
+  <g stroke="#3a2f24" stroke-width="3" stroke-linejoin="round">
+    <path d="M120 140 L520 140 L520 200 L120 200 Z" fill="#dcb87f"/>
+    <path d="M340 200 L460 200 L460 360 L340 360 Z" fill="#b69254"/>
+  </g>
+
+  <!-- wood-grain marks -->
+  <g stroke="#8a6c3e" stroke-width="1.5" opacity="0.5">
+    <path d="M210 230 L210 480"/>
+    <path d="M250 240 L250 480"/>
+    <path d="M540 230 L540 480"/>
+    <path d="M580 240 L580 480"/>
+    <path d="M160 160 L500 165"/>
+    <path d="M160 180 L500 185"/>
+  </g>
+
+  <!-- arrow + dimension line on the right -->
+  <g stroke="#8a3f22" stroke-width="2" fill="none">
+    <line x1="660" y1="200" x2="660" y2="380"/>
+    <path d="M654 206 L660 200 L666 206"/>
+    <path d="M654 374 L660 380 L666 374"/>
+  </g>
+  <text x="676" y="294" font-family="Georgia, serif" font-size="14" fill="#8a3f22" font-style="italic">180 mm</text>
+</svg>

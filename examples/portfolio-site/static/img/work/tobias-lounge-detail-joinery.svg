@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <!-- Tobias Lounge — joinery detail. Close-up of the bent-ash loop
+       meeting itself, with the brass pin + plug. -->
+  <rect width="800" height="600" fill="#efeae0"/>
+
+  <!-- backdrop suggestion of the chair frame, blurred -->
+  <g fill="none" stroke="#d8cdb6" stroke-width="20" stroke-linecap="round" opacity="0.6">
+    <path d="M120 480 L240 100"/>
+    <path d="M560 480 L520 100"/>
+  </g>
+
+  <!-- the joint detail — two pieces of ash meeting -->
+  <g stroke="#3a2f24" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M280 280 Q400 180 520 280" fill="#c8a777"/>
+    <path d="M520 280 L520 460" fill="#9c7d44"/>
+    <path d="M280 280 L280 460" fill="#9c7d44"/>
+    <!-- Wood grain hints -->
+    <path d="M300 300 L300 440" stroke="#8a6c3e" stroke-width="1.5" opacity="0.6"/>
+    <path d="M320 310 L320 440" stroke="#8a6c3e" stroke-width="1.5" opacity="0.5"/>
+    <path d="M500 300 L500 440" stroke="#8a6c3e" stroke-width="1.5" opacity="0.6"/>
+  </g>
+
+  <!-- brass pin, countersunk — a small darker circle inside a lighter ring -->
+  <circle cx="400" cy="240" r="22" fill="#b8945a" stroke="#3a2f24" stroke-width="3"/>
+  <circle cx="400" cy="240" r="14" fill="#8a6c3e"/>
+  <circle cx="396" cy="236" r="3" fill="#e2c389" opacity="0.8"/>
+
+  <!-- shadow under the joint -->
+  <ellipse cx="400" cy="475" rx="180" ry="6" fill="#000" opacity="0.10"/>
+</svg>

@@ -1,6 +1,7 @@
 ---
 title: Bramble Side Table
 layout: project
+category: furniture
 date: 2024-04-08
 year: "2024"
 tagline: Cantilevered side table
@@ -11,6 +12,16 @@ tools:
 hero: /img/work/bramble-table.svg
 heroAlt: Bramble side table, three-quarter view showing the cantilever
 caption: Bramble Side Table prototype, white oak in oil finish.
+gallery:
+  - src: /img/work/bramble-table-detail-mortise.svg
+    alt: Detail of the deep mortise joint
+    caption: The mortise runs the full depth of the base block; no visible fastener anywhere.
+  - src: /img/work/bramble-table-top.svg
+    alt: Plan view of the cantilevered top
+    caption: Plan view. Sixty per cent of the top sits past the base.
+  - src: /img/work/bramble-table-pair.svg
+    alt: Two Bramble side table prototypes in the studio
+    caption: Two prototypes in the studio, both in white oak with an oil finish.
 ---
 
 A side table that fits *beside* a chair, not in front of it — the

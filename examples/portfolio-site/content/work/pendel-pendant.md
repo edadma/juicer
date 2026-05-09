@@ -1,6 +1,7 @@
 ---
 title: Pendel
 layout: project
+category: lighting
 date: 2023-11-20
 year: "2023"
 tagline: Hand-spun pendant lamp

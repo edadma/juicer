@@ -4,6 +4,12 @@
      strip — projects opt in by setting `layout: project` in their
      frontmatter, and the grid silently sorts/limits across them.
 
+     Optional [[workCategories]] in site.toml render as filter chips
+     above the grid; clicking a chip toggles a tiny JS that filters
+     cards by their `data-category` attribute. No JS needed if the
+     site doesn't declare any categories — the chip bar just doesn't
+     render and every card is shown.
+
      Card content per project: hero image (frontmatter `hero`),
      title, year, optional one-line role/tagline. Click anywhere
      on the card to open the project page. -->
@@ -19,9 +25,15 @@
   {{ projects := .site.pages | filter `.layout = "project"` }}
   {{ if projects }}
   <section class="juicerportfolio-work" aria-label="Selected work">
-    <ul class="juicerportfolio-work-grid">
+    {{ if .site.workCategories }}
+    <div class="juicerportfolio-work-filters" role="tablist" aria-label="Filter work by category">
+      <button class="juicerportfolio-work-filter is-active" type="button" data-filter="*" aria-pressed="true">All</button>
+      {{ for c <- .site.workCategories }}<button class="juicerportfolio-work-filter" type="button" data-filter="{{ c.value }}" aria-pressed="false">{{ c.label }}</button>{{ end }}
+    </div>
+    {{ end }}
+    <ul class="juicerportfolio-work-grid" data-active-filter="*">
       {{ for p <- projects }}
-      <li class="juicerportfolio-work-card">
+      <li class="juicerportfolio-work-card"{{ if p.category }} data-category="{{ p.category }}"{{ end }}>
         <a class="juicerportfolio-work-card-link" href="{{ p.url }}">
           {{ if p.hero }}
           <figure class="juicerportfolio-work-figure">
@@ -41,4 +53,23 @@
     </ul>
   </section>
   {{ end }}
+
+  <script>
+    (function () {
+      var chips = document.querySelectorAll('.juicerportfolio-work-filter');
+      var grid  = document.querySelector('.juicerportfolio-work-grid');
+      if (!chips.length || !grid) return;
+      chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          var filter = chip.getAttribute('data-filter');
+          chips.forEach(function (c) {
+            var on = c === chip;
+            c.classList.toggle('is-active', on);
+            c.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+          grid.setAttribute('data-active-filter', filter);
+        });
+      });
+    })();
+  </script>
 {{ end }}

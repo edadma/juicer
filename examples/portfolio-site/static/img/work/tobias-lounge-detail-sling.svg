@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <!-- Tobias Lounge — sling-and-grommet detail. Brass grommet
+       through a hand-rolled hem of canvas. -->
+  <rect width="800" height="600" fill="#efeae0"/>
+
+  <!-- canvas plane, draped — softly curved -->
+  <path d="M120 200 Q400 240 680 200 L680 480 Q400 520 120 480 Z" fill="#bda482" stroke="#3a2f24" stroke-width="3"/>
+  <path d="M120 200 Q400 240 680 200" fill="none" stroke="#9b8568" stroke-width="6"/>
+
+  <!-- canvas weave hints -->
+  <g stroke="#9b8568" stroke-width="0.8" opacity="0.5">
+    <line x1="160" y1="240" x2="180" y2="460"/>
+    <line x1="240" y1="250" x2="248" y2="470"/>
+    <line x1="320" y1="258" x2="316" y2="476"/>
+    <line x1="400" y1="262" x2="396" y2="480"/>
+    <line x1="480" y1="258" x2="488" y2="476"/>
+    <line x1="560" y1="250" x2="572" y2="470"/>
+    <line x1="640" y1="240" x2="660" y2="460"/>
+  </g>
+
+  <!-- hand-rolled hem suggestion (top) -->
+  <path d="M120 200 Q400 240 680 200" fill="none" stroke="#5a4a3a" stroke-width="1.5" stroke-dasharray="4 6"/>
+
+  <!-- brass grommet — large -->
+  <g>
+    <circle cx="400" cy="340" r="60" fill="#b8945a" stroke="#3a2f24" stroke-width="4"/>
+    <circle cx="400" cy="340" r="34" fill="#1c1814"/>
+    <!-- highlight on the brass -->
+    <path d="M380 310 A22 22 0 0 1 420 310" fill="none" stroke="#e2c389" stroke-width="3"/>
+  </g>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <!-- Two Bramble side table prototypes side by side in the studio. -->
+  <rect width="800" height="600" fill="#efeae0"/>
+  <rect x="0" y="490" width="800" height="110" fill="#e5dfd0"/>
+
+  <!-- left table -->
+  <g stroke="#3a2f24" stroke-width="3" stroke-linejoin="round">
+    <path d="M160 320 L220 320 L220 490 L160 490 Z" fill="#c8a777"/>
+    <path d="M220 320 L260 290 L260 460 L220 490 Z" fill="#a3865a"/>
+    <path d="M160 320 L200 290 L260 290 L220 320 Z" fill="#d6b787"/>
+    <path d="M40 290 L220 290 L260 264 L80 264 Z" fill="#dcb87f"/>
+    <path d="M40 290 L220 290 L220 300 L40 300 Z" fill="#b69254"/>
+  </g>
+
+  <!-- right table — slightly offset for variety -->
+  <g stroke="#3a2f24" stroke-width="3" stroke-linejoin="round">
+    <path d="M520 320 L580 320 L580 490 L520 490 Z" fill="#c8a777"/>
+    <path d="M580 320 L620 290 L620 460 L580 490 Z" fill="#a3865a"/>
+    <path d="M520 320 L560 290 L620 290 L580 320 Z" fill="#d6b787"/>
+    <path d="M400 290 L580 290 L620 264 L440 264 Z" fill="#dcb87f"/>
+    <path d="M400 290 L580 290 L580 300 L400 300 Z" fill="#b69254"/>
+  </g>
+
+  <!-- floor shadows -->
+  <ellipse cx="180" cy="500" rx="120" ry="6" fill="#000" opacity="0.08"/>
+  <ellipse cx="540" cy="500" rx="120" ry="6" fill="#000" opacity="0.08"/>
+</svg>

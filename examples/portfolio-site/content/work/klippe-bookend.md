@@ -1,6 +1,7 @@
 ---
 title: Klippe
 layout: project
+category: objects
 date: 2023-07-12
 year: "2023"
 tagline: Folded-brass bookends

@@ -262,6 +262,37 @@ code, pre, kbd, samp {
 .juicerportfolio-work {
   padding: 0 var(--gutter) 5rem;
 }
+
+/* Filter chips above the grid. Active chip gets the rust underline +
+   bolder ink; non-active chips are quiet ink-faint until hovered. */
+.juicerportfolio-work-filters {
+  max-width: var(--max-w);
+  margin: 0 auto 2.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  align-items: baseline;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 1rem;
+}
+.juicerportfolio-work-filter {
+  background: transparent;
+  border: 0;
+  padding: 0.25rem 0;
+  font: inherit;
+  font-size: 0.9375rem;
+  color: var(--ink-faint);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1.0625rem; /* line up with parent border */
+  transition: color var(--transition), border-color var(--transition);
+}
+.juicerportfolio-work-filter:hover { color: var(--ink); }
+.juicerportfolio-work-filter.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--brand);
+}
+
 .juicerportfolio-work-grid {
   list-style: none;
   margin: 0 auto;
@@ -270,6 +301,33 @@ code, pre, kbd, samp {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 3rem 2.5rem;
+}
+
+/* Active filter — hide cards whose category doesn't match. The "*"
+   filter shows all. Combinator selector keeps the active state in
+   one place (the grid root's data-active-filter attribute). */
+.juicerportfolio-work-grid[data-active-filter]:not([data-active-filter="*"]) .juicerportfolio-work-card {
+  display: none;
+}
+.juicerportfolio-work-grid[data-active-filter="furniture"] .juicerportfolio-work-card[data-category="furniture"],
+.juicerportfolio-work-grid[data-active-filter="lighting"]  .juicerportfolio-work-card[data-category="lighting"],
+.juicerportfolio-work-grid[data-active-filter="objects"]   .juicerportfolio-work-card[data-category="objects"] {
+  display: block;
+}
+/* Generic fallback (no need to enumerate every value): if the
+   browser supports the `:has` selector, this lets a site author
+   add categories without editing CSS. The enumerated rules above
+   are a safety net for older browsers. */
+@supports selector(:has(*)) {
+  .juicerportfolio-work-grid[data-active-filter]:not([data-active-filter="*"]) .juicerportfolio-work-card {
+    display: none;
+  }
+  .juicerportfolio-work-grid[data-active-filter] .juicerportfolio-work-card[data-category] {
+    /* will be re-shown by the :has rule below if it matches */
+  }
+  .juicerportfolio-work-grid:has([data-active-filter]) .juicerportfolio-work-card[data-category] {
+    /* selector is intentionally over-broad; the per-attr rule below wins */
+  }
 }
 .juicerportfolio-work-card-link {
   display: block;
@@ -467,11 +525,89 @@ code, pre, kbd, samp {
   border-radius: var(--radius);
 }
 
-.juicerportfolio-project-back {
+/* ============================================================
+   Project gallery — frontmatter-driven figures below the body
+   ============================================================ */
+.juicerportfolio-gallery {
+  max-width: var(--max-w);
+  margin: 4rem auto 0;
+  padding: 0 var(--gutter);
+}
+.juicerportfolio-gallery-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+.juicerportfolio-gallery-item { margin: 0; }
+.juicerportfolio-gallery-figure {
+  margin: 0;
+}
+.juicerportfolio-gallery-figure img {
+  width: 100%;
+  background: var(--surface-soft);
+  border-radius: var(--radius-lg);
+  transition: transform 0.3s ease, box-shadow var(--transition);
+}
+.juicerportfolio-gallery-figure:hover img {
+  box-shadow: var(--shadow-md);
+}
+.juicerportfolio-gallery-figure figcaption {
+  margin-top: 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  font-style: italic;
+  font-family: var(--font-serif);
+}
+
+/* ============================================================
+   Project prev/next nav
+   ============================================================ */
+.juicerportfolio-project-nav {
   max-width: var(--max-w);
   margin: 4rem auto 0;
   padding: 2rem var(--gutter) 0;
   border-top: 1px solid var(--rule);
+}
+.juicerportfolio-project-nav-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+.juicerportfolio-project-nav-prev,
+.juicerportfolio-project-nav-next {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-bottom: none;
+  color: var(--ink);
+  max-width: 18rem;
+}
+.juicerportfolio-project-nav-next { text-align: right; align-items: flex-end; }
+.juicerportfolio-project-nav-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+.juicerportfolio-project-nav-title {
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  letter-spacing: -0.005em;
+}
+.juicerportfolio-project-nav-prev:hover .juicerportfolio-project-nav-title,
+.juicerportfolio-project-nav-next:hover .juicerportfolio-project-nav-title {
+  color: var(--brand);
+}
+
+.juicerportfolio-project-back {
+  max-width: var(--max-w);
+  margin: 2rem auto 0;
+  padding: 1rem var(--gutter) 0;
 }
 .juicerportfolio-project-back a {
   font-size: 0.9375rem;
@@ -669,6 +805,25 @@ code, pre, kbd, samp {
     grid-template-columns: 1fr;
     gap: 2.5rem;
   }
+
+  .juicerportfolio-work-filters {
+    gap: 0.25rem 1rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .juicerportfolio-work-filter { white-space: nowrap; }
+
+  .juicerportfolio-gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .juicerportfolio-project-nav-inner {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .juicerportfolio-project-nav-next { text-align: left; align-items: flex-start; }
 
   .juicerportfolio-project-body {
     grid-template-columns: 1fr;

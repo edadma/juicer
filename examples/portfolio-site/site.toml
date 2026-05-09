@@ -52,6 +52,21 @@ url   = "https://are.na/example"
 label = "Newsletter"
 url   = "https://buttondown.email/example"
 
+# Work-grid filter chips. Each row: {label, value}. Projects that
+# match a chip set `category = "<value>"` in their frontmatter; the
+# filter chip "All" is always shown first by the home layout.
+[[workCategories]]
+label = "Furniture"
+value = "furniture"
+
+[[workCategories]]
+label = "Lighting"
+value = "lighting"
+
+[[workCategories]]
+label = "Objects"
+value = "objects"
+
 # Per-site palette overrides. Defaults are warm-paper + rust accent.
 # Uncomment to retune; see docs/content/reference/theming.md.
 #

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <!-- Tobias Lounge in situ next to the Bramble side table. Wider
+       view, both pieces in the room. -->
+  <rect width="800" height="600" fill="#efeae0"/>
+  <rect x="0" y="450" width="800" height="150" fill="#e5dfd0"/>
+  <!-- back wall hint -->
+  <line x1="0" y1="100" x2="800" y2="100" stroke="#cbc4b3" stroke-width="2"/>
+
+  <!-- chair on left, smaller-scale -->
+  <g fill="none" stroke="#3a2f24" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M180 480 L210 240"/>
+    <path d="M210 240 Q260 215 320 235"/>
+    <path d="M320 235 L350 340"/>
+    <path d="M350 340 Q368 372 400 388"/>
+    <path d="M400 388 L430 480"/>
+    <path d="M180 480 L430 480"/>
+  </g>
+  <!-- chair sling -->
+  <path d="M226 268 Q260 360 380 365" fill="none" stroke="#9b8568" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- side table on right -->
+  <g stroke="#3a2f24" stroke-width="3" stroke-linejoin="round">
+    <path d="M540 320 L620 320 L620 480 L540 480 Z" fill="#c8a777"/>
+    <path d="M620 320 L660 290 L660 450 L620 480 Z" fill="#a3865a"/>
+    <path d="M540 320 L580 290 L660 290 L620 320 Z" fill="#d6b787"/>
+    <!-- cantilever -->
+    <path d="M460 290 L620 290 L660 264 L500 264 Z" fill="#dcb87f"/>
+    <path d="M460 290 L620 290 L620 300 L460 300 Z" fill="#b69254"/>
+  </g>
+
+  <!-- a book on the cantilever -->
+  <rect x="476" y="276" width="60" height="6" fill="#3a2f24" stroke="#3a2f24" stroke-width="1"/>
+
+  <!-- floor shadows -->
+  <ellipse cx="304" cy="488" rx="160" ry="6" fill="#000" opacity="0.08"/>
+  <ellipse cx="600" cy="488" rx="100" ry="5" fill="#000" opacity="0.08"/>
+</svg>
