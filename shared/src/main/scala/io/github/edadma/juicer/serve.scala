@@ -16,12 +16,21 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
   *   - microserve's [[FsWatcher]] registers `watchRoot` recursively and
   *     triggers a rebuild on change (debounced ~150 ms via the runtime's
   *     timer, not `Thread.sleep` so JS/Native stay non-blocking).
-  *   - HTML responses get a `<script>` injected before `</body>` that opens
-  *     an `EventSource` to `/__juicer/live` and reloads on the `reload` event.
-  *   - The SSE channel uses microserve's streaming `Response` mode and the
-  *     per-response `onClose` callback to prune subscribers when browser
-  *     tabs close, instead of discovering disconnects on the next failed
-  *     write.
+  *   - HTML responses get a `<script>` injected before `</body>` that
+  *     long-polls `GET /__juicer/wait?since=N`. The server holds each
+  *     poll open until the next rebuild (or 30s) and responds with a
+  *     small JSON `{reload, version}`. The client either calls
+  *     `location.reload()` or immediately re-polls.
+  *
+  * **Why long-poll instead of SSE?** SSE keeps a single connection open
+  * forever per tab. Browsers cap concurrent HTTP/1.1 connections per host
+  * at 6 (Chrome/Safari). Each navigation in a multi-page site briefly
+  * stacks two SSE connections (old page + new page) before page-unload
+  * fires; rapid clicks accumulate enough overlap to exhaust the pool, and
+  * the next request `Stalled`s on Chrome's side waiting for a slot. Each
+  * long-poll cycle naturally completes (server responds → client
+  * reconnects), so connection slots are freed continuously and the
+  * accumulation pattern can't form.
   *
   * Bind retry: microserve's `Server.listen(...)(onListening, onError)`
   * surfaces port-in-use errors via `onError`. When `port` is taken we scan
@@ -41,15 +50,17 @@ def serve(
   given runtime: Runtime  = summon[Runtime]
   given ec:      ExecutionContext = runtime.executionContext
 
-  val sse = new SseChannel
+  val longPoll = new LongPollChannel(runtime.timers)
   val handler: RequestHandler = (req, res) =>
-    if liveReload && req.path == "/__juicer/live" then
-      sse.subscribe(res)
-      // SSE handler returns immediately; the response stays open and is
-      // written-to from `notifyReload` and the keep-alive ticker.
-      Future.successful(())
+    if liveReload && req.path == "/__juicer/wait" then
+      val since = req.query.get("since").flatMap(s => scala.util.Try(s.toLong).toOption).getOrElse(0L)
+      longPoll.handleWait(since, res)
     else
-      serveStatic(root, htmlDir, injectLiveReload = liveReload, req, res)
+      // Pass the current build version so the injected script can poll
+      // with `since = <served version>` — without that, every page would
+      // load with since=0 and immediately get reload=true if any build
+      // had ever happened, producing an infinite reload loop.
+      serveStatic(root, htmlDir, injectLiveReload = liveReload, longPoll.currentVersion, req, res)
 
   bindWithRetry(handler, host, port, retriesLeft = 20) { boundServer =>
     val actualPort = boundServer.actualPort
@@ -57,8 +68,7 @@ def serve(
     println(s"  root: $root")
     if liveReload then
       println("  live reload: enabled")
-      sse.startKeepalive(runtime.timers)
-      if watchRoot != null then startWatcher(watchRoot, excludeDir, rebuild, sse)
+      if watchRoot != null then startWatcher(watchRoot, excludeDir, rebuild, longPoll)
     println("Press Ctrl+C to stop.")
   }
 
@@ -83,6 +93,7 @@ private[juicer] def serveStatic(
     root:             Path,
     htmlDir:          String,
     injectLiveReload: Boolean,
+    currentVersion:   Long,
     req:              Request,
     res:              Response,
 ): Future[Unit] =
@@ -103,7 +114,7 @@ private[juicer] def serveStatic(
       val mime = contentType(t.filename)
       val bytes =
         if injectLiveReload && mime.startsWith("text/html") then
-          injectLiveReloadHtml(t.readText()).getBytes("UTF-8")
+          injectLiveReloadHtml(t.readText(), currentVersion).getBytes("UTF-8")
         else t.readBytes
       res.set("Content-Type", mime)
       if injectLiveReload then
@@ -141,87 +152,156 @@ private[juicer] def contentType(filename: String): String =
 
 // ===== Live-reload script injection ==========================================
 
-/** SSE client script — injected into HTML responses when live-reload is on.
-  * Idempotent (the `__juicerLive` guard) so duplicate injection is harmless.
-  * Exposed (private to package) for unit tests. */
+/** Long-poll client script — injected into HTML responses when live-reload
+  * is on. Idempotent (the `__juicerLive` guard) so duplicate injection is
+  * harmless.
+  *
+  * Wire protocol: each cycle is one `fetch('/__juicer/wait?since=N')` that
+  * the server holds open until the next rebuild (or ~20s). Response is a
+  * small JSON `{"reload": <bool>, "version": <int>}` — true triggers
+  * `location.reload()`, false triggers an immediate re-poll with the new
+  * version number. Network errors back off 1s before retrying, so a server
+  * restart doesn't busy-loop the browser.
+  *
+  * The `__VERSION__` placeholder is replaced at injection time with the
+  * server's current build version. Without that, every page would load
+  * with `since=0` and trigger an immediate reload as soon as any rebuild
+  * had ever happened — producing an infinite reload loop. The script's
+  * first poll is therefore "any change since the version I was served
+  * with?" — the server holds it until the *next* rebuild.
+  *
+  * **AbortController + pagehide is load-bearing.** Without it, the OLD
+  * page's in-flight fetch stays alive until its JS context is destroyed
+  * (which happens *after* the new page renders). With rapid navigation,
+  * dead fetches accumulate in Chrome's per-host connection pool until the
+  * 6-cap is hit and the next nav `Stalled`s. Aborting on `pagehide` frees
+  * the connection slot the instant the user clicks away — catches both
+  * normal navigation and bfcache transitions where `beforeunload` is
+  * unreliable. AbortError is silently swallowed in the `catch` because
+  * it's the *intended* outcome on navigation, not a network failure.
+  *
+  * Exposed (private to package) for unit tests. The literal string here
+  * still contains `__VERSION__`; injection substitutes it. */
 private[juicer] val LiveReloadScript: String =
   """<script>
     |(function() {
     |  if (window.__juicerLive) return;
     |  window.__juicerLive = true;
-    |  var es = new EventSource('/__juicer/live');
-    |  es.addEventListener('reload', function() { location.reload(); });
-    |  es.onerror = function() { /* keep retrying — EventSource auto-reconnects */ };
+    |  var since = __VERSION__;
+    |  var controller = null;
+    |  function poll() {
+    |    controller = new AbortController();
+    |    fetch('/__juicer/wait?since=' + since, { cache: 'no-store', signal: controller.signal })
+    |      .then(function(r) { return r.json(); })
+    |      .then(function(data) {
+    |        if (data.reload) location.reload();
+    |        else { since = data.version; poll(); }
+    |      })
+    |      .catch(function(e) {
+    |        if (e.name === 'AbortError') return;
+    |        setTimeout(poll, 1000);
+    |      });
+    |  }
+    |  window.addEventListener('pagehide', function() {
+    |    if (controller) try { controller.abort(); } catch (e) {}
+    |  });
+    |  poll();
     |})();
     |</script>""".stripMargin
 
-/** Insert the live-reload script just before the closing `</body>` tag. If
-  * the document has no `</body>` (a stripped-down or hand-written HTML), the
-  * script is appended at the end. */
-private[juicer] def injectLiveReloadHtml(html: String): String =
-  if html.contains("</body>") then html.replace("</body>", LiveReloadScript + "\n</body>")
-  else html + LiveReloadScript
+/** Insert the live-reload script just before the closing `</body>` tag, with
+  * `__VERSION__` substituted to the current build version so the first poll
+  * starts from "since this page's version". If the document has no
+  * `</body>` (a stripped-down or hand-written HTML), the script is appended
+  * at the end. */
+private[juicer] def injectLiveReloadHtml(html: String, currentVersion: Long): String =
+  val script = LiveReloadScript.replace("__VERSION__", currentVersion.toString)
+  if html.contains("</body>") then html.replace("</body>", script + "\n</body>")
+  else html + script
 
-// ===== SSE channel ===========================================================
+// ===== Long-poll channel =====================================================
 
-/** Tracks the set of currently-open streaming `Response`s, broadcasts reload
-  * events to each, and prunes subscribers as their connections close.
+/** Tracks pending `/__juicer/wait` requests and wakes them when the build
+  * completes. Each entry holds the request open until either:
+  *   - a `notifyReload` call (build finished) responds `{reload: true}`, or
+  *   - the wait timeout (30s) responds `{reload: false}`, or
+  *   - the client closes the connection (peer FIN), in which case we just
+  *     clean up state — no response needed since the client is gone.
   *
-  * The previous JVM implementation used a `ConcurrentHashMap[OutputStream]`
-  * keyed off raw streams and discovered dead clients on the next failed
-  * write. Microserve's per-response `onClose` callback lets us prune
-  * synchronously the moment a tab closes, with no synchronization needed
-  * because every callback fires on the runtime's event-loop thread.
+  * Single-threaded discipline: every method runs on microserve's runtime
+  * event loop, so no synchronisation is required. The mutable `pending` set
+  * is fine without a lock for the same reason.
   */
-private[juicer] final class SseChannel:
-  private val sinks = mutable.Set.empty[Response]
+private[juicer] final class LongPollChannel(timers: Timers)(using ExecutionContext):
+  /** One pending poll. `cancelTimeout` is mutable so we can install the
+    * timeout handle AFTER the entry is in `pending` — otherwise a timer
+    * that fires synchronously would race the add. (Single-threaded loop
+    * makes the race impossible in practice, but the explicit ordering is
+    * load-bearing if we ever move to a multi-threaded runtime.) */
+  private final class Pending(
+      val res:     Response,
+      val promise: Promise[Unit],
+  ):
+    var cancelTimeout: () => Unit = () => ()
 
-  /** Wire `res` as a fresh SSE client. The handler that called us has
-    * already returned `Future.successful(())` — this Response stays alive,
-    * being written-to from `notifyReload` and the keep-alive ticker, until
-    * its underlying connection drops. */
-  def subscribe(res: Response): Unit =
-    res.writeHead(200, Map(
-      "Content-Type"  -> "text/event-stream",
-      "Cache-Control" -> "no-cache",
-      "Connection"    -> "keep-alive",
-    ))
-    // Initial empty comment encourages clients to commit to the connection
-    // and sets a reconnect-backoff hint per the SSE spec.
-    val _ = res.write("retry: 1000\n\n")
-    sinks += res
-    res.onClose { () =>
-      sinks -= res
-    }
+  private val pending = mutable.Set.empty[Pending]
+  private var version = 0L
+  // Hold each poll for up to ~20s before responding "no change". MUST be
+  // shorter than microserve's 30s connection-idle timeout — otherwise the
+  // two timers race at exactly 30s, and when the idle timer wins the
+  // connection closes before we can write the response (curl sees status
+  // 000 / EOF). 20s leaves a comfortable 10s margin.
+  private val WaitTimeoutMs = 20000L
 
-  /** Tell every connected client to reload. Failed writes (already-dead
-    * connections that haven't fired `onClose` yet) are caught and the sink
-    * is removed eagerly. */
+  /** The current build version. Read by the static-file handler so the
+    * injected script's first poll starts from "since this page's version"
+    * rather than from 0 — without that, every page load triggers an
+    * immediate reload as soon as any rebuild has ever happened. */
+  def currentVersion: Long = version
+
+  /** Handle a `/__juicer/wait?since=N` request. Returns the future the
+    * microserve handler should return — completes when the response is
+    * fully written, or when the client disconnects without one. */
+  def handleWait(since: Long, res: Response): Future[Unit] =
+    if since < version then
+      // Build already happened past the client's last-seen version. Reply
+      // immediately so the client reloads on next paint.
+      respondReload(res)
+    else
+      val entry = new Pending(res, Promise[Unit]())
+      pending += entry
+      // Now arm the timeout. (See `Pending` docstring for ordering note.)
+      entry.cancelTimeout = timers.setTimeout(WaitTimeoutMs) { () =>
+        if pending.remove(entry) then
+          respondNoChange(entry.res).onComplete(r => entry.promise.tryComplete(r))
+      }
+      // Client disconnect — cancel the timeout and complete the handler
+      // future. Do NOT try to write a response; the transport is gone.
+      res.onClose { () =>
+        if pending.remove(entry) then
+          entry.cancelTimeout()
+          val _ = entry.promise.trySuccess(())
+      }
+      entry.promise.future
+
+  /** Build finished — bump the version and wake every pending poll. */
   def notifyReload(): Unit =
-    writeAll("event: reload\ndata: 1\n\n")
-
-  /** Schedule a 30-second keep-alive comment so reverse proxies / browsers
-    * don't kill idle connections. Uses the runtime's timer (cross-platform)
-    * instead of a JVM `ScheduledExecutorService`. The reschedule chains
-    * itself on each tick so cancellation just stops scheduling. */
-  def startKeepalive(timers: Timers): Unit =
-    def schedule(): Unit =
-      val _ = timers.setTimeout(30000)(() => {
-        writeAll(": keepalive\n\n")
-        schedule()
-      })
-    schedule()
-
-  private def writeAll(payload: String): Unit =
-    // Snapshot before iterating since onClose may mutate `sinks` from within
-    // the same loop turn (microserve fires onClose synchronously when a
-    // write fails on a dead transport).
-    sinks.toList.foreach { res =>
-      try
-        val _ = res.write(payload)
-      catch case _: Throwable => sinks -= res
+    version += 1
+    val toRespond = pending.toList
+    pending.clear()
+    toRespond.foreach { e =>
+      e.cancelTimeout()
+      respondReload(e.res).onComplete(r => e.promise.tryComplete(r))
     }
-end SseChannel
+
+  private def respondReload(res: Response): Future[Unit] =
+    res.set("Content-Type", "application/json").set("Cache-Control", "no-store")
+    res.send(s"""{"reload":true,"version":$version}""")
+
+  private def respondNoChange(res: Response): Future[Unit] =
+    res.set("Content-Type", "application/json").set("Cache-Control", "no-store")
+    res.send(s"""{"reload":false,"version":$version}""")
+end LongPollChannel
 
 // ===== File watcher + rebuild loop ===========================================
 
@@ -242,7 +322,7 @@ private[juicer] def startWatcher(
     src:        Path,
     excludeDir: Path,
     rebuild:    () => Boolean,
-    sse:        SseChannel,
+    longPoll:   LongPollChannel,
 )(using runtime: Runtime): Unit =
   val watcher  = runtime.newFsWatcher()
   var pending: () => Unit = null
@@ -258,7 +338,7 @@ private[juicer] def startWatcher(
       pending = timers.setTimeout(150) { () =>
         pending = null
         println("[juicer] source changed; rebuilding…")
-        if rebuild() then sse.notifyReload()
+        if rebuild() then longPoll.notifyReload()
       }
   }
 end startWatcher
