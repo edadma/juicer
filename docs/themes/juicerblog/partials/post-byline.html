@@ -1,17 +1,18 @@
 <!-- Single-post header byline. Renders avatars (each wrapped in an anchor
-     to that author's archive — so the avatar itself is the per-author
-     navigation), the "By <names>" line with serial-comma joining
-     ("Ed", "Ed and Ben", "Ed, Alice and Ben"), and a series progress
-     badge when the post is part of one. The narrow date/reading-time/
-     tags line lives separately in post-meta.html — both partials render
-     side by side in the post header so the byline owns the human
-     attribution and the meta line owns the structural metadata.
+     to that author's archive — so the avatar itself is also a per-author
+     link), the "By <names>" line with each name as its own anchor and
+     serial-comma joining ("By Ed", "By Ed and Ben", "By Ed, Alice and
+     Ben"), and a series progress badge when the post is part of one.
+     The narrow date/reading-time/tags line lives separately in
+     post-meta.html — both partials render side by side in the post
+     header so the byline owns the human attribution and the meta line
+     owns the structural metadata.
 
-     The names line uses squiggly's `map` + 3-arg `join` to assemble the
-     comma-and-and grammar from a list of author maps without a per-
-     element loop — keeps the partial squiggly-0.2.3-compatible. Per-
-     name anchor wrapping (instead of just per-avatar) is a follow-up
-     pending the for-with-index fix in squiggly 0.2.4. -->
+     The names line uses `for a, i <- .page.authors` so each name can be
+     its own <a>. The conjunction grammar collapses to "and" before the
+     final entry and "," between earlier entries. Requires squiggly
+     0.2.4+ (boxed-Number comparison + `$.` global root preserved across
+     copy(data=…)). -->
 {{ if .page.authors }}
 <div class="juicerblog-byline">
   <div class="juicerblog-byline-avatars">
@@ -19,10 +20,7 @@
       {{ if a.avatar }}<a class="juicerblog-byline-avatar-link" href="{{ relURL '/authors/' }}{{ a.id }}/" aria-label="{{ a.name }}"><img class="juicerblog-byline-avatar" src="{{ a.avatar }}" alt="{{ a.name }}"></a>{{ end }}
     {{ end }}
   </div>
-  <p class="juicerblog-byline-line">
-    {{ names := .page.authors | map `.name` }}
-    By {{ names | join ", " " and " }}
-  </p>
+  <p class="juicerblog-byline-line">By {{ for a, i <- .page.authors }}{{ if i > 0 }}{{ if i = $.page.authors.length - 1 }} and {{ else }}, {{ end }}{{ end }}{{ if a.id }}<a class="juicerblog-byline-name" href="{{ relURL '/authors/' }}{{ a.id }}/">{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}</a>{{ else }}{{ a.name }}{{ end }}{{ end }}</p>
 </div>
 {{ end }}
 
