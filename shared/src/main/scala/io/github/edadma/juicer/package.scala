@@ -96,8 +96,8 @@ package object juicer {
 
   // ===== Markdown parser + helpers =====
 
-  /** Cached `markdown.MarkdownConfig`. Tuned for SSG / docs use: every GFM
-    * extension we ship support for is on, plus auto heading ids.
+  /** Build a `markdown.MarkdownConfig` for a juicer site. Tuned for SSG / docs
+    * use: every GFM extension we ship support for is on, plus auto heading ids.
     *
     *   - autoHeadingIds   — every `<hN>` gets an `id` from the slugified text
     *                        so the TOC builder can read it back, and so
@@ -115,8 +115,14 @@ package object juicer {
     *
     * `math` stays off because KaTeX needs a runtime asset; turn it on per-site
     * if your theme loads KaTeX.
+    *
+    * `codeHighlighter` is the markdown lib's `(code, lang) => Option[html]`
+    * hook. Pass `None` (default) for plain `<pre><code>` rendering, or wire
+    * a [[loadHighlighters]] map through it for build-time syntax highlighting.
     */
-  lazy val markdownConfig: io.github.edadma.markdown.MarkdownConfig =
+  def buildMarkdownConfig(
+      codeHighlighter: Option[(String, String) => Option[String]] = None,
+  ): io.github.edadma.markdown.MarkdownConfig =
     io.github.edadma.markdown.MarkdownConfig.default.copy(
       autoHeadingIds    = true,
       tables            = true,
@@ -129,11 +135,74 @@ package object juicer {
       callouts          = true,
       definitionLists   = true,
       emoji             = io.github.edadma.markdown.EmojiConfig.Unicode,
+      codeHighlighter   = codeHighlighter,
     )
 
-  /** Parse markdown text into a [[Document]] AST. */
+  /** Plain default config — no highlighting. Cached because most call sites
+    * don't need a per-site instance and the lazy val saves rebuilding the
+    * (immutable) config on every shortcode / template render.
+    *
+    * Code paths that DO want highlighting build their own via
+    * [[buildMarkdownConfig]] and pass it explicitly to the renderer. */
+  lazy val markdownConfig: io.github.edadma.markdown.MarkdownConfig =
+    buildMarkdownConfig(None)
+
+  /** Scan a directory for `*.tmLanguage.json` grammar files and build one
+    * [[io.github.edadma.highlighter.Highlighter]] per language. The base name
+    * (sans `.tmLanguage.json` extension) is the language key — so a file
+    * called `scala.tmLanguage.json` registers under both `scala` and (if
+    * present) any common aliases the site config maps in.
+    *
+    * Returns an empty map when the directory is missing, unreadable, or has
+    * no grammar files. Parse errors per file are reported via `onError`
+    * (defaults to `Console.err.println`) and that grammar is skipped — one
+    * malformed grammar must not take the whole build down.
+    *
+    * `mode` defaults to `ClassMode("hl-")` so the rendered HTML carries
+    * semantic class names (`hl-keyword`, `hl-string`, etc.) that themes
+    * style — see juicerblog's hand-written palette. Pass `InlineMode(theme)`
+    * if you want fixed-color inline-styled spans instead. */
+  def loadHighlighters(
+      grammarsDir: io.github.edadma.path.Path,
+      mode:        io.github.edadma.highlighter.RenderMode = io.github.edadma.highlighter.ClassMode("hl-"),
+      onError:     (String, String) => Unit = (file, msg) => Console.err.println(s"[juicer] grammar $file: $msg"),
+  ): Map[String, io.github.edadma.highlighter.Highlighter] = {
+    if (!grammarsDir.exists || !grammarsDir.isDirectory) return Map.empty
+    val builder = scala.collection.mutable.LinkedHashMap.empty[String, io.github.edadma.highlighter.Highlighter]
+    for (entry <- grammarsDir.listDirectory("*.tmLanguage.json")) {
+      val f = grammarsDir / entry.name
+      if (f.isFile) {
+        val lang = entry.name.stripSuffix(".tmLanguage.json")
+        io.github.edadma.highlighter.Highlighter.fromJson(f.readText(), mode) match {
+          case Right(hl) => builder += (lang -> hl)
+          case Left(err) => onError(entry.name, err)
+        }
+      }
+    }
+    builder.toMap
+  }
+
+  /** Build a `(code, lang) => Option[html]` callback from a highlighter map.
+    * The returned function is what [[buildMarkdownConfig]]'s `codeHighlighter`
+    * expects. Returns `None` for unknown languages, which leaves the markdown
+    * lib to emit a plain `<pre><code class="language-X">…</code></pre>`. */
+  def buildCodeHighlighter(
+      highlighters: Map[String, io.github.edadma.highlighter.Highlighter],
+  ): Option[(String, String) => Option[String]] =
+    if (highlighters.isEmpty) None
+    else Some((code, lang) => highlighters.get(lang).map(_.highlight(code)))
+
+  /** Parse markdown text into a [[Document]] AST using the default (no-
+    * highlighting) config. Call sites that need highlighting use the
+    * two-argument overload below with their per-site config. */
   def parseMarkdown(s: String): Document =
     io.github.edadma.markdown.parseDocumentContent(s, markdownConfig)
+
+  /** Parse markdown text into a [[Document]] AST using a caller-supplied
+    * config — typically the per-build [[buildMarkdownConfig]] result so
+    * fenced code blocks get highlighted. */
+  def parseMarkdown(s: String, config: io.github.edadma.markdown.MarkdownConfig): Document =
+    io.github.edadma.markdown.parseDocumentContent(s, config)
 
   /** Render a list of inline nodes to HTML (delegates to markdown 0.4.2's
     * public `renderInlines`).

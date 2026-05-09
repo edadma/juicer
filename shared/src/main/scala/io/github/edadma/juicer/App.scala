@@ -75,6 +75,25 @@ object App {
 
     if (!isDir(src1)) problem(s"not a readable directory: $src1")
 
+    // ----- Syntax highlighting (Phase 3, Stage 4 of juicerblog polish) -----
+    //
+    // Sites opt in by dropping `*.tmLanguage.json` files into `<src>/grammars/`.
+    // We parse each one once into a `Highlighter` (cached for the build),
+    // then build a `(code, lang) => Option[html]` callback that the markdown
+    // lib calls per fenced code block. Sites with no `grammars/` directory
+    // get a no-op callback — markdown emits plain `<pre><code>` and the
+    // theme's CSS handles the un-highlighted case.
+    //
+    // ClassMode("hl-") means highlighter emits `<span class="hl-keyword">`
+    // etc.; the theme owns the colors via CSS. Swap to `InlineMode(theme)`
+    // if you want fixed colors baked into the HTML — see loadHighlighters'
+    // `mode` parameter.
+    val grammarsDir   = src1 / "grammars"
+    val highlighters  = loadHighlighters(grammarsDir)
+    if (highlighters.nonEmpty)
+      show(s"highlighter: ${highlighters.size} grammar(s) loaded from $grammarsDir (${highlighters.keys.mkString(", ")})")
+    val siteMarkdownConfig = buildMarkdownConfig(buildCodeHighlighter(highlighters))
+
     val confdoc      = config(src1, baseConfig)
     val baseURLstr   = baseurl.orElse(confdoc.getString("baseURL")).getOrElse("http://localhost:8080")
     val confdata: VectorMap[String, Any] = {
@@ -199,7 +218,7 @@ object App {
       new TemplateRenderer(
         partials  = partialsLoader,
         data      = rendererData,
-        functions = TemplateBuiltin.functions ++ juicerUrlBuiltins,
+        functions = TemplateBuiltin.functions ++ juicerUrlBuiltins(siteMarkdownConfig),
       )
     val shortcodesLoader: TemplateLoader =
       (name: String) =>
@@ -219,12 +238,12 @@ object App {
     for (case c @ ContentFile(_, name, _, _, _, _, _, _) <- site.content) {
       show(s"parse markdown file $name")
 
-      val raw = parseMarkdown(preprocessor.process(c.source))
+      val raw = parseMarkdown(preprocessor.process(c.source), siteMarkdownConfig)
       val doc = transformLinks(shiftHeadings(raw, by = conf.int.headingShift), linkCallback)
 
       c.toc = buildToc(doc)
-      c.content = io.github.edadma.markdown.renderToHTML(doc, markdownConfig).trim
-      c.summary = computeSummary(c, doc, preprocessor, linkCallback)
+      c.content = io.github.edadma.markdown.renderToHTML(doc, siteMarkdownConfig).trim
+      c.summary = computeSummary(c, doc, preprocessor, linkCallback, siteMarkdownConfig)
     }
 
     trait TOCItem
@@ -1791,7 +1810,12 @@ object App {
     * around the new `markdown` library. Merged into the renderer's function
     * map alongside squiggly's defaults.
     */
-  private lazy val juicerUrlBuiltins: Map[String, TemplateFunction] = {
+  /** Build the juicer-side template builtins. Called once per `App.build`
+    * (no longer cached as a `lazy val`) so the per-site `mdConfig` — which
+    * carries the `codeHighlighter` callback — flows into `markdownify`. */
+  private def juicerUrlBuiltins(
+      mdConfig: io.github.edadma.markdown.MarkdownConfig,
+  ): Map[String, TemplateFunction] = {
     def baseFromContext(con: io.github.edadma.squiggly.Context): BaseURL =
       con.renderer.data("baseURL").asInstanceOf[BaseURL]
 
@@ -1821,7 +1845,7 @@ object App {
         "markdownify",
         1,
         { case (con, Seq(s: String)) =>
-          io.github.edadma.markdown.renderToHTML(parseMarkdown(s), markdownConfig).trim
+          io.github.edadma.markdown.renderToHTML(parseMarkdown(s, mdConfig), mdConfig).trim
         },
       ),
       // Substitute :shortcode: tokens with the corresponding Unicode emoji.
@@ -1926,6 +1950,7 @@ object App {
       doc:          Document,
       preprocessor: Preprocessor,
       linkCallback: String => String,
+      mdConfig:     io.github.edadma.markdown.MarkdownConfig,
   ): String = {
     val frontmatter = c.page match {
       case m: Map[?, ?] => m.asInstanceOf[Map[Any, Any]]
@@ -1938,8 +1963,8 @@ object App {
         val moreIdx = src.indexOf("<!--more-->")
         if (moreIdx >= 0) {
           val before = src.substring(0, moreIdx)
-          val parsed = transformLinks(parseMarkdown(preprocessor.process(before)), linkCallback)
-          io.github.edadma.markdown.renderToHTML(parsed, markdownConfig).trim
+          val parsed = transformLinks(parseMarkdown(preprocessor.process(before), mdConfig), linkCallback)
+          io.github.edadma.markdown.renderToHTML(parsed, mdConfig).trim
         } else {
           // Walk the AST for the first paragraph (skip leading headings,
           // thematic breaks, etc.). plainText strips inline formatting

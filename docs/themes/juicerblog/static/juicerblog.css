@@ -516,6 +516,39 @@ blockquote {
 .juicerblog-footer a:hover { color: var(--brand); }
 
 /* ============================================================
+   Syntax highlighting
+   ============================================================
+   Server-side via the `highlighter` lib (TextMate grammars). When juicer
+   sees a `<src>/grammars/<lang>.tmLanguage.json`, it parses it once,
+   wires markdown's `codeHighlighter` callback, and emits `<span
+   class="hl-keyword">…</span>` etc. inside the existing `<pre><code>`.
+   The theme owns the colors via these classes; sites without a
+   grammars/ dir get plain `<pre><code>` and these styles are inert.
+
+   Palette is tuned to juicerblog's warm-neutral substrate — amber-family
+   keywords, green strings, indigo/violet types-and-functions, faded
+   comments. Dark-mode swaps to lighter, slightly cooler tones so the
+   accents don't burn against the dark `--code-bg`. */
+.juicerblog-content .hl-keyword     { color: #9a3412; font-weight: 600; }
+.juicerblog-content .hl-string      { color: #166534; }
+.juicerblog-content .hl-comment     { color: #78716c; font-style: italic; }
+.juicerblog-content .hl-number      { color: #b45309; }
+.juicerblog-content .hl-type        { color: #1d4ed8; }
+.juicerblog-content .hl-function    { color: #6d28d9; }
+.juicerblog-content .hl-variable    { color: inherit; }
+.juicerblog-content .hl-operator    { color: #44403c; }
+.juicerblog-content .hl-punctuation { color: #78716c; }
+
+[data-theme="dark"] .juicerblog-content .hl-keyword     { color: #fb923c; }
+[data-theme="dark"] .juicerblog-content .hl-string      { color: #86efac; }
+[data-theme="dark"] .juicerblog-content .hl-comment     { color: #a8a29e; }
+[data-theme="dark"] .juicerblog-content .hl-number      { color: #fdba74; }
+[data-theme="dark"] .juicerblog-content .hl-type        { color: #93c5fd; }
+[data-theme="dark"] .juicerblog-content .hl-function    { color: #c4b5fd; }
+[data-theme="dark"] .juicerblog-content .hl-operator    { color: #d6d3d1; }
+[data-theme="dark"] .juicerblog-content .hl-punctuation { color: #a8a29e; }
+
+/* ============================================================
    Author archive
    ============================================================ */
 .juicerblog-author-list {
