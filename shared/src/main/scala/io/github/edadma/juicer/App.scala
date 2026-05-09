@@ -731,10 +731,19 @@ object App {
       val words = wordsOf(c.content)
       val fm    = frontmatterMap(c.page)
       val authors = resolveAuthors(fm)
+      // `slug` — the URL stem, useful for in-page anchors and CSS hooks
+      // when a template walks `.section.pages` and wants to namespace
+      // each section's HTML id. For `/menu/espresso/` it's `espresso`;
+      // for `/menu/` it's `menu`; for the root `/` it's `""`.
+      val slug = {
+        val trimmed = rel.stripPrefix("/").stripSuffix("/")
+        if (trimmed.isEmpty) "" else trimmed.split('/').last
+      }
       val core = fm ++ Map(
         "permalink"    -> abs,
         "relPermalink" -> rel,
         "url"          -> rel,
+        "slug"         -> slug,
         "summary"      -> (if (c.summary eq null) "" else c.summary),
         "isSection"    -> (c.name == folderContent),
         "lang"         -> langOf(c),
@@ -1609,10 +1618,20 @@ object App {
 
     // ----- Author archives (Phase 2.3) -----
     //
-    // `/authors/index.html` lists every author who has at least one page;
-    // `/authors/<id>/index.html` lists that author's posts. Same opt-in
-    // discipline as taxonomies — missing layout = silent skip.
-    if (authorTerms.nonEmpty) {
+    // `/authors/index.html` lists every author in `.site.authorRegistry`
+    // (the full team / staff / contributor list), and is rendered if a
+    // registry exists at all — themes like juicercafe surface a "team"
+    // page that's about *who works here*, not "who has authored posts."
+    //
+    // `/authors/<id>/index.html` is the per-author archive (their posts);
+    // it's only emitted for authors who have at least one referencing
+    // page — `authorTerms.nonEmpty`. An empty archive page would be
+    // misleading.
+    //
+    // Same opt-in discipline as taxonomies — missing layout = silent
+    // skip. Themes can ship author-list without author-page or vice
+    // versa.
+    if (authorRegistry.nonEmpty) {
       findLayout(Nil, "author-list").foreach { tmpl =>
         val outDir = dst1 / "authors"
         outDir.createDirectories()
@@ -1624,6 +1643,8 @@ object App {
         show(s"render $outFile using ${tmpl.path.relativeTo(src1)}")
         outFile.writeText(renderToString(templateRenderer, data, tmpl.template))
       }
+    }
+    if (authorTerms.nonEmpty) {
       findLayout(Nil, "author-page").foreach { tmpl =>
         for (a <- authorTerms) {
           val id     = a("id").asInstanceOf[String]

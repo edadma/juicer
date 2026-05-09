@@ -76,6 +76,22 @@ least one referencing page and is augmented with `count`, `url`, and
 should show every team member regardless of how many sermons or posts
 they've authored; use `.site.authors` for "browse by author" archives.
 
+#### When `/authors/` and `/authors/<id>/` get rendered
+
+The two layouts have different gates so themes can ship a "team page"
+that shows everyone, even on a fresh site with no posts:
+
+- `layouts/_default/author-list.html` → `/authors/index.html` is
+  rendered whenever a registry exists at all (`[[authors]]` non-empty
+  in `site.toml`). The layout typically iterates
+  `.site.authorRegistry`.
+- `layouts/_default/author-page.html` → `/authors/<id>/index.html` is
+  only rendered for authors with at least one referencing page. An
+  empty per-author archive page would be misleading.
+
+Either layout is opt-in — missing the file means the corresponding
+output is silently skipped.
+
 ### `.site.now`
 
 Build-time timestamp captured once per build, in four shapes so the
@@ -191,6 +207,7 @@ The current page's enriched record:
 | `.page.url`            | `String`  | Site-relative URL |
 | `.page.relPermalink`   | `String`  | Same as `url`, named for Hugo parity |
 | `.page.permalink`      | `String`  | Absolute URL (baseURL + url) |
+| `.page.slug`           | `String`  | URL stem (last path segment, no slashes) — useful for in-page anchors when a layout walks `.section.pages` and wants a stable per-section HTML id. `""` for the root index. |
 | `.page.isSection`      | `Boolean` | `true` for `_index.md` pages |
 | `.page.parent`         | `Map?`    | Enclosing section's `_index` record |
 | `.page.ancestors`      | `List[Map]` | Root → parent chain (excluding self) |

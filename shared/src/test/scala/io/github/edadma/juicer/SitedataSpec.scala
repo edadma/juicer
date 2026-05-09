@@ -260,6 +260,85 @@ class SitedataSpec extends AnyFlatSpec with Matchers with JuicerTestSupport {
     out("index.html").trim shouldBe "[/img/b1.svg||Newer][/img/a1.svg||Older][/img/a2.svg|At the picnic|Older]"
   }
 
+  it should "expose .page.slug as the URL stem (last path segment, no slashes)" in {
+    // For section pages it's the section name; for leaf pages it's the
+    // file stem; for the root index it's the empty string. Useful for
+    // in-page anchors when a layout walks .section.pages and wants a
+    // stable per-section HTML id.
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n")
+    writeAt("content/menu/_index.md", "---\ntitle: Menu\n---\n")
+    writeAt("content/menu/espresso.md", "---\ntitle: Espresso\nstatic: true\n---\n")
+    writeAt("layouts/_default/file.html", "[{{ .page.slug }}]")
+    writeAt("layouts/_default/folder.html", "[{{ .page.slug }}]")
+
+    build()
+
+    // The root `_index` lands at the bare top of the output tree;
+    // everything else is wrapped under the default `htmlDir = "html"`.
+    out("index.html").trim shouldBe "[]"
+    out("html/menu/index.html").trim shouldBe "[menu]"
+    out("html/menu/espresso/index.html").trim shouldBe "[espresso]"
+  }
+
+  it should "render /authors/index.html when a registry exists, even with no referencing pages" in {
+    // Regression for the original behaviour where /authors/ was only emitted
+    // if at least one page had `author:` frontmatter — that's right for the
+    // per-author archive, but wrong for the team/staff list. juicercafe
+    // surfaces a "team" page that's about who works there, not who has
+    // published posts.
+    writeAt(
+      "site.toml",
+      """title = "S"
+        |baseURL = "http://x"
+        |
+        |[[authors]]
+        |id = "rosa"
+        |name = "Rosa"
+        |role = "Owner"
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: H\n---\n")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt(
+      "layouts/_default/author-list.html",
+      "REGISTRY:{{ for a <- .site.authorRegistry }}[{{ a.id }}]{{ end }}",
+    )
+
+    build()
+
+    // /authors/index.html exists and walks the full registry (one author),
+    // even though no page has `author: rosa` in its frontmatter.
+    out("authors/index.html").trim shouldBe "REGISTRY:[rosa]"
+  }
+
+  it should "skip /authors/<id>/index.html for authors with no referencing pages" in {
+    // The per-author archive page is a list of THEIR posts; emitting it for
+    // an author with zero posts would be misleading. Author-list (above)
+    // and author-page have different gates on purpose.
+    writeAt(
+      "site.toml",
+      """title = "S"
+        |baseURL = "http://x"
+        |
+        |[[authors]]
+        |id = "rosa"
+        |name = "Rosa"
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: H\n---\n")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/author-list.html", "L")
+    writeAt("layouts/_default/author-page.html", "P")
+
+    build()
+
+    out("authors/index.html").trim shouldBe "L"
+    (dst / "authors" / "rosa" / "index.html").exists shouldBe false
+  }
+
   it should "expose .site.pagesByYear grouping the same posts list by year, year descending" in {
     writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
     writeAt("content/_index.md", "---\ntitle: H\n---\n")
