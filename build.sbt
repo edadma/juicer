@@ -64,6 +64,7 @@ lazy val juicer = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "io.github.edadma"       %%% "markdown"                 % "0.4.4",
       "io.github.edadma"       %%% "squiggly"                 % "0.2.3",
       "io.github.edadma"       %%% "emoji"                    % "0.1.2",
+      "io.github.edadma"       %%% "microserve"               % "0.5.0",
     ),
     publishMavenStyle      := true,
     Test / publishArtifact := false,
