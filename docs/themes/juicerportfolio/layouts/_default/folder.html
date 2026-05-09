@@ -1,0 +1,29 @@
+<!-- Generic section index — for sub-sections like /press/ or /writing/.
+     The home page is the canonical project listing; this layout covers
+     the long-tail of "show me a list of these other things." -->
+{{ define content }}
+  <article class="juicerportfolio-page-wrap">
+    {{ if .page.title }}<h1 class="juicerportfolio-page-title">{{ .page.title }}</h1>{{ end }}
+    {{ if .content }}
+    <div class="juicerportfolio-content">
+      {{ .content }}
+    </div>
+    {{ end }}
+
+    {{ if .section.pages }}
+      <ol class="juicerportfolio-postlist">
+        {{ for p <- .section.pages }}
+        <li>
+          <h2 class="juicerportfolio-postlist-title">
+            <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+          </h2>
+          <div class="juicerportfolio-postlist-meta">
+            {{ if p.year }}<span>{{ p.year }}</span>{{ else }}{{ if p.date }}<time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time>{{ end }}{{ end }}
+          </div>
+          {{ if p.summary }}<p class="juicerportfolio-postlist-summary">{{ p.summary }}</p>{{ end }}
+        </li>
+        {{ end }}
+      </ol>
+    {{ end }}
+  </article>
+{{ end }}

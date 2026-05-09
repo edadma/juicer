@@ -1,0 +1,66 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{{ if .page.title }}{{ if .page.title = .site.title }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ else }}<title>{{ .page.title }} — {{ .site.title }}</title>{{ end }}{{ else }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ end }}
+{{ if .page.summary }}<meta name="description" content="{{ .page.summary }}">{{ else }}{{ if .site.description }}<meta name="description" content="{{ .site.description }}">{{ end }}{{ end }}
+{{ if .page.permalink }}<link rel="canonical" href="{{ .page.permalink }}">{{ end }}
+{{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
+
+<!-- OpenGraph + Twitter cards. Resolves image / description from
+     frontmatter (ogImage/image then ogDescription/description/summary),
+     falling back to site-wide ogImage / image. -->
+{{ ogTags .page }}
+
+<!-- Atom feed discovery — juicer always emits a site-wide feed. -->
+<link rel="alternate" type="application/atom+xml" title="{{ .site.title }}" href="{{ relURL '/feed.xml' }}">
+
+<!-- Apply the theme BEFORE first paint to avoid the white flash.
+     Reads localStorage ('juicerportfolio-theme'), falls back to system
+     preference. Sets data-theme="dark" or data-theme="light" on
+     <html>. Inline so it executes before stylesheet evaluation. -->
+<script>
+  (function() {
+    try {
+      var stored = localStorage.getItem('juicerportfolio-theme');
+      var dark = stored
+        ? stored === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    } catch (e) {}
+  })();
+</script>
+
+<link rel="stylesheet" href="{{ relURL '/juicerportfolio.css' }}">
+
+<!-- Site-supplied stylesheets, loaded AFTER the bundled theme CSS so
+     they can override anything. Drop your file in static/site.css and
+     set `customCSS = ["site.css"]` in site.toml; the list takes any
+     number of paths in the order to load them. -->
+{{ if .site.customCSS }}{{ for css <- .site.customCSS }}<link rel="stylesheet" href="{{ relURL css }}">
+{{ end }}{{ end }}
+
+<!-- Per-site palette overrides emitted from site.toml [juicerportfolio].
+     Light tokens land on :root; the *Dark variants land on
+     [data-theme="dark"] so they cleanly override the theme's hardcoded
+     dark palette without leaking into light mode. -->
+{{ if .site.juicerportfolio }}
+<style>
+  :root {
+    {{ if .site.juicerportfolio.brand }}--brand: {{ .site.juicerportfolio.brand }};{{ end }}
+    {{ if .site.juicerportfolio.brandStrong }}--brand-strong: {{ .site.juicerportfolio.brandStrong }};{{ end }}
+    {{ if .site.juicerportfolio.brandSoft }}--brand-soft: {{ .site.juicerportfolio.brandSoft }};{{ end }}
+    {{ if .site.juicerportfolio.accent }}--accent: {{ .site.juicerportfolio.accent }};{{ end }}
+    {{ if .site.juicerportfolio.fontSans }}--font-sans: {{ .site.juicerportfolio.fontSans }};{{ end }}
+    {{ if .site.juicerportfolio.fontSerif }}--font-serif: {{ .site.juicerportfolio.fontSerif }};{{ end }}
+    {{ if .site.juicerportfolio.fontMono }}--font-mono: {{ .site.juicerportfolio.fontMono }};{{ end }}
+    {{ if .site.juicerportfolio.measure }}--measure: {{ .site.juicerportfolio.measure }};{{ end }}
+    {{ if .site.juicerportfolio.gutter }}--gutter: {{ .site.juicerportfolio.gutter }};{{ end }}
+    {{ if .site.juicerportfolio.radiusLg }}--radius-lg: {{ .site.juicerportfolio.radiusLg }};{{ end }}
+  }
+  [data-theme="dark"] {
+    {{ if .site.juicerportfolio.brandDark }}--brand: {{ .site.juicerportfolio.brandDark }};{{ end }}
+    {{ if .site.juicerportfolio.brandStrongDark }}--brand-strong: {{ .site.juicerportfolio.brandStrongDark }};{{ end }}
+    {{ if .site.juicerportfolio.brandSoftDark }}--brand-soft: {{ .site.juicerportfolio.brandSoftDark }};{{ end }}
+    {{ if .site.juicerportfolio.accentDark }}--accent: {{ .site.juicerportfolio.accentDark }};{{ end }}
+  }
+</style>
+{{ end }}

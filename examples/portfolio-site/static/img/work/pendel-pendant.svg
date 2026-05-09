@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <!-- Pendel — spun-aluminum pendant on linen-wrapped cord. Front
+       elevation, hung from the ceiling line. -->
+  <rect width="800" height="600" fill="#efeae0"/>
+
+  <!-- ceiling line -->
+  <line x1="0" y1="40" x2="800" y2="40" stroke="#cbc4b3" stroke-width="2"/>
+
+  <!-- ceiling canopy (brass) -->
+  <rect x="384" y="36" width="32" height="12" fill="#b8945a" stroke="#3a2f24" stroke-width="1"/>
+
+  <!-- linen cord — slightly off-vertical to suggest weight -->
+  <path d="M400 48 L398 280" fill="none" stroke="#a89378" stroke-width="3"/>
+
+  <!-- shade — flat exterior, deep curve inside; trapezoidal silhouette -->
+  <g stroke="#3a2f24" stroke-width="3" stroke-linejoin="round">
+    <!-- outer shell — satin aluminum -->
+    <path d="M280 280 L520 280 L460 460 L340 460 Z" fill="#cdc8be"/>
+    <!-- inside curve — darker, suggests deep recess -->
+    <path d="M340 460 Q400 380 460 460" fill="#7a7263"/>
+    <!-- top reflective ring -->
+    <line x1="280" y1="285" x2="520" y2="285" stroke="#e8e3d6" stroke-width="2"/>
+  </g>
+
+  <!-- light glow underneath -->
+  <ellipse cx="400" cy="490" rx="140" ry="22" fill="#f3d680" opacity="0.35"/>
+  <ellipse cx="400" cy="500" rx="220" ry="14" fill="#f3d680" opacity="0.18"/>
+</svg>

@@ -1,0 +1,77 @@
+<!-- Project page. Triggered by `layout: project` in frontmatter.
+
+     Frontmatter the layout reads:
+       title       — the project name (required)
+       year        — "2024" or "2023–2024"; appears in meta sidebar
+       role        — what you did on it (optional)
+       client      — who it was for (optional; omit for self-initiated)
+       tools       — list, e.g. ["oak", "brass", "leather"]
+       link        — { label, url } external link (live site, shop, etc.)
+       hero        — large image at top
+       heroAlt     — alt text for hero
+       caption     — caption under hero image (optional)
+       summary     — short subtitle under the title
+
+     Stage-1 ships title + hero + meta sidebar + body. Stage-2 will
+     add a frontmatter-driven gallery (`gallery: [{src, caption}]`)
+     under the body. -->
+{{ define content }}
+  <article class="juicerportfolio-project">
+    {{ if .page.hero }}
+    <figure class="juicerportfolio-project-hero">
+      <img src="{{ relURL .page.hero }}" alt="{{ if .page.heroAlt }}{{ .page.heroAlt }}{{ else }}{{ .page.title }}{{ end }}">
+      {{ if .page.caption }}<figcaption>{{ .page.caption }}</figcaption>{{ end }}
+    </figure>
+    {{ end }}
+
+    <div class="juicerportfolio-project-body">
+      <header class="juicerportfolio-project-head">
+        <h1 class="juicerportfolio-project-title">{{ .page.title }}</h1>
+        {{ if .page.summary }}<p class="juicerportfolio-project-summary">{{ .page.summary }}</p>{{ end }}
+      </header>
+
+      <aside class="juicerportfolio-project-meta" aria-label="Project details">
+        {{ if .page.year }}
+        <div class="juicerportfolio-project-meta-row">
+          <p class="juicerportfolio-project-meta-label">Year</p>
+          <p class="juicerportfolio-project-meta-value">{{ .page.year }}</p>
+        </div>
+        {{ end }}
+        {{ if .page.role }}
+        <div class="juicerportfolio-project-meta-row">
+          <p class="juicerportfolio-project-meta-label">Role</p>
+          <p class="juicerportfolio-project-meta-value">{{ .page.role }}</p>
+        </div>
+        {{ end }}
+        {{ if .page.client }}
+        <div class="juicerportfolio-project-meta-row">
+          <p class="juicerportfolio-project-meta-label">Client</p>
+          <p class="juicerportfolio-project-meta-value">{{ .page.client }}</p>
+        </div>
+        {{ end }}
+        {{ if .page.tools }}
+        <div class="juicerportfolio-project-meta-row">
+          <p class="juicerportfolio-project-meta-label">Materials</p>
+          <ul class="juicerportfolio-project-tools">
+            {{ for t <- .page.tools }}<li>{{ t }}</li>{{ end }}
+          </ul>
+        </div>
+        {{ end }}
+        {{ if .page.link }}
+        <div class="juicerportfolio-project-meta-row">
+          <p class="juicerportfolio-project-meta-label">Link</p>
+          <p class="juicerportfolio-project-meta-value"><a href="{{ .page.link.url }}" rel="noopener">{{ .page.link.label }} →</a></p>
+        </div>
+        {{ end }}
+      </aside>
+
+      <div class="juicerportfolio-project-content">
+        {{ .content }}
+      </div>
+    </div>
+
+    <nav class="juicerportfolio-project-back">
+      <a href="{{ relURL '/' }}">← All work</a>
+    </nav>
+  </article>
+{{ end }}

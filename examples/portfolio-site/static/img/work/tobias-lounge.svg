@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <!-- Tobias Lounge — bent ash + canvas sling, 3/4 view.
+       Stylised line drawing on a paper background; placeholder for
+       real photography. Warm palette so it sits on the theme bg. -->
+  <rect width="800" height="600" fill="#efeae0"/>
+
+  <!-- soft floor tone -->
+  <rect x="0" y="450" width="800" height="150" fill="#e5dfd0"/>
+
+  <!-- chair frame: a continuous bent-ash loop, low + reclined -->
+  <g fill="none" stroke="#3a2f24" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- back leg -->
+    <path d="M280 480 L320 200"/>
+    <!-- top of backrest curve -->
+    <path d="M320 200 Q380 170 460 195"/>
+    <!-- backrest down to seat-back point -->
+    <path d="M460 195 L500 320"/>
+    <!-- seat front rail -->
+    <path d="M500 320 Q520 360 560 380"/>
+    <!-- front leg -->
+    <path d="M560 380 L600 480"/>
+    <!-- back rail at floor -->
+    <path d="M280 480 L600 480"/>
+    <!-- arm hint (back to front) -->
+    <path d="M340 250 Q420 240 510 290" opacity="0.55"/>
+  </g>
+
+  <!-- canvas sling — slung from backrest top to front rail -->
+  <path d="M340 230 Q380 360 530 360" fill="none" stroke="#9b8568" stroke-width="14" stroke-linecap="round"/>
+  <path d="M340 232 Q380 360 530 360" fill="none" stroke="#bda482" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- small brass pin highlight -->
+  <circle cx="320" cy="200" r="4" fill="#c8a263"/>
+  <circle cx="460" cy="195" r="4" fill="#c8a263"/>
+  <circle cx="500" cy="320" r="4" fill="#c8a263"/>
+
+  <!-- floor shadow -->
+  <ellipse cx="440" cy="490" rx="220" ry="10" fill="#000" opacity="0.08"/>
+</svg>

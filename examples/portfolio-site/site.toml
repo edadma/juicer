@@ -1,0 +1,60 @@
+# Example portfolio-site — exercises the juicerportfolio theme.
+# Stage-1 demo: home (intro + 4-project grid) + 4 project pages
+# + about page. Stage-2 will add per-project galleries, tag/category
+# filters, and project-to-project nav. Stage-3 adds CV/contact/press
+# secondary pages and the theme reference docs.
+#
+# Demo subject: "Atelier Hahn" — a fictional one-person industrial
+# design studio doing furniture, lighting, and small objects.
+#
+# Local preview:
+#   sbt 'juicerJVM/run serve -s examples/portfolio-site -L'
+
+title       = "Atelier Hahn"
+tagline     = "Industrial design, Lisbon"
+author      = "Mira Hahn"
+baseURL     = "http://localhost:8080"
+description = "Mira Hahn is an independent industrial designer based in Lisbon. Selected work in furniture, lighting, and small objects."
+
+themeDir = "../../docs/themes"
+theme    = "juicerportfolio"
+
+htmlDir = ""
+sortBy  = "date"
+
+# Optional engine keys, all themes read these.
+# favicon          = "/favicon.svg"
+# hideJuicerCredit = true
+
+# Topbar nav links. Order is left-to-right.
+[[topnav]]
+label = "Work"
+url   = "/"
+
+[[topnav]]
+label = "About"
+url   = "/about/"
+
+# Footer contact line + links. Both optional.
+[contact]
+email    = "studio@atelierhahn.example"
+location = "Lisbon, Portugal"
+
+[[links]]
+label = "Instagram"
+url   = "https://instagram.com/example"
+
+[[links]]
+label = "Are.na"
+url   = "https://are.na/example"
+
+[[links]]
+label = "Newsletter"
+url   = "https://buttondown.email/example"
+
+# Per-site palette overrides. Defaults are warm-paper + rust accent.
+# Uncomment to retune; see docs/content/reference/theming.md.
+#
+# [juicerportfolio]
+# brand  = "#0f766e"   # teal-700
+# accent = "#1c1814"

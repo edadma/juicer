@@ -1,0 +1,12 @@
+<!-- Generic single-page layout — about, contact, CV, press, etc.
+     A constrained measure for prose; the project layout handles
+     anything image-heavy. -->
+{{ define content }}
+  <article class="juicerportfolio-page-wrap">
+    {{ if .page.title }}<h1 class="juicerportfolio-page-title">{{ .page.title }}</h1>{{ end }}
+    {{ if .page.summary }}<p class="juicerportfolio-page-summary">{{ .page.summary }}</p>{{ end }}
+    <div class="juicerportfolio-content">
+      {{ .content }}
+    </div>
+  </article>
+{{ end }}

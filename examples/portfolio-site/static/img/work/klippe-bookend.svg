@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <!-- Klippe — folded-brass bookends with four books between. Side
+       elevation. -->
+  <rect width="800" height="600" fill="#efeae0"/>
+  <rect x="0" y="450" width="800" height="150" fill="#e5dfd0"/>
+
+  <!-- left bookend: tall upright + foot extending right -->
+  <g stroke="#3a2f24" stroke-width="3" stroke-linejoin="round">
+    <path d="M180 200 L196 200 L196 446 L260 446 L260 462 L180 462 Z" fill="#b8945a"/>
+    <!-- patina shadow -->
+    <path d="M186 200 L186 446" stroke="#8a6c3e" stroke-width="2" fill="none" opacity="0.8"/>
+  </g>
+
+  <!-- four books standing between bookends -->
+  <g stroke="#3a2f24" stroke-width="2" stroke-linejoin="round">
+    <rect x="218" y="270" width="56" height="180" fill="#5a4a3a"/>
+    <rect x="278" y="252" width="68" height="198" fill="#8a3f22"/>
+    <rect x="350" y="284" width="48" height="166" fill="#3d4a3a"/>
+    <rect x="402" y="262" width="76" height="188" fill="#c4633b"/>
+
+    <!-- book spine details -->
+    <line x1="240" y1="300" x2="252" y2="300" stroke="#c8a263" stroke-width="1.5"/>
+    <line x1="304" y1="280" x2="320" y2="280" stroke="#e6d6c0" stroke-width="1.5"/>
+    <line x1="430" y1="290" x2="450" y2="290" stroke="#f0e0d0" stroke-width="1.5"/>
+  </g>
+
+  <!-- right bookend: mirror -->
+  <g stroke="#3a2f24" stroke-width="3" stroke-linejoin="round">
+    <path d="M620 200 L604 200 L604 446 L540 446 L540 462 L620 462 Z" fill="#b8945a"/>
+    <path d="M614 200 L614 446" stroke="#8a6c3e" stroke-width="2" fill="none" opacity="0.8"/>
+  </g>
+
+  <!-- felt foot pads (subtle) -->
+  <rect x="180" y="462" width="80" height="3" fill="#5a4a3a" opacity="0.7"/>
+  <rect x="540" y="462" width="80" height="3" fill="#5a4a3a" opacity="0.7"/>
+
+  <!-- floor shadow -->
+  <ellipse cx="400" cy="476" rx="240" ry="6" fill="#000" opacity="0.10"/>
+</svg>

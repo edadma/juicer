@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Not found — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerportfolio.css' }}">
+</head>
+<body>
+  <div class="juicerportfolio-page">
+    <header class="juicerportfolio-topbar">
+      <div class="juicerportfolio-topbar-inner">
+        <a class="juicerportfolio-brand" href="{{ relURL '/' }}">{{ .site.title }}</a>
+      </div>
+    </header>
+    <main class="juicerportfolio-main">
+      <article class="juicerportfolio-page-wrap" style="text-align: center;">
+        <h1 class="juicerportfolio-page-title">404</h1>
+        <p>That page doesn't exist. Try the <a href="{{ relURL '/' }}">work index</a>.</p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

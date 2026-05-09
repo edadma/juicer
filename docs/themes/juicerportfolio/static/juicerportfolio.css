@@ -1,0 +1,714 @@
+/* juicerportfolio — image-led portfolio / case-study theme for juicer.
+ *
+ * Conventions follow the rest of the bundled themes: CSS variables for
+ * tokens, [data-theme="dark"] overrides, semantic .juicerportfolio-*
+ * class names. No utility framework, no JS framework. The only JS is
+ * the tiny pre-paint theme-apply + click-toggle in head/topbar.
+ *
+ * Aesthetic is "gallery / studio website" — warm paper background,
+ * near-black ink, a single muted rust accent. Body in a clean sans,
+ * project titles in a more characterful serif. Heavy use of whitespace
+ * because the work is the content; the chrome should disappear.
+ *
+ * Inspirations: Hay Design, Vitra catalog pages, Monocle's commerce
+ * product pages, the "studio" pages of small architecture practices.
+ * Restraint over flourish. */
+
+/* ============================================================
+   Tokens
+   ============================================================ */
+:root {
+  /* Brand */
+  --brand:        #c4633b;          /* warm rust — restrained accent */
+  --brand-strong: #8a3f22;          /* darker rust for hover/emphasis */
+  --brand-soft:   #f4e6dc;          /* paper-tinted rust */
+  --accent:       #2b2620;          /* near-black ink, used as a UI accent */
+
+  /* Surfaces */
+  --bg:           #f7f4ee;          /* warm paper */
+  --bg-soft:      #efeae0;          /* tinted alternating bg */
+  --surface:      #ffffff;
+  --surface-soft: #f0ebe0;
+  --ink:          #1c1814;          /* almost-black, warm */
+  --ink-soft:     #524a40;          /* muted ink for secondary copy */
+  --ink-faint:    #8a7f70;          /* meta + label tone */
+  --rule:         #e2dccf;          /* hairlines */
+  --rule-soft:    #ede7d9;
+
+  /* Code (rare on a portfolio site, but possible in writeups) */
+  --code-bg:      #ede7d9;
+  --code-border:  #d8d1bf;
+  --code-ink:     #1c1814;
+
+  /* Type */
+  --font-sans:  -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Inter', 'Segoe UI', sans-serif;
+  --font-serif: 'Iowan Old Style', 'Source Serif Pro', 'Charter', Georgia, 'Times New Roman', serif;
+  --font-mono:  ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Sizing */
+  --measure:    62ch;
+  --gutter:     1.5rem;
+  --max-w:      82rem;              /* wide container — work pages need breathing room */
+  --max-w-page: 56rem;              /* prose-y pages (about, contact) */
+
+  /* Radii + transitions + elevation */
+  --radius:      0.25rem;
+  --radius-lg:   0.375rem;          /* deliberately small — gallery aesthetic */
+  --shadow-sm:   0 1px 2px 0 rgba(28, 24, 20, 0.04);
+  --shadow-md:   0 6px 18px -4px rgba(28, 24, 20, 0.10);
+  --transition:  0.2s ease;
+}
+
+[data-theme="dark"] {
+  --brand:        #d6845f;          /* lifted rust for dark bg */
+  --brand-strong: #f0a982;
+  --brand-soft:   rgba(214, 132, 95, 0.16);
+  --accent:       #ede7d9;
+
+  --bg:           #161311;          /* deep warm-charcoal */
+  --bg-soft:      #1d1916;
+  --surface:      #1d1916;
+  --surface-soft: #25201b;
+  --ink:          #ede7d9;          /* warm off-white ink */
+  --ink-soft:     #c2b8a4;
+  --ink-faint:    #8a7f70;
+  --rule:         #2c2722;
+  --rule-soft:    #251f1a;
+
+  --code-bg:      #25201b;
+  --code-border:  #2c2722;
+  --code-ink:     #ede7d9;
+
+  --shadow-sm:   0 1px 2px 0 rgba(0, 0, 0, 0.30);
+  --shadow-md:   0 6px 18px -4px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================================
+   Reset + base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+  transition: color var(--transition), border-color var(--transition);
+}
+a:hover {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+
+img, video, svg { max-width: 100%; height: auto; display: block; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 0.5em 0;
+  line-height: 1.15;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  font-family: var(--font-serif);
+}
+h1 { font-size: 2.25rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+
+p { margin: 0 0 1em 0; }
+
+code, pre, kbd, samp {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* ============================================================
+   Layout shell
+   ============================================================ */
+.juicerportfolio-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.juicerportfolio-main { flex: 1; }
+
+/* ============================================================
+   Topbar
+   ============================================================ */
+.juicerportfolio-topbar {
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg);
+}
+.juicerportfolio-topbar-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 1.25rem var(--gutter);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.juicerportfolio-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  color: var(--ink);
+  border-bottom: none;
+  font-family: var(--font-serif);
+}
+.juicerportfolio-brand:hover { color: var(--brand); }
+.juicerportfolio-brand-logo {
+  width: 1.5rem;
+  height: 1.5rem;
+  align-self: center;
+}
+.juicerportfolio-brand-name {
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.juicerportfolio-brand-tagline {
+  font-size: 0.875rem;
+  font-weight: 400;
+  font-family: var(--font-sans);
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+.juicerportfolio-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.juicerportfolio-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.juicerportfolio-nav a {
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+  border-bottom: none;
+}
+.juicerportfolio-nav a:hover { color: var(--brand); }
+
+.juicerportfolio-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.juicerportfolio-theme-toggle:hover {
+  background: var(--surface-soft);
+  color: var(--brand);
+  border-color: var(--rule);
+}
+.juicerportfolio-icon-sun { display: none; }
+.juicerportfolio-icon-moon { display: block; }
+[data-theme="dark"] .juicerportfolio-icon-sun { display: block; }
+[data-theme="dark"] .juicerportfolio-icon-moon { display: none; }
+
+/* ============================================================
+   Home — intro + project grid
+   ============================================================ */
+.juicerportfolio-home-intro {
+  padding: 4rem var(--gutter) 3rem;
+}
+.juicerportfolio-home-intro-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+.juicerportfolio-home-title {
+  font-size: 3rem;
+  letter-spacing: -0.025em;
+  font-weight: 400;
+  margin-bottom: 0.25em;
+}
+.juicerportfolio-home-tagline {
+  font-size: 1.25rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-bottom: 1.5em;
+  max-width: 36rem;
+}
+.juicerportfolio-home-blurb {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  max-width: 38rem;
+}
+.juicerportfolio-home-blurb p { margin-bottom: 1em; }
+.juicerportfolio-home-blurb p:last-child { margin-bottom: 0; }
+
+.juicerportfolio-work {
+  padding: 0 var(--gutter) 5rem;
+}
+.juicerportfolio-work-grid {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: var(--max-w);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3rem 2.5rem;
+}
+.juicerportfolio-work-card-link {
+  display: block;
+  color: var(--ink);
+  border-bottom: none;
+}
+.juicerportfolio-work-figure {
+  margin: 0 0 1rem 0;
+  background: var(--surface-soft);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.juicerportfolio-work-figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.juicerportfolio-work-card-link:hover .juicerportfolio-work-figure {
+  box-shadow: var(--shadow-md);
+}
+.juicerportfolio-work-card-link:hover .juicerportfolio-work-figure img {
+  transform: scale(1.02);
+}
+.juicerportfolio-work-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+.juicerportfolio-work-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin: 0;
+  font-family: var(--font-serif);
+  letter-spacing: -0.005em;
+}
+.juicerportfolio-work-card-link:hover .juicerportfolio-work-title {
+  color: var(--brand);
+}
+.juicerportfolio-work-byline {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  flex-shrink: 0;
+}
+.juicerportfolio-work-tagline {
+  display: block;
+  font-style: italic;
+}
+
+/* ============================================================
+   Project page
+   ============================================================ */
+.juicerportfolio-project {
+  padding: 0 0 5rem;
+}
+
+.juicerportfolio-project-hero {
+  margin: 0 0 4rem;
+  background: var(--surface-soft);
+}
+.juicerportfolio-project-hero img {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: cover;
+  display: block;
+}
+.juicerportfolio-project-hero figcaption {
+  max-width: var(--max-w);
+  margin: 0.75rem auto 0;
+  padding: 0 var(--gutter);
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+  font-style: italic;
+  text-align: right;
+}
+
+.juicerportfolio-project-body {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  display: grid;
+  grid-template-columns: minmax(0, 2.5fr) minmax(0, 1fr);
+  gap: 4rem;
+  align-items: start;
+}
+.juicerportfolio-project-head {
+  grid-column: 1;
+  margin-bottom: 1rem;
+}
+.juicerportfolio-project-title {
+  font-size: 2.5rem;
+  letter-spacing: -0.025em;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}
+.juicerportfolio-project-summary {
+  font-size: 1.1875rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin: 0;
+  max-width: 36rem;
+}
+
+.juicerportfolio-project-meta {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  position: sticky;
+  top: 2rem;
+  padding: 1.25rem 0 0;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.juicerportfolio-project-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.juicerportfolio-project-meta-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+.juicerportfolio-project-meta-value {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+.juicerportfolio-project-meta-value a {
+  color: var(--brand);
+  border-bottom-color: var(--brand-soft);
+}
+.juicerportfolio-project-meta-value a:hover {
+  color: var(--brand-strong);
+  border-bottom-color: var(--brand);
+}
+.juicerportfolio-project-tools {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.juicerportfolio-project-tools li {
+  padding: 0.125rem 0.5rem;
+  background: var(--surface-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.juicerportfolio-project-content {
+  grid-column: 1;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.juicerportfolio-project-content > * + * { margin-top: 1.25rem; }
+.juicerportfolio-project-content h2 {
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+.juicerportfolio-project-content h3 {
+  font-size: 1.1875rem;
+  margin-top: 2rem;
+}
+.juicerportfolio-project-content blockquote {
+  margin: 1.5rem 0;
+  padding: 0 0 0 1.5rem;
+  border-left: 2px solid var(--brand);
+  color: var(--ink-soft);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.125rem;
+}
+.juicerportfolio-project-content img {
+  margin: 1.5rem 0;
+  border-radius: var(--radius);
+}
+
+.juicerportfolio-project-back {
+  max-width: var(--max-w);
+  margin: 4rem auto 0;
+  padding: 2rem var(--gutter) 0;
+  border-top: 1px solid var(--rule);
+}
+.juicerportfolio-project-back a {
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+  border-bottom: none;
+}
+.juicerportfolio-project-back a:hover { color: var(--brand); }
+
+/* ============================================================
+   Generic page (file.html / folder.html)
+   ============================================================ */
+.juicerportfolio-page-wrap {
+  max-width: var(--max-w-page);
+  margin: 0 auto;
+  padding: 4rem var(--gutter);
+}
+.juicerportfolio-page-title {
+  font-size: 2.25rem;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}
+.juicerportfolio-page-summary {
+  font-size: 1.125rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-bottom: 2rem;
+}
+.juicerportfolio-content {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--ink);
+  max-width: var(--measure);
+}
+.juicerportfolio-content > * + * { margin-top: 1.25rem; }
+.juicerportfolio-content h2 {
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
+}
+.juicerportfolio-content h3 {
+  font-size: 1.1875rem;
+  margin-top: 2rem;
+}
+.juicerportfolio-content a {
+  color: var(--brand);
+  border-bottom-color: var(--brand-soft);
+}
+.juicerportfolio-content a:hover {
+  color: var(--brand-strong);
+  border-bottom-color: var(--brand);
+}
+.juicerportfolio-content blockquote {
+  margin: 1.5rem 0;
+  padding: 0 0 0 1.5rem;
+  border-left: 2px solid var(--brand);
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+.juicerportfolio-content code {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius);
+  padding: 0.1em 0.35em;
+  font-size: 0.875em;
+}
+.juicerportfolio-content pre {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+}
+.juicerportfolio-content pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.juicerportfolio-postlist {
+  list-style: none;
+  margin: 2rem 0 0 0;
+  padding: 0;
+}
+.juicerportfolio-postlist li {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.juicerportfolio-postlist-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+.juicerportfolio-postlist-title a { color: var(--ink); border-bottom: none; }
+.juicerportfolio-postlist-title a:hover { color: var(--brand); }
+.juicerportfolio-postlist-meta {
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+  margin-bottom: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+.juicerportfolio-postlist-summary {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.juicerportfolio-footer {
+  padding: 3rem var(--gutter) 1.5rem;
+  border-top: 1px solid var(--rule);
+  background: var(--bg);
+  margin-top: 4rem;
+}
+.juicerportfolio-footer-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+.juicerportfolio-footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.juicerportfolio-footer-name {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  color: var(--ink);
+}
+.juicerportfolio-footer-contact {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+.juicerportfolio-footer-contact a {
+  color: var(--ink-soft);
+  border-bottom-color: var(--rule);
+}
+.juicerportfolio-footer-contact a:hover {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+.juicerportfolio-footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+.juicerportfolio-footer-links a {
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+  border-bottom: none;
+}
+.juicerportfolio-footer-links a:hover { color: var(--brand); }
+
+.juicerportfolio-footer-fine {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+}
+.juicerportfolio-footer-credit a {
+  color: var(--ink-faint);
+  border-bottom-color: var(--rule);
+}
+.juicerportfolio-footer-credit a:hover {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 880px) {
+  .juicerportfolio-home-intro { padding: 3rem var(--gutter) 2rem; }
+  .juicerportfolio-home-title { font-size: 2.25rem; }
+  .juicerportfolio-home-tagline { font-size: 1.0625rem; }
+
+  .juicerportfolio-work-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .juicerportfolio-project-body {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .juicerportfolio-project-meta {
+    grid-row: auto;
+    grid-column: 1;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 2rem;
+  }
+  .juicerportfolio-project-meta-row { flex: 0 0 auto; min-width: 8rem; }
+  .juicerportfolio-project-title { font-size: 1.875rem; }
+  .juicerportfolio-project-content { grid-column: 1; }
+
+  .juicerportfolio-topbar-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .juicerportfolio-topbar-actions { align-self: flex-end; }
+}
+
+@media (max-width: 540px) {
+  .juicerportfolio-brand-tagline { display: none; }
+  .juicerportfolio-nav { gap: 1rem; }
+}
+
+/* ============================================================
+   Scrollbar — match the warm palette
+   ============================================================ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }

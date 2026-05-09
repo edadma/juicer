@@ -1,0 +1,37 @@
+<!-- Portfolio topbar: brand on the left, optional secondary nav on the
+     right, and a compact theme-toggle button. Intentionally minimal —
+     a portfolio's chrome should disappear behind the work. -->
+<header class="juicerportfolio-topbar">
+  <div class="juicerportfolio-topbar-inner">
+    <a class="juicerportfolio-brand" href="{{ relURL '/' }}">
+      {{ if .site.juicerportfolio.logo }}<img class="juicerportfolio-brand-logo" src="{{ relURL .site.juicerportfolio.logo }}" alt="">{{ end }}
+      <span class="juicerportfolio-brand-name">{{ .site.title }}</span>
+      {{ if .site.tagline }}<span class="juicerportfolio-brand-tagline">{{ .site.tagline }}</span>{{ end }}
+    </a>
+
+    <div class="juicerportfolio-topbar-actions">
+      {{ if .site.topnav }}
+      <nav class="juicerportfolio-nav" aria-label="Main">
+        {{ for n <- .site.topnav }}<a href="{{ if n.url }}{{ relURL n.url }}{{ else }}#{{ end }}">{{ n.label }}</a>{{ end }}
+      </nav>
+      {{ end }}
+      <button class="juicerportfolio-theme-toggle" type="button" aria-label="Toggle theme">
+        <svg class="juicerportfolio-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="juicerportfolio-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  (function() {
+    var btn = document.querySelector('.juicerportfolio-theme-toggle');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      var current = document.documentElement.getAttribute('data-theme');
+      var next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('juicerportfolio-theme', next); } catch (e) {}
+    });
+  })();
+</script>

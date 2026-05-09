@@ -1,0 +1,44 @@
+<!-- Portfolio home: optional intro paragraph from _index.md content,
+     then a project grid sourced from .site.pages filtered to
+     `layout: project`. Same pattern juicercafe uses for its menu
+     strip — projects opt in by setting `layout: project` in their
+     frontmatter, and the grid silently sorts/limits across them.
+
+     Card content per project: hero image (frontmatter `hero`),
+     title, year, optional one-line role/tagline. Click anywhere
+     on the card to open the project page. -->
+{{ define content }}
+  <section class="juicerportfolio-home-intro">
+    <div class="juicerportfolio-home-intro-inner">
+      {{ if .site.title }}<h1 class="juicerportfolio-home-title">{{ .site.title }}</h1>{{ end }}
+      {{ if .site.tagline }}<p class="juicerportfolio-home-tagline">{{ .site.tagline }}</p>{{ end }}
+      {{ if .content }}<div class="juicerportfolio-home-blurb">{{ .content }}</div>{{ end }}
+    </div>
+  </section>
+
+  {{ projects := .site.pages | filter `.layout = "project"` }}
+  {{ if projects }}
+  <section class="juicerportfolio-work" aria-label="Selected work">
+    <ul class="juicerportfolio-work-grid">
+      {{ for p <- projects }}
+      <li class="juicerportfolio-work-card">
+        <a class="juicerportfolio-work-card-link" href="{{ p.url }}">
+          {{ if p.hero }}
+          <figure class="juicerportfolio-work-figure">
+            <img src="{{ relURL p.hero }}" alt="{{ if p.heroAlt }}{{ p.heroAlt }}{{ else }}{{ p.title }}{{ end }}" loading="lazy">
+          </figure>
+          {{ end }}
+          <div class="juicerportfolio-work-meta">
+            <h2 class="juicerportfolio-work-title">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</h2>
+            <p class="juicerportfolio-work-byline">
+              {{ if p.year }}<span class="juicerportfolio-work-year">{{ p.year }}</span>{{ end }}
+              {{ if p.tagline }}<span class="juicerportfolio-work-tagline">{{ p.tagline }}</span>{{ end }}
+            </p>
+          </div>
+        </a>
+      </li>
+      {{ end }}
+    </ul>
+  </section>
+  {{ end }}
+{{ end }}

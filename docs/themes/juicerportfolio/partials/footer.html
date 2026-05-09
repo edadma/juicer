@@ -1,0 +1,24 @@
+<!-- Portfolio footer: brand line + optional contact line + optional
+     external links + small juicer credit. Three rows, deliberately
+     spare — the work is what should be remembered, not the chrome. -->
+<footer class="juicerportfolio-footer">
+  <div class="juicerportfolio-footer-inner">
+    <div class="juicerportfolio-footer-brand">
+      <p class="juicerportfolio-footer-name">{{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</p>
+      {{ if .site.contact }}<p class="juicerportfolio-footer-contact">{{ if .site.contact.email }}<a href="mailto:{{ .site.contact.email }}">{{ .site.contact.email }}</a>{{ end }}{{ if .site.contact.location }}{{ if .site.contact.email }} · {{ end }}{{ .site.contact.location }}{{ end }}</p>{{ end }}
+    </div>
+
+    {{ if .site.links }}
+    <ul class="juicerportfolio-footer-links">
+      {{ for l <- .site.links }}<li><a href="{{ l.url }}">{{ l.label }}</a></li>{{ end }}
+    </ul>
+    {{ end }}
+  </div>
+
+  <div class="juicerportfolio-footer-fine">
+    <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+    {{ if not .site.hideJuicerCredit }}
+    <span class="juicerportfolio-footer-credit">Built with <a href="https://github.com/edadma/juicer">juicer</a></span>
+    {{ end }}
+  </div>
+</footer>

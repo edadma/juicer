@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <!-- Bramble Side Table — cantilevered oak top. Three-quarter view. -->
+  <rect width="800" height="600" fill="#efeae0"/>
+  <rect x="0" y="490" width="800" height="110" fill="#e5dfd0"/>
+
+  <!-- base block — solid oak rectangle in plan, drawn with depth -->
+  <g stroke="#3a2f24" stroke-width="3" stroke-linejoin="round">
+    <!-- front face -->
+    <path d="M340 280 L460 280 L460 490 L340 490 Z" fill="#c8a777"/>
+    <!-- side face -->
+    <path d="M460 280 L520 240 L520 450 L460 490 Z" fill="#a3865a"/>
+    <!-- top face of base -->
+    <path d="M340 280 L400 240 L520 240 L460 280 Z" fill="#d6b787"/>
+  </g>
+
+  <!-- cantilevered top — extends forward of the base by ~60% -->
+  <g stroke="#3a2f24" stroke-width="3" stroke-linejoin="round">
+    <!-- top surface (visible) -->
+    <path d="M180 240 L460 240 L520 200 L240 200 Z" fill="#dcb87f"/>
+    <!-- top edge (front) -->
+    <path d="M180 240 L460 240 L460 256 L180 256 Z" fill="#b69254"/>
+    <!-- right edge of top -->
+    <path d="M460 240 L520 200 L520 216 L460 256 Z" fill="#9c7d44"/>
+  </g>
+
+  <!-- a faint teacup shape on the cantilever to show what it's for -->
+  <g stroke="#3a2f24" stroke-width="2" fill="#f7f4ee" opacity="0.85">
+    <ellipse cx="280" cy="218" rx="22" ry="6"/>
+    <path d="M258 218 Q258 240 280 244 Q302 240 302 218" fill="#f7f4ee"/>
+    <path d="M302 222 Q316 224 314 232 Q314 238 302 238" fill="none"/>
+  </g>
+
+  <!-- floor shadow under base + cantilever -->
+  <ellipse cx="430" cy="495" rx="180" ry="9" fill="#000" opacity="0.10"/>
+  <ellipse cx="280" cy="248" rx="80" ry="4" fill="#000" opacity="0.06"/>
+</svg>
