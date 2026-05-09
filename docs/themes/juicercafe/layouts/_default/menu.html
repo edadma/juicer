@@ -1,0 +1,57 @@
+<!-- Menu — full bar at a glance. Walks `.section.pages` (each per-section
+     file like espresso.md, pour-over.md, etc.) and inlines each
+     section's `items:` frontmatter array as a price-list block.
+
+     Per-section files are individually addressable (/menu/espresso/),
+     so a section can be deep-linked. The cafe's `_index.md` picks this
+     layout via `layout: menu`.
+
+     Each item: { name, price, description?, tags? }. price is rendered
+     in monospace so columns line up across rows. -->
+{{ define content }}
+  <article class="juicercafe-page-wrap juicercafe-menu-page">
+    <h1 class="juicercafe-page-title">{{ .page.title }}</h1>
+    {{ if .content }}
+    <div class="juicercafe-content juicercafe-menu-intro">{{ .content }}</div>
+    {{ end }}
+
+    {{ if .section.pages }}
+    <nav class="juicercafe-menu-toc" aria-label="Sections">
+      {{ for s <- .section.pages }}
+      <a href="#{{ s.slug }}">{{ s.title }}</a>
+      {{ end }}
+    </nav>
+
+    {{ for s <- .section.pages }}
+    <section class="juicercafe-menu-section" id="{{ s.slug }}">
+      <header class="juicercafe-menu-section-head">
+        <h2 class="juicercafe-menu-section-title">
+          <a href="{{ s.url }}">{{ s.title }}</a>
+        </h2>
+        {{ if s.summary }}<p class="juicercafe-menu-section-summary">{{ s.summary }}</p>{{ end }}
+      </header>
+
+      {{ if s.items }}
+      <ul class="juicercafe-menu-items">
+        {{ for it <- s.items }}
+        <li class="juicercafe-menu-item">
+          <div class="juicercafe-menu-item-line">
+            <span class="juicercafe-menu-item-name">{{ it.name }}</span>
+            <span class="juicercafe-menu-item-leader" aria-hidden="true"></span>
+            <span class="juicercafe-menu-item-price">{{ it.price }}</span>
+          </div>
+          {{ if it.description }}<p class="juicercafe-menu-item-desc">{{ it.description }}</p>{{ end }}
+          {{ if it.tags }}
+          <ul class="juicercafe-menu-item-tags">
+            {{ for t <- it.tags }}<li>{{ t }}</li>{{ end }}
+          </ul>
+          {{ end }}
+        </li>
+        {{ end }}
+      </ul>
+      {{ end }}
+    </section>
+    {{ end }}
+    {{ end }}
+  </article>
+{{ end }}

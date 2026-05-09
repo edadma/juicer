@@ -1,0 +1,52 @@
+<!-- Single event layout — big date chip on the left, body on the right.
+     Recurring events get a "Every Thursday" badge instead of a single
+     date. Page picks this layout via `layout: event` in frontmatter. -->
+{{ define content }}
+  <article class="juicercafe-event">
+    <header class="juicercafe-event-header">
+      <div class="juicercafe-event-datechip" aria-hidden="true">
+        {{ if .page.recurring }}
+        <p class="juicercafe-event-datechip-month">Every</p>
+        <p class="juicercafe-event-datechip-day">{{ if .page.recurringDay }}{{ .page.recurringDay }}{{ else }}week{{ end }}</p>
+        {{ else }}{{ if .page.date }}
+        <p class="juicercafe-event-datechip-month">{{ .page.dateLong }}</p>
+        <p class="juicercafe-event-datechip-day">{{ .page.eventTime }}</p>
+        {{ end }}{{ end }}
+      </div>
+      <div class="juicercafe-event-headline">
+        <h1 class="juicercafe-event-title">{{ .page.title }}</h1>
+        <ul class="juicercafe-event-facts">
+          {{ if .page.date }}
+          <li>
+            <span class="juicercafe-event-fact-label">When</span>
+            {{ if .page.recurring }}
+              {{ if .page.recurringDay }}{{ .page.recurringDay }}s{{ else }}weekly{{ end }}{{ if .page.eventTime }}, {{ .page.eventTime }}{{ end }}
+            {{ else }}
+              <time datetime="{{ .page.dateISO }}">{{ .page.dateLong }}</time>{{ if .page.eventTime }} · {{ .page.eventTime }}{{ end }}
+            {{ end }}
+          </li>
+          {{ end }}
+          {{ if .page.eventLocation }}
+          <li>
+            <span class="juicercafe-event-fact-label">Where</span>
+            {{ .page.eventLocation }}
+          </li>
+          {{ end }}
+          {{ if .page.recurring }}
+          <li>
+            <span class="juicercafe-event-fact-label juicercafe-event-recurring-badge">Recurring</span>
+          </li>
+          {{ end }}
+        </ul>
+      </div>
+    </header>
+
+    <div class="juicercafe-event-body juicercafe-content">
+      {{ .content }}
+    </div>
+
+    <p class="juicercafe-event-back">
+      <a href="{{ relURL '/events/' }}">← All events</a>
+    </p>
+  </article>
+{{ end }}

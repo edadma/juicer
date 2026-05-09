@@ -75,6 +75,53 @@ mapURL      = "https://www.openstreetmap.org/?mlat=45.514&mlon=-122.642#map=16/4
 transit     = "5-min walk from SE Belmont · streetcar two blocks east"
 parkingNote = "Street parking + small lot off Pine Avenue. Bike racks at the front door."
 
+# ============================================================
+# Team registry — rides the engine's [[authors]] machinery, just
+# named "The team" in the theme copy. Posts that have an `author:`
+# or `authors:` field reference these IDs.
+# ============================================================
+[[authors]]
+id     = "rosa"
+name   = "Rosa Lindgren"
+role   = "Owner · Roaster relationships"
+bio    = "Rosa opened Stratus in 2022 with Mike and Andre. She handles bean sourcing, vendor relationships, and most of the morning bake-pickup. Has strong opinions about extraction yield and weak ones about everything else."
+avatar = "/img/team/rosa.svg"
+email  = "rosa@stratus.example"
+
+[[authors.links]]
+label = "Mastodon"
+url   = "https://example.social/@rosa"
+
+[[authors]]
+id     = "mike"
+name   = "Mike Park"
+role   = "Owner · Bar manager"
+bio    = "Mike runs the bar — espresso program, pour-over rotation, the latte-art class on Sundays. Twelve years in specialty before this; previously at Barista PDX."
+avatar = "/img/team/mike.svg"
+email  = "mike@stratus.example"
+
+[[authors]]
+id     = "andre"
+name   = "Andre Costa"
+role   = "Owner · Kitchen + IT"
+bio    = "Andre handles the lunch menu and (because someone has to) the wi-fi, the POS, the back-room outlets, and the captive portal. Cooks at home professionally. Maintains the open-source captive-portal that runs the Stratus-Guest network."
+avatar = "/img/team/andre.svg"
+email  = "andre@stratus.example"
+
+[[authors]]
+id     = "jen"
+name   = "Jen Okafor"
+role   = "Senior Barista"
+bio    = "Jen has been at Stratus since the summer of 2023. Trains new staff, runs Saturday mornings, and brews the Tuesday cupping selections."
+avatar = "/img/team/jen.svg"
+
+[[authors]]
+id     = "diego"
+name   = "Diego Alvarado"
+role   = "Barista · Sound engineer"
+bio    = "Diego runs Thursday open mic when he's not behind the bar. Plays a bit of everything; happy to recommend an album."
+avatar = "/img/team/diego.svg"
+
 # Per-site palette overrides. Defaults are espresso/cream/caramel.
 # Uncomment to retune.
 #

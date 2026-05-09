@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ if .author.name }}{{ .author.name }}{{ else }}{{ .author.id }}{{ end }} — {{ .site.title }}</title>
+  {{ if .author.bio }}<meta name="description" content="{{ .author.bio }}">{{ end }}
+  <link rel="stylesheet" href="{{ relURL '/juicercafe.css' }}">
+</head>
+<body>
+  <div class="juicercafe-page">
+    {{ partial 'topbar' . }}
+    <main class="juicercafe-main">
+      <article class="juicercafe-page-wrap">
+        <header class="juicercafe-staff-page-header">
+          {{ if .author.avatar }}<img class="juicercafe-staff-avatar juicercafe-staff-avatar--lg" src="{{ .author.avatar }}" alt="{{ .author.name }}">{{ end }}
+          <div>
+            <h1 class="juicercafe-staff-name juicercafe-staff-name--lg">{{ if .author.name }}{{ .author.name }}{{ else }}{{ .author.id }}{{ end }}</h1>
+            {{ if .author.role }}<p class="juicercafe-staff-role juicercafe-staff-role--lg">{{ .author.role }}</p>{{ end }}
+            {{ if .author.bio }}<p class="juicercafe-staff-bio juicercafe-staff-bio--lg">{{ .author.bio }}</p>{{ end }}
+            <ul class="juicercafe-staff-links">
+              {{ if .author.email }}<li><a href="mailto:{{ .author.email }}">Email</a></li>{{ end }}
+              {{ if .author.links }}{{ for link <- .author.links }}<li><a href="{{ link.url }}" rel="me noopener">{{ link.label }}</a></li>{{ end }}{{ end }}
+            </ul>
+          </div>
+        </header>
+
+        {{ if .author.pages }}
+        <h2 class="juicercafe-staff-archive-head">
+          Posts by {{ if .author.name }}{{ .author.name }}{{ else }}{{ .author.id }}{{ end }}
+        </h2>
+        <ol class="juicercafe-postlist">
+          {{ for p <- .author.pages }}
+          <li>
+            <h3 class="juicercafe-postlist-title">
+              <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+            </h3>
+            <div class="juicercafe-postlist-meta">
+              {{ if p.date }}<time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time>{{ end }}
+            </div>
+            {{ if p.summary }}<p class="juicercafe-postlist-summary">{{ p.summary }}</p>{{ end }}
+          </li>
+          {{ end }}
+        </ol>
+        {{ end }}
+
+        <p class="juicercafe-staff-back">
+          <a href="{{ relURL '/authors/' }}">← Back to the team</a>
+        </p>
+      </article>
+    </main>
+    {{ partial 'footer' . }}
+  </div>
+</body>
+</html>

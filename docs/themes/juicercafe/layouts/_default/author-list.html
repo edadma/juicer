@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Team — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicercafe.css' }}">
+  <!-- author-list / author-page render outside the baseof pipeline (engine
+       walks the registry directly and writes one HTML per author), so head +
+       chrome are inlined. juicercafe deliberately renders the FULL
+       `.site.authorRegistry` here rather than the engine's `.authors` term
+       list — staff pages should show everyone behind the bar, not just the
+       people who happen to have written a blog post recently. -->
+</head>
+<body>
+  <div class="juicercafe-page">
+    {{ partial 'topbar' . }}
+    <main class="juicercafe-main">
+      <article class="juicercafe-page-wrap">
+        <h1 class="juicercafe-page-title">The team</h1>
+        <p class="juicercafe-staff-intro">
+          The people behind the bar at {{ .site.title }}.
+        </p>
+
+        {{ if .site.authorRegistry }}
+        <ul class="juicercafe-staff-list">
+          {{ for a <- .site.authorRegistry }}
+          {{ aid := a.id }}
+          {{ hasArchive := false }}
+          {{ for term <- $.authors }}{{ if term.id = aid }}{{ hasArchive := true }}{{ end }}{{ end }}
+          <li class="juicercafe-staff-card">
+            {{ if a.avatar }}<img class="juicercafe-staff-avatar" src="{{ a.avatar }}" alt="{{ a.name }}">{{ end }}
+            <div class="juicercafe-staff-meta">
+              <h2 class="juicercafe-staff-name">
+                {{ if hasArchive }}<a href="{{ relURL '/authors/' }}{{ a.id }}/">{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}</a>{{ else }}{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}{{ end }}
+              </h2>
+              {{ if a.role }}<p class="juicercafe-staff-role">{{ a.role }}</p>{{ end }}
+              {{ if a.bio }}<p class="juicercafe-staff-bio">{{ a.bio }}</p>{{ end }}
+              <ul class="juicercafe-staff-links">
+                {{ if a.email }}<li><a href="mailto:{{ a.email }}">Email</a></li>{{ end }}
+                {{ if a.links }}{{ for link <- a.links }}<li><a href="{{ link.url }}" rel="me noopener">{{ link.label }}</a></li>{{ end }}{{ end }}
+              </ul>
+            </div>
+          </li>
+          {{ end }}
+        </ul>
+        {{ end }}
+      </article>
+    </main>
+    {{ partial 'footer' . }}
+  </div>
+</body>
+</html>

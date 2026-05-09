@@ -1,0 +1,35 @@
+<!-- Menu section — single-section detail page (e.g. /menu/espresso/).
+     Page picks this via `layout: menu-section`. Mirrors the menu-section
+     block from menu.html but as a standalone page.
+
+     Each per-section file IS addressable as a regular page when
+     visitors deep-link to a single category. Items come from the same
+     `items:` frontmatter as the menu index reads. -->
+{{ define content }}
+  <article class="juicercafe-page-wrap juicercafe-menu-page">
+    <p class="juicercafe-menu-section-back"><a href="{{ relURL '/menu/' }}">← Full menu</a></p>
+    <h1 class="juicercafe-page-title">{{ .page.title }}</h1>
+    {{ if .page.summary }}<p class="juicercafe-menu-section-summary juicercafe-menu-section-summary--lg">{{ .page.summary }}</p>{{ end }}
+    {{ if .content }}<div class="juicercafe-content juicercafe-menu-intro">{{ .content }}</div>{{ end }}
+
+    {{ if .page.items }}
+    <ul class="juicercafe-menu-items">
+      {{ for it <- .page.items }}
+      <li class="juicercafe-menu-item">
+        <div class="juicercafe-menu-item-line">
+          <span class="juicercafe-menu-item-name">{{ it.name }}</span>
+          <span class="juicercafe-menu-item-leader" aria-hidden="true"></span>
+          <span class="juicercafe-menu-item-price">{{ it.price }}</span>
+        </div>
+        {{ if it.description }}<p class="juicercafe-menu-item-desc">{{ it.description }}</p>{{ end }}
+        {{ if it.tags }}
+        <ul class="juicercafe-menu-item-tags">
+          {{ for t <- it.tags }}<li>{{ t }}</li>{{ end }}
+        </ul>
+        {{ end }}
+      </li>
+      {{ end }}
+    </ul>
+    {{ end }}
+  </article>
+{{ end }}

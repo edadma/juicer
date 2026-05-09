@@ -1,0 +1,69 @@
+<!-- Events section index — splits `.section.pages` into Upcoming and Past
+     based on `.site.now.date` (build-time YYYY-MM-DD). Recurring events
+     always sit in Upcoming. Pages without a parsed `date` (probably
+     misconfigured) fall through to Past so the editor notices.
+
+     Section's _index.md picks this layout via `layout: event-list`. -->
+{{ define content }}
+  {{ if .content }}
+  <article class="juicercafe-page-wrap">
+    <h1 class="juicercafe-page-title">{{ .page.title }}</h1>
+    <div class="juicercafe-content">{{ .content }}</div>
+  </article>
+  {{ end }}
+
+  {{ upcoming := .section.pages | filter `.recurring or .dateShort >= $.site.now.date` }}
+  {{ past     := .section.pages | filter `not .recurring and .dateShort < $.site.now.date` }}
+
+  <section class="juicercafe-event-group juicercafe-event-group--upcoming">
+    <h2 class="juicercafe-event-group-head">Upcoming &amp; recurring</h2>
+    {{ if upcoming }}
+    <ol class="juicercafe-event-list">
+      {{ for p <- upcoming }}
+      <li class="juicercafe-event-card{{ if p.recurring }} is-recurring{{ end }}">
+        <div class="juicercafe-event-card-datechip">
+          {{ if p.recurring }}
+          <p class="juicercafe-event-card-month">Every</p>
+          <p class="juicercafe-event-card-day">{{ if p.recurringDay }}{{ p.recurringDay }}{{ else }}week{{ end }}</p>
+          {{ else }}{{ if p.date }}
+          <p class="juicercafe-event-card-month">{{ p.dateLong }}</p>
+          {{ if p.eventTime }}<p class="juicercafe-event-card-day">{{ p.eventTime }}</p>{{ end }}
+          {{ end }}{{ end }}
+        </div>
+        <div class="juicercafe-event-card-meta">
+          <h3 class="juicercafe-event-card-title">
+            <a href="{{ p.url }}">{{ p.title }}</a>
+          </h3>
+          {{ if p.eventLocation }}<p class="juicercafe-event-card-loc">{{ p.eventLocation }}</p>{{ end }}
+          {{ if p.summary }}<p class="juicercafe-event-card-summary">{{ p.summary }}</p>{{ end }}
+        </div>
+      </li>
+      {{ end }}
+    </ol>
+    {{ else }}
+    <p class="juicercafe-empty">Nothing on the calendar at the moment. Check back soon.</p>
+    {{ end }}
+  </section>
+
+  {{ if past }}
+  <section class="juicercafe-event-group juicercafe-event-group--past">
+    <h2 class="juicercafe-event-group-head">Past</h2>
+    <ol class="juicercafe-event-list juicercafe-event-list--past">
+      {{ for p <- past }}
+      <li class="juicercafe-event-card juicercafe-event-card--past">
+        <div class="juicercafe-event-card-datechip">
+          {{ if p.date }}<p class="juicercafe-event-card-month">{{ p.dateLong }}</p>{{ end }}
+          {{ if p.eventTime }}<p class="juicercafe-event-card-day">{{ p.eventTime }}</p>{{ end }}
+        </div>
+        <div class="juicercafe-event-card-meta">
+          <h3 class="juicercafe-event-card-title">
+            <a href="{{ p.url }}">{{ p.title }}</a>
+          </h3>
+          {{ if p.eventLocation }}<p class="juicercafe-event-card-loc">{{ p.eventLocation }}</p>{{ end }}
+        </div>
+      </li>
+      {{ end }}
+    </ol>
+  </section>
+  {{ end }}
+{{ end }}
