@@ -1,57 +1,22 @@
 package io.github.edadma.juicer
 
-import io.github.edadma.path.Path
-import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-
-import scala.compiletime.uninitialized
-import scala.util.Random
 
 /** End-to-end tests for the juicer build pipeline. Each test builds a small
   * site under a temp directory, runs `App.build`, then reads the rendered
   * HTML back and asserts on its structure.
+  *
+  * NOTE — this file currently still hosts every juicer build test (~3200
+  * LOC). The plan is to split the per-feature sections (i18n, sections,
+  * feeds, search.json, pagination, taxonomies, dates, slug, word count,
+  * permalinks, date archives, future posts, aliases, series, authors,
+  * og tags, highlighter, layout override, sitedata) into their own
+  * `*Spec.scala` files mixing in [[JuicerTestSupport]]. This file then
+  * keeps only the smoke + frontmatter base. See handoff memo
+  * `project_juicerblog_polish_handoff.md` for the planned split.
   */
-class JuicerBuildSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
-
-  /** Live workspace for the test currently in flight. Recreated per test. */
-  var src: Path = uninitialized
-  var dst: Path = uninitialized
-
-  override def beforeEach(): Unit = {
-    val nonce = System.currentTimeMillis().toString + "-" + Random.nextInt(1_000_000)
-    src = Path("/tmp") / s"juicer-test-src-$nonce"
-    dst = Path("/tmp") / s"juicer-test-dst-$nonce"
-    src.createDirectories()
-  }
-
-  override def afterEach(): Unit = {
-    deleteTree(src)
-    deleteTree(dst)
-  }
-
-  private def deleteTree(p: Path): Unit = {
-    if (!p.exists) return
-    if (p.isDirectory) {
-      p.listDirectory().foreach(e => deleteTree(p / e.name))
-      p.delete()
-    } else p.delete()
-  }
-
-  /** Convenience: write `content` to `src / relPath`, creating parents. */
-  private def writeAt(relPath: String, content: String): Unit = {
-    val p = relPath.split('/').foldLeft(src)(_ / _)
-    p.parent.foreach(_.createDirectories())
-    p.writeText(content)
-  }
-
-  /** Run `juicer build` against the staged `src` / `dst`. */
-  private def build(args: Args = Args()): Unit =
-    App.run(args.copy(cmd = Some(BuildCommand(src = src, dst = dst))))
-
-  /** Read a file from the output tree. */
-  private def out(relPath: String): String =
-    relPath.split('/').foldLeft(dst)(_ / _).readText()
+class JuicerBuildSpec extends AnyFlatSpec with Matchers with JuicerTestSupport {
 
   // -----------------------------------------------------------------
 
