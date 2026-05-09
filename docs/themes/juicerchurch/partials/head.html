@@ -15,6 +15,13 @@
 
 <link rel="stylesheet" href="{{ relURL '/juicerchurch.css' }}">
 
+<!-- Site-supplied stylesheets, loaded AFTER the bundled theme CSS so
+     they can override anything. Drop your file in static/site.css and
+     set `customCSS = ["site.css"]` in site.toml; the list takes any
+     number of paths in the order to load them. -->
+{{ if .site.customCSS }}{{ for css <- .site.customCSS }}<link rel="stylesheet" href="{{ relURL css }}">
+{{ end }}{{ end }}
+
 <!-- Per-site palette overrides emitted from site.toml [juicerchurch].
      Light-mode tokens land on :root; the *Dark variants land on
      [data-theme="dark"] so they cleanly override the theme's hardcoded
@@ -27,6 +34,12 @@
     {{ if .site.juicerchurch.brandSoft }}--brand-soft: {{ .site.juicerchurch.brandSoft }};{{ end }}
     {{ if .site.juicerchurch.accent }}--accent: {{ .site.juicerchurch.accent }};{{ end }}
     {{ if .site.juicerchurch.leaf }}--leaf: {{ .site.juicerchurch.leaf }};{{ end }}
+    {{ if .site.juicerchurch.fontSans }}--font-sans: {{ .site.juicerchurch.fontSans }};{{ end }}
+    {{ if .site.juicerchurch.fontSerif }}--font-serif: {{ .site.juicerchurch.fontSerif }};{{ end }}
+    {{ if .site.juicerchurch.fontMono }}--font-mono: {{ .site.juicerchurch.fontMono }};{{ end }}
+    {{ if .site.juicerchurch.measure }}--measure: {{ .site.juicerchurch.measure }};{{ end }}
+    {{ if .site.juicerchurch.gutter }}--gutter: {{ .site.juicerchurch.gutter }};{{ end }}
+    {{ if .site.juicerchurch.radiusLg }}--radius-lg: {{ .site.juicerchurch.radiusLg }};{{ end }}
   }
   [data-theme="dark"] {
     {{ if .site.juicerchurch.brandDark }}--brand: {{ .site.juicerchurch.brandDark }};{{ end }}

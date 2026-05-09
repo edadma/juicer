@@ -15,6 +15,13 @@
 
 <link rel="stylesheet" href="{{ relURL '/juicercafe.css' }}">
 
+<!-- Site-supplied stylesheets, loaded AFTER the bundled theme CSS so
+     they can override anything. Drop your file in static/site.css and
+     set `customCSS = ["site.css"]` in site.toml; the list takes any
+     number of paths in the order to load them. -->
+{{ if .site.customCSS }}{{ for css <- .site.customCSS }}<link rel="stylesheet" href="{{ relURL css }}">
+{{ end }}{{ end }}
+
 <!-- Per-site palette overrides emitted from site.toml [juicercafe].
      Light-mode tokens land on :root; the *Dark variants land on
      [data-theme="dark"] so they cleanly override the theme's hardcoded
@@ -27,6 +34,12 @@
     {{ if .site.juicercafe.brandSoft }}--brand-soft: {{ .site.juicercafe.brandSoft }};{{ end }}
     {{ if .site.juicercafe.accent }}--accent: {{ .site.juicercafe.accent }};{{ end }}
     {{ if .site.juicercafe.leaf }}--leaf: {{ .site.juicercafe.leaf }};{{ end }}
+    {{ if .site.juicercafe.fontSans }}--font-sans: {{ .site.juicercafe.fontSans }};{{ end }}
+    {{ if .site.juicercafe.fontSerif }}--font-serif: {{ .site.juicercafe.fontSerif }};{{ end }}
+    {{ if .site.juicercafe.fontMono }}--font-mono: {{ .site.juicercafe.fontMono }};{{ end }}
+    {{ if .site.juicercafe.measure }}--measure: {{ .site.juicercafe.measure }};{{ end }}
+    {{ if .site.juicercafe.gutter }}--gutter: {{ .site.juicercafe.gutter }};{{ end }}
+    {{ if .site.juicercafe.radiusLg }}--radius-lg: {{ .site.juicercafe.radiusLg }};{{ end }}
   }
   [data-theme="dark"] {
     {{ if .site.juicercafe.brandDark }}--brand: {{ .site.juicercafe.brandDark }};{{ end }}

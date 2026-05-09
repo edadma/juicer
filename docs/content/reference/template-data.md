@@ -303,16 +303,10 @@ work on any static host without rewrite rules.
 
 ## Site-wide chrome keys
 
-Top-level `site.toml` keys that the bundled themes (`juicercafe`,
-`juicerchurch`, `juicerblog`, `juicerdocs`) read from `.site.*` to drive
-shared chrome — favicon, footer attribution, repo link. All are
-optional; defaults are noted.
-
-| Key                     | Type      | Default | What |
-|-------------------------|-----------|---------|------|
-| `.site.favicon`         | `String`  | unset   | Path used in `<link rel="icon">`. Browser infers MIME from extension. |
-| `.site.hideJuicerCredit`| `Boolean` | `false` | Set `true` to omit the "Built with juicer" footer line. |
-| `.site.repoURL`         | `String`  | unset   | Git host URL (typically `https://github.com/owner/repo`). juicerdocs surfaces a topbar GitHub icon and a homepage "Star on GitHub" button when set; other themes ignore. |
+Top-level `site.toml` keys that the bundled themes read from `.site.*` to
+drive shared chrome — favicon, footer attribution, repo link, custom
+stylesheets — are catalogued in [Theming](/reference/theming/) along with
+the per-theme `[juicerXxx]` palette / typography / sizing tables.
 
 ## Other top-level
 

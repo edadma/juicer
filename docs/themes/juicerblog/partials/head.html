@@ -15,6 +15,14 @@
 <link rel="alternate" type="application/atom+xml" title="{{ .site.title }}" href="{{ relURL '/feed.xml' }}">
 
 <link rel="stylesheet" href="{{ relURL '/juicerblog.css' }}">
+
+<!-- Site-supplied stylesheets, loaded AFTER the bundled theme CSS so
+     they can override anything. Drop your file in static/site.css and
+     set `customCSS = ["site.css"]` in site.toml; the list takes any
+     number of paths in the order to load them. -->
+{{ if .site.customCSS }}{{ for css <- .site.customCSS }}<link rel="stylesheet" href="{{ relURL css }}">
+{{ end }}{{ end }}
+
 <script src="{{ relURL '/juicerblog.js' }}" defer></script>
 
 <!-- Per-site palette overrides emitted from site.toml [juicerblog] block.
@@ -29,6 +37,12 @@
     {{ if .site.juicerblog.brandSoft }}--brand-soft: {{ .site.juicerblog.brandSoft }};{{ end }}
     {{ if .site.juicerblog.accent }}--accent: {{ .site.juicerblog.accent }};{{ end }}
     {{ if .site.juicerblog.leaf }}--leaf: {{ .site.juicerblog.leaf }};{{ end }}
+    {{ if .site.juicerblog.fontSans }}--font-sans: {{ .site.juicerblog.fontSans }};{{ end }}
+    {{ if .site.juicerblog.fontSerif }}--font-serif: {{ .site.juicerblog.fontSerif }};{{ end }}
+    {{ if .site.juicerblog.fontMono }}--font-mono: {{ .site.juicerblog.fontMono }};{{ end }}
+    {{ if .site.juicerblog.measure }}--measure: {{ .site.juicerblog.measure }};{{ end }}
+    {{ if .site.juicerblog.gutter }}--gutter: {{ .site.juicerblog.gutter }};{{ end }}
+    {{ if .site.juicerblog.radiusLg }}--radius-lg: {{ .site.juicerblog.radiusLg }};{{ end }}
   }
   [data-theme="dark"] {
     {{ if .site.juicerblog.brandDark }}--brand: {{ .site.juicerblog.brandDark }};{{ end }}
