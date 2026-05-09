@@ -32,7 +32,7 @@
             {{ if a.avatar }}<img class="juicercafe-staff-avatar" src="{{ a.avatar }}" alt="{{ a.name }}">{{ end }}
             <div class="juicercafe-staff-meta">
               <h2 class="juicercafe-staff-name">
-                {{ if hasArchive }}<a href="{{ relURL '/authors/' }}{{ a.id }}/">{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}</a>{{ else }}{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}{{ end }}
+                {{ if hasArchive }}<a href="{{ relURL .site.authorsPath }}{{ a.id }}/">{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}</a>{{ else }}{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}{{ end }}
               </h2>
               {{ if a.role }}<p class="juicercafe-staff-role">{{ a.role }}</p>{{ end }}
               {{ if a.bio }}<p class="juicercafe-staff-bio">{{ a.bio }}</p>{{ end }}

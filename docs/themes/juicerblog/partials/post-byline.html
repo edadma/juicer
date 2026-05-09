@@ -17,10 +17,10 @@
 <div class="juicerblog-byline">
   <div class="juicerblog-byline-avatars">
     {{ for a <- .page.authors }}
-      {{ if a.avatar }}<a class="juicerblog-byline-avatar-link" href="{{ relURL '/authors/' }}{{ a.id }}/" aria-label="{{ a.name }}"><img class="juicerblog-byline-avatar" src="{{ a.avatar }}" alt="{{ a.name }}"></a>{{ end }}
+      {{ if a.avatar }}<a class="juicerblog-byline-avatar-link" href="{{ relURL .site.authorsPath }}{{ a.id }}/" aria-label="{{ a.name }}"><img class="juicerblog-byline-avatar" src="{{ a.avatar }}" alt="{{ a.name }}"></a>{{ end }}
     {{ end }}
   </div>
-  <p class="juicerblog-byline-line">By {{ for a, i <- .page.authors }}{{ if i > 0 }}{{ if i = $.page.authors.length - 1 }} and {{ else }}, {{ end }}{{ end }}{{ if a.id }}<a class="juicerblog-byline-name" href="{{ relURL '/authors/' }}{{ a.id }}/">{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}</a>{{ else }}{{ a.name }}{{ end }}{{ end }}</p>
+  <p class="juicerblog-byline-line">By {{ for a, i <- .page.authors }}{{ if i > 0 }}{{ if i = $.page.authors.length - 1 }} and {{ else }}, {{ end }}{{ end }}{{ if a.id }}<a class="juicerblog-byline-name" href="{{ relURL .site.authorsPath }}{{ a.id }}/">{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}</a>{{ else }}{{ a.name }}{{ end }}{{ end }}</p>
 </div>
 {{ end }}
 

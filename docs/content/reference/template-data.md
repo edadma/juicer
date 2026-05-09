@@ -24,6 +24,7 @@ The merged site config (`site.toml` overlaid on the baseline) plus a few compute
 | `.site.categories` | `List[Term]`      | Same shape as `.site.tags`, for the categories axis |
 | `.site.authors`  | `List[Map]`         | Every author with at least one referencing page — registry record + `id`, `url`, `count`, `pages` |
 | `.site.authorRegistry` | `List[Map]`   | The raw `[[authors]]` table from `site.toml` in declaration order — includes authors with zero referencing pages, useful for staff-directory layouts (see below) |
+| `.site.authorsPath` | `String`         | URL prefix under which the team listing and per-author archives are emitted. Configured by `authorsPath` in `site.toml`; defaults to `/authors/`. See below |
 | `.site.now`      | `Map`               | Build-time "now" timestamp in four shapes (see below) |
 | `.site.events`   | `List[Map]`         | Pages in the configured `eventsSection` with explicit `date:` frontmatter, sorted ascending. Includes future-dated events (see below) |
 | `.site.calendar` | `List[Map]`         | Pre-computed N months of calendar grid starting at the current month, with weekly recurring events expanded onto every matching weekday (see below) |
@@ -91,6 +92,27 @@ that shows everyone, even on a fresh site with no posts:
 
 Either layout is opt-in — missing the file means the corresponding
 output is silently skipped.
+
+#### Renaming the URL prefix — `authorsPath`
+
+By default both the team listing and the per-author archives live under
+`/authors/`. Sites using a non-blog theme often want a different label —
+a cafe wants `/team/`, a doc site wants `/people/`. Set `authorsPath` in
+`site.toml`:
+
+```toml
+authorsPath = "/team/"
+```
+
+The engine pivots three things in lockstep: the on-disk output
+directory, the `url` field on every `.site.authors` term, and the
+`.site.authorsPath` string surfaced for templates. Themes should read
+`{{ .site.authorsPath }}` rather than hard-coding `/authors/` so a
+site-level override propagates without a layout edit.
+
+Forgiving normalization: `team`, `/team`, `team/`, and `/team/` all
+become `/team/`. Path traversal segments (`.`, `..`) are rejected with a
+warning and the default is used.
 
 ### `.site.now`
 

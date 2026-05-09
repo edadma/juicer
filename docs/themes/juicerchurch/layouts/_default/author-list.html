@@ -34,14 +34,14 @@
             {{ if a.avatar }}<img class="juicerchurch-staff-avatar juicerchurch-staff-avatar--lg" src="{{ a.avatar }}" alt="{{ a.name }}">{{ end }}
             <div class="juicerchurch-staff-meta">
               <h2 class="juicerchurch-staff-name">
-                {{ if hasArchive }}<a href="{{ relURL '/authors/' }}{{ a.id }}/">{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}</a>{{ else }}{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}{{ end }}
+                {{ if hasArchive }}<a href="{{ relURL .site.authorsPath }}{{ a.id }}/">{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}</a>{{ else }}{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}{{ end }}
               </h2>
               {{ if a.role }}<p class="juicerchurch-staff-role">{{ a.role }}</p>{{ end }}
               {{ if a.bio }}<p class="juicerchurch-staff-bio">{{ a.bio }}</p>{{ end }}
               <ul class="juicerchurch-staff-links">
                 {{ if a.email }}<li><a href="mailto:{{ a.email }}">Email</a></li>{{ end }}
                 {{ if a.links }}{{ for link <- a.links }}<li><a href="{{ link.url }}" rel="me noopener">{{ link.label }}</a></li>{{ end }}{{ end }}
-                {{ if hasArchive }}<li><a href="{{ relURL '/authors/' }}{{ a.id }}/">Sermons →</a></li>{{ end }}
+                {{ if hasArchive }}<li><a href="{{ relURL .site.authorsPath }}{{ a.id }}/">Sermons →</a></li>{{ end }}
               </ul>
             </div>
           </li>

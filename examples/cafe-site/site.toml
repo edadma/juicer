@@ -17,6 +17,12 @@ theme    = "juicercafe"
 htmlDir  = ""
 sortBy   = "date"
 
+# The team listing + per-author archives live under /team/ instead of
+# the engine default /authors/, so the URL matches the topbar label.
+# The juicercafe layouts read `.site.authorsPath` so flipping this is
+# a one-line change.
+authorsPath = "/team/"
+
 # ============================================================
 # Hours — surfaced on the homepage, the footer, and /visit/.
 # Theme reads these from [[hours]] in this same file. Each row:

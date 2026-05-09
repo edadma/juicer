@@ -339,6 +339,90 @@ class SitedataSpec extends AnyFlatSpec with Matchers with JuicerTestSupport {
     (dst / "authors" / "rosa" / "index.html").exists shouldBe false
   }
 
+  it should "default .site.authorsPath to /authors/ when site.toml doesn't set it" in {
+    writeAt(
+      "site.toml",
+      """title = "S"
+        |baseURL = "http://x"
+        |
+        |[[authors]]
+        |id = "rosa"
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: H\n---\n")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt("layouts/_default/folder.html", "[{{ .site.authorsPath }}]")
+
+    build()
+
+    // Default surfaces on .site.authorsPath, and the per-author archive is
+    // emitted at the legacy /authors/ tree.
+    out("index.html").trim shouldBe "[/authors/]"
+    (dst / "authors" / "index.html").exists shouldBe false  // no author-list layout
+  }
+
+  it should "honour site.toml authorsPath = \"/team/\" — emit team listing + per-author at /team/" in {
+    // The engine wires the URL prefix through three places: the .site.authorsPath
+    // string surfaced for templates, the `url` field on each .site.authors term,
+    // and the on-disk output directory for author-list / author-page layouts.
+    // All three should pivot from /authors/ to /team/ in lockstep when the
+    // setting is overridden — this is the regression a missed call site would
+    // surface as.
+    writeAt(
+      "site.toml",
+      """title = "S"
+        |baseURL = "http://x"
+        |authorsPath = "/team/"
+        |
+        |[[authors]]
+        |id = "rosa"
+        |name = "Rosa"
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: H\n---\n")
+    writeAt("content/post.md", "---\ntitle: Post\ndate: 2025-01-01\nauthor: rosa\n---\nbody\n")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/folder.html",
+      "[{{ .site.authorsPath }}]{{ for a <- .site.authors }}<{{ a.id }}|{{ a.url }}>{{ end }}",
+    )
+    writeAt("layouts/_default/author-list.html", "L:{{ .site.authorsPath }}")
+    writeAt("layouts/_default/author-page.html", "P:{{ .author.id }}")
+
+    build()
+
+    // .site.authorsPath surfaces the override, and each author term's url uses it.
+    out("index.html").trim shouldBe "[/team/]<rosa|/team/rosa/>"
+    // Files live at /team/, NOT /authors/.
+    out("team/index.html").trim shouldBe "L:/team/"
+    out("team/rosa/index.html").trim shouldBe "P:rosa"
+    (dst / "authors").exists shouldBe false
+  }
+
+  it should "accept forgiving authorsPath shapes (team, /team, team/, /team/) and normalize" in {
+    // Be lenient with what site authors write — silently normalize to the
+    // canonical /seg/ form rather than failing or emitting weird paths.
+    for (raw <- Seq("team", "/team", "team/", "/team/")) {
+      writeAt(
+        "site.toml",
+        s"""title = "S"
+           |baseURL = "http://x"
+           |authorsPath = "$raw"
+           |
+           |[[authors]]
+           |id = "rosa"
+           |""".stripMargin,
+      )
+      writeAt("content/_index.md", "---\ntitle: H\n---\n")
+      writeAt("layouts/_default/file.html", "x")
+      writeAt("layouts/_default/folder.html", "[{{ .site.authorsPath }}]")
+
+      build()
+
+      out("index.html").trim shouldBe "[/team/]"
+    }
+  }
+
   it should "expose .site.pagesByYear grouping the same posts list by year, year descending" in {
     writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
     writeAt("content/_index.md", "---\ntitle: H\n---\n")

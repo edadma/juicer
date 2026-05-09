@@ -10,7 +10,7 @@
            use them will 404 the link, which is a less subtle failure mode
            than a missing nav item nobody can find. Sites that customize
            their nav can fork this partial. -->
-      <a href="{{ relURL '/authors/' }}">Authors</a>
+      <a href="{{ relURL .site.authorsPath }}">Authors</a>
       <a href="{{ relURL '/about/' }}">About</a>
     </nav>
   </div>

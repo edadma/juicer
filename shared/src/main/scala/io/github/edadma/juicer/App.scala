@@ -687,6 +687,39 @@ object App {
         m.get("id").collect { case s: String => s }.map(id => id -> m)
       }.toMap
 
+    // ----- Author archive URL prefix -----
+    //
+    // `site.toml` `authorsPath` (string, optional) overrides the default
+    // `/authors/` path under which both the team listing and per-author
+    // archives are emitted. Themes intended for cafes / studios / agencies
+    // often want to call this `/team/`; doc sites might want `/people/`,
+    // etc. Default keeps the legacy `/authors/` behaviour so existing sites
+    // don't move.
+    //
+    // Forgiving normalization: leading/trailing slashes are added if
+    // missing, so `team`, `/team`, `team/`, `/team/` all become `/team/`.
+    // `..` segments are rejected outright (path traversal). Empty after
+    // normalization → falls back to default. Bad shape (non-string,
+    // multi-segment with `..`) → warning + default.
+    val authorsPath: String = {
+      val raw = confdata.get("authorsPath").collect { case s: String => s }
+      raw match {
+        case None => "/authors/"
+        case Some(s) =>
+          val trimmed = s.trim
+          val segments = trimmed.split('/').filter(_.nonEmpty).toList
+          if (segments.isEmpty) "/authors/"
+          else if (segments.contains("..") || segments.contains(".")) {
+            Console.err.println(s"site.toml authorsPath '$s' contains '.' or '..' segments; falling back to /authors/")
+            "/authors/"
+          } else "/" + segments.mkString("/") + "/"
+      }
+    }
+    /** Path segments derived from `authorsPath`, with leading/trailing
+      * slashes stripped. Used to build the on-disk output directory. */
+    val authorsDirSegments: List[String] =
+      authorsPath.split('/').filter(_.nonEmpty).toList
+
     /** Resolve a frontmatter `author` / `authors` field to a list of
       * registry-rich author records. Unknown ids fall back to a stub
       * record with just `{id: <id>}` so templates that read `.page.author.name`
@@ -1121,7 +1154,7 @@ object App {
           }
           record ++ Map[String, Any](
             "id"    -> id,
-            "url"   -> (basePath + "/authors/" + id + "/"),
+            "url"   -> (basePath + authorsPath + id + "/"),
             "count" -> BigDecimal(pgs.size),
             "pages" -> pgs,
           )
@@ -1404,6 +1437,7 @@ object App {
       ("categories"      -> categoryTerms.map(termToMap)) +
       ("authors"         -> authorTerms) +
       ("authorRegistry"  -> authorRegistryList) +
+      ("authorsPath"     -> authorsPath) +
       ("now"             -> nowMap) +
       ("events"          -> eventsList) +
       ("calendar"        -> calendarData) +
@@ -1633,7 +1667,7 @@ object App {
     // versa.
     if (authorRegistry.nonEmpty) {
       findLayout(Nil, "author-list").foreach { tmpl =>
-        val outDir = dst1 / "authors"
+        val outDir = authorsDirSegments.foldLeft(dst1)(_ / _)
         outDir.createDirectories()
         val data = Map[String, Any](
           "site"    -> sitedata,
@@ -1648,7 +1682,7 @@ object App {
       findLayout(Nil, "author-page").foreach { tmpl =>
         for (a <- authorTerms) {
           val id     = a("id").asInstanceOf[String]
-          val outDir = dst1 / "authors" / id
+          val outDir = (authorsDirSegments :+ id).foldLeft(dst1)(_ / _)
           outDir.createDirectories()
           val data = Map[String, Any](
             "site"   -> sitedata,
