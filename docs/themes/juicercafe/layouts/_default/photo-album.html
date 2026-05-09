@@ -1,0 +1,40 @@
+<!-- Photos section index. Renders one card per album page in the
+     `/photos/` section, each linking to the album's detail page. The
+     card's cover image is the first photo from the album's `photos:`
+     frontmatter; if the album has no photos yet, the card still renders
+     with a soft espresso/cream gradient.
+
+     Section _index.md picks this layout via `layout: photo-album`. -->
+{{ define content }}
+  <article class="juicercafe-page-wrap juicercafe-photos-wrap">
+    <h1 class="juicercafe-page-title">{{ .page.title }}</h1>
+    {{ if .content }}
+    <div class="juicercafe-content juicercafe-photos-intro">
+      {{ .content }}
+    </div>
+    {{ end }}
+
+    {{ if .section.pages }}
+    <ul class="juicercafe-album-grid">
+      {{ for a <- .section.pages }}
+      <li class="juicercafe-album-card">
+        <a href="{{ a.url }}">
+          {{ if a.photos }}
+          <img class="juicercafe-album-cover" src="{{ a.photos[0].src }}" alt="{{ a.title }}" loading="lazy">
+          {{ else }}
+          <div class="juicercafe-album-cover juicercafe-album-cover--empty" aria-hidden="true"></div>
+          {{ end }}
+          <div class="juicercafe-album-meta">
+            <h2 class="juicercafe-album-title">{{ a.title }}</h2>
+            {{ if a.dateLong }}<p class="juicercafe-album-date">{{ a.dateLong }}</p>{{ end }}
+            {{ if a.summary }}<p class="juicercafe-album-summary">{{ a.summary }}</p>{{ end }}
+          </div>
+        </a>
+      </li>
+      {{ end }}
+    </ul>
+    {{ else }}
+    <p class="juicercafe-empty">No photo albums yet. Check back soon.</p>
+    {{ end }}
+  </article>
+{{ end }}

@@ -1,8 +1,15 @@
 <!-- Visitor-first homepage. Hero with cafe name + tagline + welcome,
      then THE hours widget (the universal "are you open?" answer), then
-     a visit card. Stage 1 stops here — Stage 2 layers in menu
-     highlights, recent events, and a featured-photos strip; Stage 3
-     adds the working-from-here CTA panel. -->
+     a visit card, then four "what's happening" strips:
+       1. Menu highlight (browse-the-menu link card)
+       2. Upcoming events (next three from .site.events)
+       3. Recent photos (six newest from .site.photos)
+       4. "Working from here" CTA panel — cafe analogue of juicerchurch's
+          "I'm new" panel. Wi-fi/outlets/quiet-hours blurb with two CTAs.
+
+     Each strip is gated on data availability — empty surfaces silently
+     omit the section so a fresh site (no menu, no events on the
+     calendar) doesn't render skeletons. -->
 {{ define content }}
   <section class="juicercafe-hero">
     <div class="juicercafe-hero-inner">
@@ -27,4 +34,90 @@
     {{ if .site.visit.mapURL }}<p><a href="{{ .site.visit.mapURL }}">Open in maps →</a></p>{{ end }}
   </aside>
   {{ end }}
+
+  {{ menuSections := .site.pages | filter `.layout = "menu-section"` }}
+  {{ if menuSections }}
+  <section class="juicercafe-home-strip juicercafe-home-menu">
+    <div class="juicercafe-home-strip-head">
+      <h2 class="juicercafe-home-strip-title">On the bar today</h2>
+      <a class="juicercafe-home-strip-more" href="{{ relURL '/menu/' }}">Full menu →</a>
+    </div>
+    <ul class="juicercafe-home-menu-grid">
+      {{ shown := 0 }}
+      {{ for s <- menuSections }}{{ if shown < 3 }}{{ shown := shown + 1 }}
+      <li class="juicercafe-home-menu-card">
+        <a href="{{ s.url }}">
+          <h3 class="juicercafe-home-menu-title">{{ s.title }}</h3>
+          {{ if s.summary }}<p class="juicercafe-home-menu-summary">{{ s.summary }}</p>{{ end }}
+          <p class="juicercafe-home-menu-link">Browse →</p>
+        </a>
+      </li>
+      {{ end }}{{ end }}
+    </ul>
+  </section>
+  {{ end }}
+
+  {{ if .site.events }}
+  {{ upcomingAll := .site.events | filter `.recurring or .dateShort >= $.site.now.date` }}
+  {{ if upcomingAll }}
+  <section class="juicercafe-home-strip juicercafe-home-events">
+    <div class="juicercafe-home-strip-head">
+      <h2 class="juicercafe-home-strip-title">Upcoming events</h2>
+      <a class="juicercafe-home-strip-more" href="{{ relURL '/events/' }}">All events →</a>
+    </div>
+    <ol class="juicercafe-home-events-list">
+      {{ shown := 0 }}
+      {{ for e <- upcomingAll }}{{ if shown < 3 }}{{ shown := shown + 1 }}
+      <li class="juicercafe-home-event{{ if e.recurring }} is-recurring{{ end }}">
+        <div class="juicercafe-home-event-when">
+          {{ if e.recurring }}
+          <span class="juicercafe-home-event-month">Every</span>
+          <span class="juicercafe-home-event-day">{{ if e.recurringDay }}{{ e.recurringDay }}{{ else }}week{{ end }}</span>
+          {{ else }}{{ if e.dateLong }}
+          <span class="juicercafe-home-event-month">{{ e.dateLong }}</span>
+          {{ if e.eventTime }}<span class="juicercafe-home-event-day">{{ e.eventTime }}</span>{{ end }}
+          {{ end }}{{ end }}
+        </div>
+        <div class="juicercafe-home-event-meta">
+          <h3 class="juicercafe-home-event-title"><a href="{{ e.url }}">{{ e.title }}</a></h3>
+          {{ if e.eventLocation }}<p class="juicercafe-home-event-loc">{{ e.eventLocation }}</p>{{ end }}
+        </div>
+      </li>
+      {{ end }}{{ end }}
+    </ol>
+  </section>
+  {{ end }}
+  {{ end }}
+
+  {{ if .site.photos }}
+  <section class="juicercafe-home-strip juicercafe-home-photos">
+    <div class="juicercafe-home-strip-head">
+      <h2 class="juicercafe-home-strip-title">Recent photos</h2>
+      <a class="juicercafe-home-strip-more" href="{{ relURL '/photos/' }}">All albums →</a>
+    </div>
+    <ul class="juicercafe-home-photo-strip">
+      {{ shown := 0 }}
+      {{ for p <- .site.photos }}{{ if shown < 6 }}{{ shown := shown + 1 }}
+      <li class="juicercafe-home-photo">
+        {{ if p.page }}<a href="{{ p.page.url }}">{{ end }}
+          <img src="{{ p.src }}" alt="{{ if p.alt }}{{ p.alt }}{{ else }}{{ p.caption }}{{ end }}" loading="lazy">
+        {{ if p.page }}</a>{{ end }}
+      </li>
+      {{ end }}{{ end }}
+    </ul>
+  </section>
+  {{ end }}
+
+  <section class="juicercafe-home-strip juicercafe-home-working">
+    <div class="juicercafe-working-cta-inner">
+      <h2 class="juicercafe-working-cta-title">Working from here?</h2>
+      <p class="juicercafe-working-cta-body">
+        Stratus-Guest wi-fi, outlets at every two-top, quiet hours after 5pm, and the kind of room you can sit in for four hours without anyone giving you a look. Calls under five minutes are fine; longer ones go in the back room. Stay as long as you like.
+      </p>
+      <div class="juicercafe-working-cta-actions">
+        <a class="juicercafe-working-cta" href="{{ relURL '/working/' }}">Working policy →</a>
+        <a class="juicercafe-working-cta juicercafe-working-cta--secondary" href="{{ relURL '/visit/' }}">Plan a visit</a>
+      </div>
+    </div>
+  </section>
 {{ end }}

@@ -1,0 +1,70 @@
+<!-- Working-card partial — config-driven info block for the
+     focused-work crowd. Reads [working] from site.toml. Honest about
+     what the cafe offers before someone gets there with a laptop. All
+     fields are optional; the card silently omits any row whose data
+     isn't present.
+
+     Recommended [working] keys (none required):
+       wifiSSID    = "Stratus-Guest"
+       wifiNote    = "Captive portal — pop-up appears after first request."
+       outlets     = "Outlets at every two-top and along the bay window."
+       quietHours  = "5pm–close · phone calls in the back room only."
+       calls       = "Calls under 5 min are fine; longer ones use the back room."
+       groups      = "Groups of 4+ on weekdays — please email ahead."
+       stay        = "Stay as long as you like. We don't watch the clock."
+-->
+{{ if .site.working }}
+<aside class="juicercafe-working-card" aria-label="Working from here">
+  <div class="juicercafe-working-head">
+    <p class="juicercafe-working-title">Working from here</p>
+    <a class="juicercafe-working-more" href="{{ relURL '/working/' }}">Full policy →</a>
+  </div>
+
+  <ul class="juicercafe-working-list">
+    {{ if .site.working.wifiSSID }}
+    <li class="juicercafe-working-item">
+      <span class="juicercafe-working-label">Wi-Fi</span>
+      <span class="juicercafe-working-value">
+        <code>{{ .site.working.wifiSSID }}</code>
+        {{ if .site.working.wifiNote }}<span class="juicercafe-working-note">{{ .site.working.wifiNote }}</span>{{ end }}
+      </span>
+    </li>
+    {{ end }}
+
+    {{ if .site.working.outlets }}
+    <li class="juicercafe-working-item">
+      <span class="juicercafe-working-label">Outlets</span>
+      <span class="juicercafe-working-value">{{ .site.working.outlets }}</span>
+    </li>
+    {{ end }}
+
+    {{ if .site.working.quietHours }}
+    <li class="juicercafe-working-item">
+      <span class="juicercafe-working-label">Quiet hours</span>
+      <span class="juicercafe-working-value">{{ .site.working.quietHours }}</span>
+    </li>
+    {{ end }}
+
+    {{ if .site.working.calls }}
+    <li class="juicercafe-working-item">
+      <span class="juicercafe-working-label">Calls</span>
+      <span class="juicercafe-working-value">{{ .site.working.calls }}</span>
+    </li>
+    {{ end }}
+
+    {{ if .site.working.groups }}
+    <li class="juicercafe-working-item">
+      <span class="juicercafe-working-label">Groups</span>
+      <span class="juicercafe-working-value">{{ .site.working.groups }}</span>
+    </li>
+    {{ end }}
+
+    {{ if .site.working.stay }}
+    <li class="juicercafe-working-item">
+      <span class="juicercafe-working-label">Stay</span>
+      <span class="juicercafe-working-value">{{ .site.working.stay }}</span>
+    </li>
+    {{ end }}
+  </ul>
+</aside>
+{{ end }}

@@ -122,6 +122,21 @@ role   = "Barista · Sound engineer"
 bio    = "Diego runs Thursday open mic when he's not behind the bar. Plays a bit of everything; happy to recommend an album."
 avatar = "/img/team/diego.svg"
 
+# ============================================================
+# Working-from-here info — surfaced via partials/working-card.html on
+# the /working/ page (and anywhere else the theme inlines the partial).
+# All keys optional; the card silently omits any row whose data is
+# missing. Add or remove keys as your space allows.
+# ============================================================
+[working]
+wifiSSID   = "Stratus-Guest"
+wifiNote   = "Captive portal — splash page appears after the first request."
+outlets    = "At every two-top, along the bay window, and the four-seater long table."
+quietHours = "5pm–close on weekdays. Phone calls go in the back room."
+calls      = "Calls under 5 min at your seat. Anything longer, please use the back room."
+groups     = "Groups of 4+ on weekdays — please email ahead so we can hold the long table."
+stay       = "Stay as long as you like. We do not watch the clock."
+
 # Per-site palette overrides. Defaults are espresso/cream/caramel.
 # Uncomment to retune.
 #

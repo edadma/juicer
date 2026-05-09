@@ -1,5 +1,6 @@
 ---
 title: Working from here
+layout: working
 static: true
 summary: Wi-fi, outlets, quiet hours, and the rules of the back room.
 ---

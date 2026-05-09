@@ -1,0 +1,28 @@
+<!-- Per-album detail page — title + intro paragraph + the photo grid
+     itself + a back-link to the photos section index.
+
+     Picked via `layout: album` on individual album pages under the
+     photos section (e.g., `content/photos/interior.md`). -->
+{{ define content }}
+  <article class="juicercafe-page-wrap juicercafe-album-wrap">
+    <header class="juicercafe-album-header">
+      <p class="juicercafe-album-back">
+        <a href="{{ if .page.parent }}{{ .page.parent.url }}{{ else }}{{ relURL '/photos/' }}{{ end }}">← All albums</a>
+      </p>
+      <h1 class="juicercafe-page-title">{{ .page.title }}</h1>
+      {{ if .page.dateLong }}<p class="juicercafe-album-date">{{ .page.dateLong }}</p>{{ end }}
+    </header>
+
+    {{ if .content }}
+    <div class="juicercafe-content juicercafe-album-intro">
+      {{ .content }}
+    </div>
+    {{ end }}
+
+    {{ if .page.photos }}
+    {{ partial 'photo-grid' .page.photos }}
+    {{ else }}
+    <p class="juicercafe-empty">No photos in this album yet.</p>
+    {{ end }}
+  </article>
+{{ end }}

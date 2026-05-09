@@ -919,6 +919,437 @@ pre {
 .juicercafe-staff-back a:hover { color: var(--brand-strong); text-decoration: underline; }
 
 /* ============================================================
+   Home strips — shared scaffolding for every "what's happening"
+   strip on the homepage (menu / events / photos / working).
+   ============================================================ */
+.juicercafe-home-strip {
+  max-width: 64rem;
+  margin: 2.5rem auto 0;
+  padding: 0 var(--gutter);
+}
+
+.juicercafe-home-strip-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.juicercafe-home-strip-title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--brand-strong);
+  margin: 0;
+}
+
+.juicercafe-home-strip-more {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--brand);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.juicercafe-home-strip-more:hover { color: var(--brand-strong); }
+
+/* --- "On the bar today" — menu highlight cards --- */
+.juicercafe-home-menu-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+.juicercafe-home-menu-card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  border-left: 3px solid var(--accent);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.juicercafe-home-menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+.juicercafe-home-menu-card a {
+  display: block;
+  padding: 1.25rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.juicercafe-home-menu-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+  color: var(--brand-strong);
+}
+.juicercafe-home-menu-summary {
+  margin: 0 0 0.75rem;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+.juicercafe-home-menu-link {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--brand);
+  margin: 0;
+}
+
+/* --- Upcoming events strip --- */
+.juicercafe-home-events-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.juicercafe-home-event {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--brand);
+}
+.juicercafe-home-event.is-recurring { border-left-color: var(--leaf); }
+.juicercafe-home-event-when {
+  font-family: var(--font-sans);
+  display: grid;
+  align-content: center;
+  text-align: center;
+  background: var(--brand-soft);
+  border-radius: var(--radius);
+  padding: 0.5rem;
+}
+.juicercafe-home-event.is-recurring .juicercafe-home-event-when {
+  background: rgba(138, 154, 91, 0.18);
+}
+.juicercafe-home-event-month {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--brand-strong);
+}
+.juicercafe-home-event.is-recurring .juicercafe-home-event-month { color: var(--leaf); }
+.juicercafe-home-event-day {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin-top: 0.125rem;
+}
+.juicercafe-home-event-meta { align-self: center; }
+.juicercafe-home-event-title {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  margin: 0 0 0.25rem;
+}
+.juicercafe-home-event-title a { color: var(--ink); text-decoration: none; }
+.juicercafe-home-event-title a:hover { color: var(--brand-strong); }
+.juicercafe-home-event-loc {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* --- Recent photos strip --- */
+.juicercafe-home-photo-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.5rem;
+}
+.juicercafe-home-photo {
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--brand-soft);
+}
+.juicercafe-home-photo img,
+.juicercafe-home-photo a {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.juicercafe-home-photo img {
+  object-fit: cover;
+  transition: transform 200ms ease;
+}
+.juicercafe-home-photo a:hover img { transform: scale(1.04); }
+
+/* --- "Working from here?" CTA panel — homepage analogue of
+       juicerchurch's I'm-new card. Espresso → caramel gradient. --- */
+.juicercafe-home-working {
+  margin-bottom: 3rem;
+}
+.juicercafe-working-cta-inner {
+  background:
+    linear-gradient(135deg, var(--brand-strong) 0%, var(--brand) 55%, var(--accent) 130%);
+  color: var(--bg);
+  padding: 2.5rem 2rem;
+  border-radius: 1rem;
+  text-align: center;
+}
+.juicercafe-working-cta-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-style: italic;
+  margin: 0 0 0.75rem;
+  color: var(--bg);
+}
+.juicercafe-working-cta-body {
+  font-size: 1.0625rem;
+  max-width: 38rem;
+  margin: 0 auto 1.5rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+.juicercafe-working-cta-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.juicercafe-working-cta {
+  display: inline-block;
+  padding: 0.625rem 1.25rem;
+  background: var(--bg);
+  color: var(--brand-strong);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--radius);
+  transition: transform 120ms ease;
+}
+.juicercafe-working-cta:hover {
+  color: var(--brand-strong);
+  transform: translateY(-1px);
+}
+.juicercafe-working-cta--secondary {
+  background: transparent;
+  color: var(--bg);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+.juicercafe-working-cta--secondary:hover {
+  color: var(--bg);
+  background: rgba(255, 255, 255, 0.10);
+}
+
+/* ============================================================
+   Working-card partial — used on /working/ and anywhere the theme
+   inlines partials/working-card.html. Compact two-column rows.
+   ============================================================ */
+.juicercafe-working-card {
+  margin: 0 0 2rem;
+  padding: 1.5rem 1.75rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--leaf);
+  border-radius: var(--radius-lg);
+}
+.juicercafe-working-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.juicercafe-working-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--brand-strong);
+  margin: 0;
+}
+.juicercafe-working-more {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--brand);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.juicercafe-working-more:hover { color: var(--brand-strong); }
+.juicercafe-working-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.625rem;
+}
+.juicercafe-working-item {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.75rem;
+  align-items: baseline;
+  font-size: 0.9375rem;
+}
+.juicercafe-working-label {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.juicercafe-working-value {
+  color: var(--ink);
+}
+.juicercafe-working-value code {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  color: var(--code-ink);
+}
+.juicercafe-working-note {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* ============================================================
+   Photo gallery — section index (photo-album.html), per-album
+   page (album.html), and the reusable photo-grid partial.
+   ============================================================ */
+.juicercafe-photos-wrap { max-width: 64rem; }
+.juicercafe-photos-intro { margin-bottom: 1.5rem; }
+
+.juicercafe-album-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1.5rem;
+}
+.juicercafe-album-card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.juicercafe-album-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+.juicercafe-album-card a {
+  display: block;
+  color: var(--ink);
+  text-decoration: none;
+}
+.juicercafe-album-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  background: var(--brand-soft);
+}
+.juicercafe-album-cover--empty {
+  background:
+    linear-gradient(135deg, var(--brand-soft), var(--accent));
+}
+.juicercafe-album-meta { padding: 1rem 1.25rem 1.25rem; }
+.juicercafe-album-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  margin: 0 0 0.25rem;
+  color: var(--brand-strong);
+}
+.juicercafe-album-date {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 0.5rem;
+}
+.juicercafe-album-summary {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+/* Per-album page wrap + back link */
+.juicercafe-album-wrap { max-width: 64rem; }
+.juicercafe-album-header { margin-bottom: 1.5rem; }
+.juicercafe-album-back {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+.juicercafe-album-back a {
+  color: var(--brand);
+  text-decoration: none;
+}
+.juicercafe-album-back a:hover { color: var(--brand-strong); }
+.juicercafe-album-intro { margin-bottom: 2rem; }
+
+/* Reusable photo grid (album page + future inline-photo blocks) */
+.juicercafe-photo-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+.juicercafe-photo-tile {
+  position: relative;
+  margin: 0;
+  background: var(--brand-soft);
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+}
+.juicercafe-photo-tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.juicercafe-photo-tile.has-caption .juicercafe-photo-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.625rem 0.75rem;
+  background:
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.7) 90%);
+  color: var(--bg);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.juicercafe-photo-tile.has-caption:hover .juicercafe-photo-caption,
+.juicercafe-photo-tile.has-caption:focus-within .juicercafe-photo-caption {
+  opacity: 1;
+}
+
+.juicercafe-empty {
+  color: var(--ink-faint);
+  font-style: italic;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+/* ============================================================
    Mobile
    ============================================================ */
 @media (max-width: 640px) {
@@ -933,4 +1364,31 @@ pre {
   .juicercafe-staff-avatar { width: 4rem; height: 4rem; }
   .juicercafe-staff-page-header { grid-template-columns: 1fr; gap: 1rem; text-align: center; }
   .juicercafe-staff-page-header .juicercafe-staff-avatar--lg { margin: 0 auto; }
+
+  /* Stage 3: home strips, photo grid, working-card */
+  .juicercafe-home-event {
+    grid-template-columns: 6rem 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+  .juicercafe-home-menu-grid {
+    grid-template-columns: 1fr;
+  }
+  .juicercafe-album-grid {
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 1rem;
+  }
+  .juicercafe-photo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  }
+  /* Captions stay visible on touch — no hover state. */
+  .juicercafe-photo-tile.has-caption .juicercafe-photo-caption {
+    opacity: 1;
+  }
+  .juicercafe-working-cta-title { font-size: 1.625rem; }
+  .juicercafe-working-cta-inner { padding: 1.75rem 1.25rem; }
+  .juicercafe-working-item {
+    grid-template-columns: 1fr;
+    gap: 0.125rem;
+  }
 }

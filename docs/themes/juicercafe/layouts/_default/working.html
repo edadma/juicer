@@ -1,0 +1,15 @@
+<!-- Working-from-here detail page. Renders the at-a-glance card from
+     [working] in site.toml at the top, then the long-form prose with
+     the full policy below. Picked via `layout: working` on the
+     `/working/` page. -->
+{{ define content }}
+  <article class="juicercafe-page-wrap">
+    <h1 class="juicercafe-page-title">{{ .page.title }}</h1>
+
+    {{ if .site.working }}{{ partial 'working-card' . }}{{ end }}
+
+    <div class="juicercafe-content">
+      {{ .content }}
+    </div>
+  </article>
+{{ end }}
