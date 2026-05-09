@@ -29,5 +29,7 @@
     </ol>
 
     {{ partial 'pagination' . }}
+  {{ else }}
+    <p class="juicerblog-empty">No posts published yet.</p>
   {{ end }}
 {{ end }}

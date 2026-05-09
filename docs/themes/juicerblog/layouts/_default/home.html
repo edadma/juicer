@@ -1,0 +1,51 @@
+<!-- Homepage variant. Selected via `layout: home` frontmatter on the
+     root section's `_index.md` (engine respects per-page layout
+     override since juicer@cfb...). Different shape from the generic
+     folder.html: hero (title + tagline + intro), then a "Recent posts"
+     strip (top 5), then a "Browse" cluster (tags + archive link).
+
+     The full paginated archive of every post lives at /archive/ via
+     archive.html — the home is curated, the archive is exhaustive. -->
+{{ define content }}
+  <section class="juicerblog-hero">
+    {{ if .page.title }}<h1 class="juicerblog-hero-title">{{ .page.title }}</h1>{{ end }}
+    {{ if .site.tagline }}<p class="juicerblog-hero-tagline">{{ .site.tagline }}</p>{{ end }}
+    {{ if .content }}<div class="juicerblog-hero-intro">{{ .content }}</div>{{ end }}
+  </section>
+
+  {{ if .site.posts }}
+  <section class="juicerblog-home-recent">
+    <header class="juicerblog-home-section-head">
+      <h2 class="juicerblog-home-section-title">Recent posts</h2>
+      <a class="juicerblog-home-section-link" href="{{ relURL '/archive/' }}">All posts →</a>
+    </header>
+    <ol class="juicerblog-postlist">
+      {{ for p <- .site.posts | take 5 }}
+        <li>
+          <h3 class="juicerblog-postlist-title">
+            <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+          </h3>
+          <div class="juicerblog-postlist-meta">
+            {{ if p.date }}<time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time>{{ end }}
+            {{ if p.readingTime }}<span class="juicerblog-sep">·</span><span>{{ p.readingTime }} min read</span>{{ end }}
+          </div>
+          {{ if p.summary }}<p class="juicerblog-postlist-summary">{{ p.summary }}</p>{{ end }}
+        </li>
+      {{ end }}
+    </ol>
+  </section>
+  {{ end }}
+
+  {{ if .site.tags }}
+  <section class="juicerblog-home-browse">
+    <header class="juicerblog-home-section-head">
+      <h2 class="juicerblog-home-section-title">Browse by tag</h2>
+    </header>
+    <div class="juicerblog-tag-cloud juicerblog-home-tag-cloud">
+      {{ for t <- .site.tags }}
+      <a class="juicerblog-tag" href="{{ t.url }}">{{ t.name }}<span class="juicerblog-tag-count"> · {{ t.count }}</span></a>
+      {{ end }}
+    </div>
+  </section>
+  {{ end }}
+{{ end }}

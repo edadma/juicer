@@ -205,6 +205,84 @@ blockquote {
 }
 
 /* ============================================================
+   Homepage variant (layout: home on _index.md)
+   ============================================================
+   Distinct shape from `folder.html`: hero + curated recent strip
+   + tag-cloud cluster, with a link out to /archive/ for the full
+   chronological list. The hero gives the site a face; the recent
+   strip stops at five so the page doesn't become a paginated
+   archive in disguise. */
+.juicerblog-hero {
+  max-width: var(--measure);
+  margin: 2.5rem auto 1rem;
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+.juicerblog-hero-title {
+  font-size: 2.75rem;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.375rem;
+  color: var(--ink);
+}
+.juicerblog-hero-tagline {
+  font-size: 1.125rem;
+  color: var(--brand);
+  font-style: italic;
+  margin: 0 0 1.25rem;
+}
+.juicerblog-hero-intro {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+.juicerblog-hero-intro p { margin: 0; }
+
+.juicerblog-home-section-head {
+  max-width: var(--measure);
+  margin: 2.5rem auto 0.75rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.juicerblog-home-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin: 0;
+  color: var(--ink);
+}
+.juicerblog-home-section-link {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--accent);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.juicerblog-home-section-link:hover {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The home post list overrides the default top margin so it sits
+   tight under its own section head instead of carrying folder.html's
+   `margin: 2rem auto` above. */
+.juicerblog-home-recent .juicerblog-postlist,
+.juicerblog-home-browse .juicerblog-tag-cloud {
+  margin-top: 0.25rem;
+}
+
+.juicerblog-home-tag-cloud {
+  margin-bottom: 3rem;
+}
+
+@media (max-width: 640px) {
+  .juicerblog-hero-title { font-size: 2rem; }
+}
+
+/* ============================================================
    Home / archive — post list
    ============================================================ */
 .juicerblog-home-intro {
@@ -496,6 +574,104 @@ blockquote {
   color: var(--ink-faint);
   font-size: 0.8125rem;
   margin-left: 0.25rem;
+}
+
+/* ============================================================
+   Site-wide archive (layout: archive)
+   ============================================================
+   Year sections with a tight per-post line — date + title, no summary
+   or reading time. Date column is left-aligned and tabular for a clean
+   vertical rhythm; titles can wrap. Year heading is itself a link to
+   the deeper /<year>/ index for the richer per-year view. */
+.juicerblog-archive-year {
+  max-width: var(--measure);
+  margin: 2.25rem auto 0;
+}
+.juicerblog-archive-year-title {
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid var(--rule);
+}
+.juicerblog-archive-year-title a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.juicerblog-archive-year-title a:hover {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.juicerblog-archive-year-count {
+  color: var(--ink-faint);
+  font-size: 0.875rem;
+  font-weight: 400;
+  font-family: var(--font-sans);
+  margin-left: 0.5rem;
+}
+
+.juicerblog-archive-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+.juicerblog-archive-list li {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  gap: 1rem;
+  padding: 0.375rem 0;
+  font-size: 0.95rem;
+  align-items: baseline;
+}
+.juicerblog-archive-date {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.juicerblog-archive-link {
+  color: var(--ink);
+  text-decoration: none;
+}
+.juicerblog-archive-link:hover {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .juicerblog-archive-list li {
+    grid-template-columns: 1fr;
+    gap: 0.125rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+}
+
+/* ============================================================
+   Empty state — shown when an archive (folder, tag-page, author-page,
+   date-month) has no posts to render. Either the list is genuinely
+   empty or every entry got filtered out by `static: true`. */
+.juicerblog-empty {
+  max-width: var(--measure);
+  margin: 2.5rem auto;
+  text-align: center;
+  font-style: italic;
+  color: var(--ink-faint);
+  padding: 1.5rem 1rem;
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--rule-soft);
+}
+.juicerblog-empty-row {
+  /* When the empty state lives inside an <ol class="juicerblog-postlist">
+     wrapper (tag-page / author-page / date-month all do this so the list
+     bullets/dividers don't render around the message), strip the list
+     styling for that one row. */
+  list-style: none;
+  border-bottom: 0 !important;
+  padding: 0 !important;
 }
 
 /* ============================================================

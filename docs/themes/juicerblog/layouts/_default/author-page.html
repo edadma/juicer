@@ -46,6 +46,8 @@
             {{ if p.summary }}<p class="juicerblog-postlist-summary">{{ p.summary }}</p>{{ end }}
           </li>
           {{ end }}
+        {{ else }}
+          <li class="juicerblog-empty-row"><p class="juicerblog-empty">{{ if .author.name }}{{ .author.name }}{{ else }}{{ .author.id }}{{ end }} hasn't published anything yet.</p></li>
         {{ end }}
       </ol>
     </main>

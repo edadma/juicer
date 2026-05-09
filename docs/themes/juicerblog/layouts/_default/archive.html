@@ -1,0 +1,44 @@
+<!-- Site-wide archive — every dated, non-section, non-static post grouped
+     by year (newest year first). Selected via `layout: archive` on the
+     content stub at /archive/ (typically a one-line `archive.md` with
+     `static: true` so it doesn't pollute the post stream).
+
+     Data shape: `.site.pagesByYear` is a list of
+     {year, pages, count} maps, sorted year descending; pages within a
+     year are sorted date descending. Empty when no post has an explicit
+     parsed `date:` frontmatter — the archive then collapses to its
+     header + intro + an empty-state line. -->
+{{ define content }}
+  <article class="juicerblog-post juicerblog-post--static">
+    {{ if .page.title }}<h1 class="juicerblog-post-title">{{ .page.title }}</h1>{{ end }}
+
+    {{ if .content }}
+    <div class="juicerblog-content">
+      {{ .content }}
+    </div>
+    {{ end }}
+
+    {{ if .site.pagesByYear }}
+      {{ for yr <- .site.pagesByYear }}
+      <section class="juicerblog-archive-year">
+        <h2 class="juicerblog-archive-year-title">
+          <a href="{{ relURL '/' }}{{ yr.year }}/">{{ yr.year }}</a>
+          <span class="juicerblog-archive-year-count">·
+            {{ if yr.count = 1 }}1 post{{ else }}{{ yr.count }} posts{{ end }}
+          </span>
+        </h2>
+        <ol class="juicerblog-archive-list">
+          {{ for p <- yr.pages }}
+          <li>
+            <time class="juicerblog-archive-date" datetime="{{ p.dateISO }}">{{ p.dateShort }}</time>
+            <a class="juicerblog-archive-link" href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+          </li>
+          {{ end }}
+        </ol>
+      </section>
+      {{ end }}
+    {{ else }}
+      <p class="juicerblog-empty">No dated posts to archive yet.</p>
+    {{ end }}
+  </article>
+{{ end }}

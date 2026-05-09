@@ -32,6 +32,8 @@
           </div>
           {{ if p.summary }}<p class="juicerblog-postlist-summary">{{ p.summary }}</p>{{ end }}
         </li>
+        {{ else }}
+          <li class="juicerblog-empty-row"><p class="juicerblog-empty">No posts in {{ .monthName }}.</p></li>
         {{ end }}
       </ol>
     </main>

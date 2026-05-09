@@ -4,6 +4,7 @@
     {{ if .site.tagline }}<span class="juicerblog-tagline">{{ .site.tagline }}</span>{{ end }}
     <nav class="juicerblog-nav" aria-label="Main">
       <a href="{{ relURL '/' }}">Home</a>
+      <a href="{{ relURL '/archive/' }}">Archive</a>
       {{ if .site.tags }}<a href="{{ relURL '/tags/' }}">Tags</a>{{ end }}
       <!-- Authors / About are linked unconditionally — sites that don't
            use them will 404 the link, which is a less subtle failure mode

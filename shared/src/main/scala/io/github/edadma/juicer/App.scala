@@ -908,6 +908,50 @@ object App {
     val pagesByPath: Map[String, Map[String, Any]] =
       pages.map(p => p("relPermalink").asInstanceOf[String] -> p).toMap
 
+    // ----- Posts view (filtered, dated, sorted) -----
+    //
+    // `.site.pages` is the raw list (every content file including section
+    // indexes and static pages). For "give me the post stream" the theme
+    // wants exactly: pages with an explicit parsed `date:`, that aren't
+    // section indexes, and that aren't `static: true`. Computed once and
+    // surfaced two ways:
+    //   .site.posts         flat list, newest first
+    //   .site.pagesByYear   same list grouped by year, year descending
+    //
+    // mtime-fallback dates are intentionally excluded — same rule
+    // dateArchives uses, for the same reason: pulling docs / about / etc.
+    // into the post stream by accident is ugly.
+    def hasExplicitDateFM(c: ContentFile): Boolean =
+      frontmatterMap(c.page).get("date").collect { case s: String => s }
+        .flatMap(parseDateString).isDefined
+    def isStaticFM(c: ContentFile): Boolean =
+      frontmatterMap(c.page).get("static").collect {
+        case true   => true
+        case "true" => true
+      }.getOrElse(false)
+
+    val datedNonStaticPairs: List[(java.time.OffsetDateTime, Map[String, Any])] =
+      pageEntries.collect {
+        case (c, m) if c.name != folderContent && hasExplicitDateFM(c) && !isStaticFM(c) =>
+          (pageInstant(c), m)
+      }
+    val postsList: List[Map[String, Any]] =
+      datedNonStaticPairs.sortBy(-_._1.toEpochSecond).map(_._2)
+
+    val pagesByYearData: List[Map[String, Any]] =
+      datedNonStaticPairs
+        .groupBy(_._1.getYear)
+        .toList
+        .sortBy(-_._1)
+        .map { case (year, entries) =>
+          val sorted = entries.sortBy(-_._1.toEpochSecond).map(_._2)
+          Map[String, Any](
+            "year"  -> BigDecimal(year),
+            "pages" -> sorted,
+            "count" -> BigDecimal(sorted.size),
+          )
+        }
+
     // The root section's _index page (if any), looked up by its URL. Themes
     // use this for site-wide navigation that walks `.site.root.subsections`.
     val rootRecord: Map[String, Any] = {
@@ -1088,6 +1132,8 @@ object App {
       ("start"           -> start) +
       ("pages"           -> pages) +
       ("pagesByPath"     -> pagesByPath) +
+      ("posts"           -> postsList) +
+      ("pagesByYear"     -> pagesByYearData) +
       ("root"            -> rootRecord) +
       ("languages"       -> langs) +
       ("defaultLanguage" -> defaultLang) +
@@ -1159,7 +1205,17 @@ object App {
           if (html != "") all.drop(1) else all
         }
       }
-      val layout = if (isSec) folderLayout else fileLayout
+      // Layout selection: `layout: foo` frontmatter on a page overrides
+      // the default file/folder layout, so themes can ship special
+      // layouts (e.g. `home.html` for a curated front page,
+      // `archive.html` for a chronological listing) and content authors
+      // opt in per page. Default behaviour — no `layout` frontmatter —
+      // matches juicer's pre-override shape: sections render via
+      // `folderLayout` ("folder"), non-section pages via `fileLayout`
+      // ("file").
+      val frontmatterLayout =
+        frontmatterMap(c.page).get("layout").collect { case s: String => s }
+      val layout = frontmatterLayout.getOrElse(if (isSec) folderLayout else fileLayout)
       val particularTemplate = findLayout(folders, layout) match {
         case Some(TemplateFile(templatePath, _, template)) =>
           show(s"render $name using ${templatePath.relativeTo(src1)}")
