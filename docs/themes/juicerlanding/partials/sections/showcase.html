@@ -9,7 +9,7 @@
      A figure-with-caption pattern — the image is the hero and the copy
      contextualises it. -->
 {{ if .site.showcase }}
-<section class="juicerlanding-showcase{{ if .site.showcase.reverse }} is-reverse{{ end }}">
+<section id="showcase" class="juicerlanding-showcase{{ if .site.showcase.reverse }} is-reverse{{ end }}">
   <div class="juicerlanding-showcase-inner">
     <div class="juicerlanding-showcase-copy">
       {{ if .site.showcase.title }}<h2 class="juicerlanding-section-title">{{ .site.showcase.title }}</h2>{{ end }}

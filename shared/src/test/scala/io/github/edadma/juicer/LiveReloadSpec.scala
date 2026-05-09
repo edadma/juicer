@@ -59,4 +59,37 @@ class LiveReloadSpec extends AnyFlatSpec with Matchers {
     contentType("README")        shouldBe "application/octet-stream"
     contentType("file.unknown")  shouldBe "application/octet-stream"
   }
+
+  // The watcher's exclude-dir filter exists to break the rebuild loop where
+  // a build's own writes to <src>/public/ trigger the next rebuild. Test the
+  // pure helper across the cases that matter.
+  "isWatchEventRelevant" should "fire for events outside the excluded directory" in {
+    val ex = "/tmp/site/public"
+    isWatchEventRelevant("/tmp/site/content/_index.md", ex) shouldBe true
+    isWatchEventRelevant("/tmp/site/site.toml", ex)         shouldBe true
+    isWatchEventRelevant("/tmp/elsewhere/foo", ex)          shouldBe true
+  }
+
+  it should "suppress events inside the excluded directory" in {
+    val ex = "/tmp/site/public"
+    isWatchEventRelevant("/tmp/site/public/index.html", ex)        shouldBe false
+    isWatchEventRelevant("/tmp/site/public/img/logo.svg", ex)      shouldBe false
+    isWatchEventRelevant("/tmp/site/public/deep/nested/file.json", ex) shouldBe false
+  }
+
+  it should "suppress an event whose path is exactly the excluded directory" in {
+    isWatchEventRelevant("/tmp/site/public", "/tmp/site/public") shouldBe false
+  }
+
+  it should "not be fooled by a sibling whose name shares a prefix" in {
+    // /tmp/site/public2/x is NOT under /tmp/site/public — without the
+    // separator-aware check, a naive startsWith would match it.
+    isWatchEventRelevant("/tmp/site/public2/x.html", "/tmp/site/public") shouldBe true
+    isWatchEventRelevant("/tmp/site/public-staging.txt", "/tmp/site/public") shouldBe true
+  }
+
+  it should "fire for every event when excludedAbs is null (filter disabled)" in {
+    isWatchEventRelevant("/anything", null) shouldBe true
+    isWatchEventRelevant("",          null) shouldBe true
+  }
 }

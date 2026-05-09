@@ -36,6 +36,7 @@ def serve(
     watchRoot:  Path          = null,
     rebuild:    () => Boolean = () => false,
     htmlDir:    String        = "",
+    excludeDir: Path          = null,
 ): Unit =
   given runtime: Runtime  = summon[Runtime]
   given ec:      ExecutionContext = runtime.executionContext
@@ -57,7 +58,7 @@ def serve(
     if liveReload then
       println("  live reload: enabled")
       sse.startKeepalive(runtime.timers)
-      if watchRoot != null then startWatcher(watchRoot, rebuild, sse)
+      if watchRoot != null then startWatcher(watchRoot, excludeDir, rebuild, sse)
     println("Press Ctrl+C to stop.")
   }
 
@@ -229,28 +230,51 @@ end SseChannel
   * we debounce by 150 ms (one rebuild per burst) using the runtime's timer.
   *
   * On macOS the JVM `WatchService` is polling-backed and events come in
-  * 1–10 s after the change; that's a known platform quirk, not a bug here. */
+  * 1–10 s after the change; that's a known platform quirk, not a bug here.
+  *
+  * `excludeDir` is the build's output directory, typically a child of the
+  * watched `src` tree (e.g. `<src>/public/`). Without filtering, the build's
+  * own writes trigger a rebuild that triggers another rebuild — the page
+  * "jumps every couple of seconds" until the user kills the server. We
+  * suppress events whose absolute path is inside `excludeDir`. Pass `null`
+  * to disable. */
 private[juicer] def startWatcher(
-    src:     Path,
-    rebuild: () => Boolean,
-    sse:     SseChannel,
+    src:        Path,
+    excludeDir: Path,
+    rebuild:    () => Boolean,
+    sse:        SseChannel,
 )(using runtime: Runtime): Unit =
-  val watcher = runtime.newFsWatcher()
+  val watcher  = runtime.newFsWatcher()
   var pending: () => Unit = null
-  val timers = runtime.timers
+  val timers   = runtime.timers
+  val excluded = if excludeDir eq null then null else excludeDir.normalize.toAbsolutePath.toString
 
-  val _ = watcher.watch(src.toString, recursive = true) { _ =>
-    // Coalesce a burst of events into a single rebuild. The cancel function
-    // returned by setTimeout makes "I already scheduled one — push it out"
-    // trivial: cancel and re-schedule.
-    if pending != null then pending()
-    pending = timers.setTimeout(150) { () =>
-      pending = null
-      println("[juicer] source changed; rebuilding…")
-      if rebuild() then sse.notifyReload()
-    }
+  val _ = watcher.watch(src.toString, recursive = true) { ev =>
+    if isWatchEventRelevant(ev.path, excluded) then
+      // Coalesce a burst of events into a single rebuild. The cancel function
+      // returned by setTimeout makes "I already scheduled one — push it out"
+      // trivial: cancel and re-schedule.
+      if pending != null then pending()
+      pending = timers.setTimeout(150) { () =>
+        pending = null
+        println("[juicer] source changed; rebuilding…")
+        if rebuild() then sse.notifyReload()
+      }
   }
 end startWatcher
+
+/** Pure helper, exposed for unit testing. Returns true when an event at
+  * `eventPath` should trigger a rebuild — i.e. it is *not* under the build
+  * output directory `excludedAbs`. A trailing separator is appended before
+  * the prefix check so a sibling directory whose name happens to share a
+  * prefix (e.g. `public2/` next to `public/`) is not accidentally excluded.
+  * `excludedAbs == null` disables filtering and every event is relevant. */
+private[juicer] def isWatchEventRelevant(eventPath: String, excludedAbs: String): Boolean =
+  if excludedAbs == null then true
+  else
+    val sep = java.io.File.separator
+    val withSep = if excludedAbs.endsWith(sep) then excludedAbs else excludedAbs + sep
+    !eventPath.startsWith(withSep) && eventPath != excludedAbs
 
 // ===== Bind with retry =======================================================
 

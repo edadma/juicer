@@ -8,7 +8,7 @@
      Stage-2/3 polish; Stage 1 leaves it disabled by default (no [[trust]]
      in the demo site.toml) so it doesn't render. -->
 {{ if .site.trust }}
-<section class="juicerlanding-trust">
+<section id="trust" class="juicerlanding-trust">
   <div class="juicerlanding-trust-inner">
     {{ if .site.trustLabel }}<p class="juicerlanding-trust-label">{{ .site.trustLabel }}</p>{{ else }}<p class="juicerlanding-trust-label">Trusted by teams at</p>{{ end }}
     <ul class="juicerlanding-trust-list">

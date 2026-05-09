@@ -41,6 +41,11 @@ object App {
         watchRoot  = if (liveReload) src else null,
         rebuild    = rebuild,
         htmlDir    = htmlDir,
+        // outDir typically lives under src (e.g. <src>/public/). Exclude
+        // it from watch-event consideration so the build's own writes
+        // don't trigger another rebuild — that loop produces a "page
+        // jumps every couple of seconds" experience.
+        excludeDir = if (liveReload) outDir else null,
       )
     case Args(baseConfig, _, _, Some(ThemeAddCommand(src, url, name, ref, force))) =>
       themeAdd(baseConfig, src, url, name, ref, force)

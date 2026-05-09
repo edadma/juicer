@@ -13,7 +13,7 @@
      and primaryCta are the only really-required fields; the rest
      gracefully drop out. -->
 {{ if .site.hero }}
-<section class="juicerlanding-hero">
+<section id="hero" class="juicerlanding-hero">
   <div class="juicerlanding-hero-inner">
     <div class="juicerlanding-hero-copy">
       {{ if .site.hero.eyebrow }}<p class="juicerlanding-hero-eyebrow">{{ .site.hero.eyebrow }}</p>{{ end }}

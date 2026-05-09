@@ -319,6 +319,23 @@ code, pre, kbd, samp {
 /* ============================================================
    Section scaffolding shared across sections
    ============================================================ */
+
+/* Sticky topbar (~58px tall) covers the top of any section a
+   fragment link scrolls to. Compensate per-section so the heading
+   lands clear of the topbar; html scroll-behavior: smooth above
+   takes care of the animation. */
+.juicerlanding-hero,
+.juicerlanding-trust,
+.juicerlanding-features,
+.juicerlanding-code-section,
+.juicerlanding-showcase,
+.juicerlanding-pricing,
+.juicerlanding-testimonials,
+.juicerlanding-faq,
+.juicerlanding-final-cta {
+  scroll-margin-top: 4rem;
+}
+
 .juicerlanding-section-head {
   max-width: var(--max-w-narrow);
   margin: 0 auto 3rem;
