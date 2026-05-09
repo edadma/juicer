@@ -97,19 +97,34 @@ Commands:
   build                          build the site
     -s, --source <path>            site source directory (default ./)
     -d, --dest <path>              destination directory (default ./public)
+    -D, --drafts                   include draft pages (frontmatter `draft: true`)
+    -F, --future                   include future-dated pages
 
   config                         show the resolved build configuration
     -s, --source <path>            site source directory
+
+  theme add <git-url>            install a theme into <src>/<themeDir>/
+    -s, --source <path>            site source directory
+    -n, --name <name>              install under this theme name
+    -r, --ref <branch|tag|sha>     branch, tag, or commit to check out
+        --force                    overwrite an existing theme directory
 
   serve                          build the site, then serve it on localhost
     -s, --source <path>            site source directory
     -d, --dest <path>              destination directory
         --host <host>              host to bind (default 'localhost')
     -p, --port <port>              port to listen on (default 8080)
+    -D, --drafts                   include draft pages
+    -F, --future                   include future-dated pages
+    -L, --live-reload              rebuild on source changes and reload
+                                   browser tabs (SSE-driven)
 ```
 
-`serve` is JVM-only — it uses `com.sun.net.httpserver` under the hood.
-`build` and `config` work on JVM, Scala.js, and Scala Native.
+Every command — `build`, `config`, `theme`, `serve` — runs on JVM,
+Scala.js (Node), and Scala Native. The `serve` command is built on
+[microserve](https://github.com/edadma/microserve), which provides a
+single static-file server / live-reload abstraction across all three
+runtimes.
 
 ## Site config
 
@@ -178,9 +193,11 @@ exposed as `args[i]` and named args as `key`.
 
 `build.sbt` cross-builds for JVM, Scala.js, and Scala Native. JVM is the
 primary target right now; Scala.js and Scala Native compile from the same
-sources but are less battle-tested. The `serve` command is intentionally
-JVM-only — a cross-platform server library is on the roadmap (the existing
-`microserve` is currently JVM-only).
+sources and run the full integration suite. There are no JVM-only
+features — `serve` and its live-reload watcher both use
+[microserve](https://github.com/edadma/microserve), which abstracts over
+`java.nio` (JVM), Node `net`/`fs.watch` (JS), and libuv (Native) behind
+a shared Scala API.
 
 ## Tests
 

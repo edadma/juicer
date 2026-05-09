@@ -15,9 +15,12 @@ case.
    to HTML, not webpack-replacement. See [Tier 3](#tier-3--explicitly-deferred)
    for the full skip list.
 3. **Cross-platform stays cross-platform.** Anything new in `shared/`
-   has to keep compiling on JVM, JS, and Native. JVM-only features
-   (currently just `serve`) live under `jvm/src/main/scala/...` with
-   stub equivalents in `js/` and `native/` that print a clear message.
+   has to keep compiling on JVM, JS, and Native. There are currently
+   no JVM-only features — `serve` and its live-reload watcher both run
+   on all three targets via [microserve](https://github.com/edadma/microserve).
+   If a new feature genuinely cannot be made cross-platform, put it
+   under `jvm/src/main/scala/...` with stub equivalents in `js/` and
+   `native/` that print a clear message.
 4. **Each item ships with a test in `JuicerBuildSpec`.** No item is
    considered done until the integration suite covers it.
 5. **Avoid one-shot `if (frontmatter.contains("xyz"))` plumbing.** When a
@@ -33,7 +36,7 @@ case.
 | Shortcodes (`[= name =]`) | ✓ | — |
 | Auto heading IDs / TOC | ✓ | — |
 | Static file pass-through | ✓ | — |
-| `serve` command | ✓ JVM-only | + live reload |
+| `serve` command | ✓ cross-platform (JVM/JS/Native via microserve), with live reload | — |
 | `site.toc` nav data | ✓ | + `.site.pages` |
 | `.page.permalink` etc. | implicit only | explicit |
 | Drafts | none | `draft: true` |
@@ -145,7 +148,10 @@ public `markdown.plainText` helper for option 3.
 **Status: complete (except #7).** Shipped on `dev` between commits
 `03fe603` and `68c053c`:
 
-- ✓ #6 live reload (`5931e17`) — WatchService + SSE + script injection
+- ✓ #6 live reload (`5931e17`) — initially WatchService + SSE + script
+  injection (JVM-only); later migrated to microserve so the entire
+  serve command runs cross-platform on JVM, Scala.js (Node), and
+  Scala Native via libuv
 - ✗ #7 render hooks — **deferred indefinitely**. The juicerdocs theme
   covers the docs-site need entirely with Tailwind utility classes plus
   the lightweight JS for code-block copy buttons / language badges /
@@ -172,24 +178,29 @@ Plus several Tier-2-adjacent shipments:
 
 
 
-### 6. Live reload in `serve` (JVM-only)
+### 6. Live reload in `serve` (now cross-platform)
 
 **What.** When `serve` is running, watch the source tree; on file
-changes, rebuild incrementally and inject a tiny WebSocket script into
-the served HTML so connected browsers refresh.
+changes, rebuild and inject a tiny SSE script into the served HTML so
+connected browsers refresh. Excludes events under the build's output
+directory so the build's own writes don't trigger a rebuild loop.
 
-**Cost.** ~150–200 LOC across `jvm/src/main/scala/.../serve.scala` plus
-a new `LiveReloadHandler`. Uses `java.nio.file.WatchService` (JVM-only,
-which is fine — `serve` already is) and `com.sun.net.httpserver` for
-the WebSocket-or-SSE channel.
+**Status.** Shipped JVM-only at `5931e17` using `java.nio.file.WatchService`
++ `com.sun.net.httpserver`, then migrated to
+[microserve](https://github.com/edadma/microserve) so the whole serve
+command (HTTP server + filesystem watcher + SSE channel) runs
+cross-platform — JVM via `java.nio`, Scala.js via Node `net` /
+`fs.watch`, Scala Native via libuv.
 
-**Where.** New file in jvm/. The shared `App.run` doesn't change; the
-JVM `serve(...)` overload picks up a new `liveReload: Boolean = false`
-argument bound to a CLI flag.
+**Where.** Now in `shared/src/main/scala/.../serve.scala` (no
+platform splits). `App.run` wires the build's outDir as `excludeDir`
+so the destination tree is filtered out of watch events.
 
-**Test.** Hard to integration-test cleanly without a browser; cover by
-unit-testing the watcher abstraction and the HTML-injection helper.
-Manual smoke-test in the README.
+**Test.** `LiveReloadSpec` covers the script payload, HTML injection
+idempotence, content-type lookup, and the `isWatchEventRelevant`
+exclude-dir helper. The HTTP-loop pieces (bind retry, static handler,
+SSE, debounced rebuild) are covered by microserve's own
+cross-platform integration suite. Manual smoke-test in the README.
 
 ### 7. Render hooks for links / images / code blocks
 
