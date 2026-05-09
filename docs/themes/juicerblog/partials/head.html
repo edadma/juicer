@@ -3,6 +3,7 @@
 {{ if .page.title }}<title>{{ .page.title }} — {{ .site.title }}</title>{{ else }}<title>{{ .site.title }}</title>{{ end }}
 {{ if .page.summary }}<meta name="description" content="{{ .page.summary }}">{{ end }}
 {{ if .page.permalink }}<link rel="canonical" href="{{ .page.permalink }}">{{ end }}
+{{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
 
 <!-- OpenGraph + Twitter card meta tags. Resolves image / description from
      frontmatter (ogImage/image then ogDescription/description/summary),

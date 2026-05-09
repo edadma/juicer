@@ -23,6 +23,11 @@ sortBy   = "date"
 # a one-line change.
 authorsPath = "/team/"
 
+# Engine-level optional keys, all themes read these:
+#   favicon          = "/favicon.ico"   # <link rel=icon> path
+#   hideJuicerCredit = true             # remove "Built with juicer" line
+# Stratus is a demo, so we leave both at their defaults.
+
 # ============================================================
 # Hours — surfaced on the homepage, the footer, and /visit/.
 # Theme reads these from [[hours]] in this same file. Each row:
