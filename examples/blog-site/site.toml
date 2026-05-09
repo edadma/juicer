@@ -1,5 +1,9 @@
-# Example blog site — exercises the juicerblog theme + Phase 1 blog features
-# (tags, pagination, parsed dates, reading time).
+# Example blog site — exercises the juicerblog theme along with the engine's
+# Phase 1 features (tags, pagination, parsed dates, reading time) AND the
+# Phase 2 features (authors, series, date archives, aliases, permalinks,
+# atom feeds, OG tags). It's the canonical "what does juicerblog actually
+# look like with realistic content" demo, and the iteration target while
+# polishing the theme.
 #
 # Local preview:
 #   sbt 'juicerJVM/run serve -s examples/blog-site -L'
@@ -7,7 +11,7 @@
 #   sbt 'juicerJVM/run build -s examples/blog-site -d /tmp/blog-out'
 
 title    = "juicerblog demo"
-tagline  = "a blog theme for juicer"
+tagline  = "a place for prose, code, and longer thoughts"
 author   = "Ed Maxedon"
 baseURL  = "http://localhost:8080"
 
@@ -19,5 +23,61 @@ theme    = "juicerblog"
 
 # Blog defaults: smaller paginate size, sort by date.
 htmlDir  = ""
-paginate = 3
+paginate = 4
 sortBy   = "date"
+
+# Phase 2.4 — emit `/<year>/` and `/<year>/<month>/` archives. Renders only
+# if the theme provides `date-year.html` / `date-month.html` layouts.
+dateArchives = true
+
+# Phase 2.6 — pretty per-section URLs. The default (without [permalinks])
+# is `/<slug>/`; here we make posts live under their year+month so the URL
+# survives a re-tagging or a series rename.
+[permalinks]
+posts = ":year/:month/:slug/"
+
+# Phase 2.3 — author registry. `id` is the stable handle referenced from
+# post frontmatter (`author: ed`, or `authors: [ed, alice]`). Everything
+# else (name, bio, avatar, links) flows through to `.page.author` and the
+# generated `/authors/<id>/` archive page.
+[[authors]]
+id     = "ed"
+name   = "Ed Maxedon"
+bio    = "Writes about Scala, languages, and the craft of small tools."
+avatar = "/img/avatar-ed.png"
+
+[[authors.links]]
+label = "GitHub"
+url   = "https://github.com/edadma"
+
+[[authors.links]]
+label = "Mastodon"
+url   = "https://hachyderm.io/@edadma"
+
+[[authors]]
+id     = "alice"
+name   = "Alice Romero"
+bio    = "Designer-turned-developer; writes about typography, UX, and reading on screens."
+avatar = "/img/avatar-alice.png"
+
+[[authors.links]]
+label = "Website"
+url   = "https://example.com/alice"
+
+[[authors]]
+id     = "ben"
+name   = "Ben Iyengar"
+bio    = "Backend engineer with a soft spot for static site generators and plain HTML."
+avatar = "/img/avatar-ben.png"
+
+[[authors.links]]
+label = "GitHub"
+url   = "https://github.com/example-ben"
+
+# Per-site theme palette overrides. juicerblog reads `[juicerblog]` from
+# site.toml and emits CSS variable overrides in the <head>. Default warm-
+# neutral palette is fine; commented-out demo of how to retune.
+#
+# [juicerblog]
+# brand  = "#0f766e"   # teal-700
+# accent = "#7c3aed"   # violet-600

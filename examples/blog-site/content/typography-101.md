@@ -1,6 +1,7 @@
 ---
 title: Typography 101 for site builders
 date: 2024-09-22
+author: alice
 tags: [design, web]
 summary: A short opinionated guide to picking type, sizing it, and not embarrassing yourself.
 ---

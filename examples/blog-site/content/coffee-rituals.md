@@ -1,6 +1,7 @@
 ---
 title: On coffee rituals
 date: 2024-08-15
+author: ed
 tags: [life]
 summary: A small daily practice with a hardware budget, a chemistry, and an entire morning baked in.
 ---

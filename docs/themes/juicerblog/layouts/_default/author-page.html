@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ if .author.name }}{{ .author.name }}{{ else }}{{ .author.id }}{{ end }} — {{ .site.title }}</title>
+  {{ if .author.bio }}<meta name="description" content="{{ .author.bio }}">{{ end }}
+  <link rel="stylesheet" href="{{ relURL '/juicerblog.css' }}">
+</head>
+<body>
+  <div class="juicerblog-page">
+    {{ partial 'topbar' . }}
+    <main class="juicerblog-main">
+      <header class="juicerblog-author-header">
+        {{ if .author.avatar }}<img class="juicerblog-author-avatar juicerblog-author-avatar-lg" src="{{ .author.avatar }}" alt="{{ .author.name }}">{{ end }}
+        <div>
+          <h1 class="juicerblog-author-name-lg">{{ if .author.name }}{{ .author.name }}{{ else }}{{ .author.id }}{{ end }}</h1>
+          {{ if .author.bio }}<p class="juicerblog-author-bio-lg">{{ .author.bio }}</p>{{ end }}
+          {{ if .author.links }}
+          <ul class="juicerblog-author-links">
+            {{ for link <- .author.links }}
+            <li><a href="{{ link.url }}" rel="me noopener">{{ link.label }}</a></li>
+            {{ end }}
+          </ul>
+          {{ end }}
+        </div>
+      </header>
+
+      <h2 class="juicerblog-archive-section-title">
+        Posts by {{ if .author.name }}{{ .author.name }}{{ else }}{{ .author.id }}{{ end }}
+        <span class="juicerblog-archive-count">·
+          {{ if .author.count = 1 }}1 post{{ else }}{{ .author.count }} posts{{ end }}
+        </span>
+      </h2>
+      <ol class="juicerblog-postlist">
+        {{ for p <- .author.pages }}
+          {{ if not p.static }}
+          <li>
+            <h2 class="juicerblog-postlist-title">
+              <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+            </h2>
+            <div class="juicerblog-postlist-meta">
+              {{ if p.date }}<time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time>{{ end }}
+              {{ if p.readingTime }}<span class="juicerblog-sep">·</span><span>{{ p.readingTime }} min read</span>{{ end }}
+            </div>
+            {{ if p.summary }}<p class="juicerblog-postlist-summary">{{ p.summary }}</p>{{ end }}
+          </li>
+          {{ end }}
+        {{ end }}
+      </ol>
+    </main>
+    {{ partial 'footer' . }}
+  </div>
+</body>
+</html>

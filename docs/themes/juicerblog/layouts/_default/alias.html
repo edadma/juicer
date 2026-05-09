@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url={{ .target }}">
+  <link rel="canonical" href="{{ .absTarget }}">
+  <title>Redirecting — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerblog.css' }}">
+  <!-- Aliased / moved-content redirect. The browser follows the meta-refresh
+       almost instantly; the visible markup below is a fallback for clients
+       that ignore meta-refresh (rare, but cheap insurance). -->
+</head>
+<body>
+  <div class="juicerblog-page">
+    <main class="juicerblog-main juicerblog-redirect">
+      <h1>This page has moved.</h1>
+      <p>
+        It now lives at
+        <a href="{{ .target }}">{{ if .page.title }}{{ .page.title }}{{ else }}{{ .target }}{{ end }}</a>.
+      </p>
+      <p class="juicerblog-redirect-meta">
+        You should be redirected automatically; if not, follow the link above.
+      </p>
+    </main>
+  </div>
+</body>
+</html>

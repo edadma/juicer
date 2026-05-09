@@ -1,7 +1,9 @@
 ---
 title: Why static sites still win
 date: 2024-12-04
+authors: [ben, ed]
 tags: [meta, web]
+aliases: [/posts/why-static-2024/, /static-still-wins/]
 summary: Generated HTML is fast, cheap, and ages well. A short defence of the boring choice.
 ---
 

@@ -1,39 +1,56 @@
-<!-- Single post — title, date+reading+tags meta, body, series sidebar, prev/next. -->
+<!-- file.html doubles as the post AND the static-page layout. The post
+     chrome (meta line, series sidebar, prev/next nav) shows by default;
+     pages that declare `static: true` in their frontmatter render as a
+     clean long-form essay with no post chrome. This is the simplest way
+     to cover about/colophon/contact pages without adding a separate
+     `page.html` selector to the engine — see the about page in
+     examples/blog-site for the static-page variant.
+
+     `.page.date` is unreliable as a "is this a post" signal because the
+     engine fills it from filesystem mtime when frontmatter omits it, so
+     dateless pages would still report a date. The frontmatter flag is
+     the explicit truth. -->
 {{ define content }}
-  <article class="juicerblog-post">
+  <article class="juicerblog-post {{ if .page.static }}juicerblog-post--static{{ else }}juicerblog-post--dated{{ end }}">
     <h1 class="juicerblog-post-title">{{ .page.title }}</h1>
+
+    {{ if not .page.static }}
     <div class="juicerblog-post-meta">
       {{ partial 'post-meta' . }}
     </div>
+    {{ end }}
+
     <div class="juicerblog-content">
       {{ .content }}
     </div>
 
-    {{ partial 'series-nav' . }}
+    {{ if not .page.static }}{{ partial 'series-nav' . }}{{ end }}
   </article>
 
-  {{ if .page.prev }}
-  <nav class="juicerblog-prev-next" aria-label="Post navigation">
-    <a class="juicerblog-prev-next-link juicerblog-prev-next-prev" href="{{ .page.prev.url }}">
-      <span class="juicerblog-prev-next-label">← Older</span>
-      <span class="juicerblog-prev-next-title">{{ .page.prev.title }}</span>
-    </a>
-    {{ if .page.next }}
-    <a class="juicerblog-prev-next-link juicerblog-prev-next-next" href="{{ .page.next.url }}">
-      <span class="juicerblog-prev-next-label">Newer →</span>
-      <span class="juicerblog-prev-next-title">{{ .page.next.title }}</span>
-    </a>
-    {{ else }}<span></span>{{ end }}
-  </nav>
-  {{ else }}
-    {{ if .page.next }}
+  {{ if not .page.static }}
+    {{ if .page.prev }}
     <nav class="juicerblog-prev-next" aria-label="Post navigation">
-      <span></span>
+      <a class="juicerblog-prev-next-link juicerblog-prev-next-prev" href="{{ .page.prev.url }}">
+        <span class="juicerblog-prev-next-label">← Older</span>
+        <span class="juicerblog-prev-next-title">{{ .page.prev.title }}</span>
+      </a>
+      {{ if .page.next }}
       <a class="juicerblog-prev-next-link juicerblog-prev-next-next" href="{{ .page.next.url }}">
         <span class="juicerblog-prev-next-label">Newer →</span>
         <span class="juicerblog-prev-next-title">{{ .page.next.title }}</span>
       </a>
+      {{ else }}<span></span>{{ end }}
     </nav>
+    {{ else }}
+      {{ if .page.next }}
+      <nav class="juicerblog-prev-next" aria-label="Post navigation">
+        <span></span>
+        <a class="juicerblog-prev-next-link juicerblog-prev-next-next" href="{{ .page.next.url }}">
+          <span class="juicerblog-prev-next-label">Newer →</span>
+          <span class="juicerblog-prev-next-title">{{ .page.next.title }}</span>
+        </a>
+      </nav>
+      {{ end }}
     {{ end }}
   {{ end }}
 {{ end }}

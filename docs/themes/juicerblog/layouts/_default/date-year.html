@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .year }} — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerblog.css' }}">
+</head>
+<body>
+  <div class="juicerblog-page">
+    {{ partial 'topbar' . }}
+    <main class="juicerblog-main">
+      <h1 class="juicerblog-archive-title">{{ .year }}</h1>
+      <p class="juicerblog-archive-sub">
+        {{ if .pages.length = 1 }}1 post{{ else }}{{ .pages.length }} posts{{ end }} this year, across {{ .months.length }} {{ if .months.length = 1 }}month{{ else }}months{{ end }}.
+      </p>
+
+      <!-- Per-month roll-up — quick navigation to the deeper /YYYY/MM/ pages. -->
+      <ul class="juicerblog-month-roll">
+        {{ for m <- .months }}
+        <li>
+          <a href="{{ m.url }}">{{ m.monthName }}</a>
+          <span class="juicerblog-month-count">·
+            {{ if m.count = 1 }}1 post{{ else }}{{ m.count }} posts{{ end }}
+          </span>
+        </li>
+        {{ end }}
+      </ul>
+
+      <!-- The full year list — newest first. -->
+      <ol class="juicerblog-postlist">
+        {{ for p <- .pages }}
+        <li>
+          <h2 class="juicerblog-postlist-title">
+            <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+          </h2>
+          <div class="juicerblog-postlist-meta">
+            {{ if p.date }}<time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time>{{ end }}
+            {{ if p.readingTime }}<span class="juicerblog-sep">·</span><span>{{ p.readingTime }} min read</span>{{ end }}
+          </div>
+          {{ if p.summary }}<p class="juicerblog-postlist-summary">{{ p.summary }}</p>{{ end }}
+        </li>
+        {{ end }}
+      </ol>
+    </main>
+    {{ partial 'footer' . }}
+  </div>
+</body>
+</html>

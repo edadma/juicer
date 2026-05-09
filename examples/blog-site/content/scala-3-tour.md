@@ -1,6 +1,7 @@
 ---
 title: A whirlwind tour of Scala 3
 date: 2024-11-18
+author: ed
 tags: [scala, language]
 summary: Five things Scala 3 gets right, illustrated with the smallest examples that make the case.
 ---

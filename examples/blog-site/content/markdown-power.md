@@ -1,6 +1,7 @@
 ---
 title: Markdown is enough
 date: 2024-10-30
+author: ed
 tags: [meta, writing]
 summary: Plain-text markup turned out to be the right level of abstraction for the writing web.
 ---

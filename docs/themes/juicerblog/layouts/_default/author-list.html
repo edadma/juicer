@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authors — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerblog.css' }}">
+  <!-- author-list / author-page render outside the baseof pipeline (engine
+       walks the registry directly and writes one HTML per author), so head +
+       chrome are inlined. Topbar / footer come from the regular partials. -->
+</head>
+<body>
+  <div class="juicerblog-page">
+    {{ partial 'topbar' . }}
+    <main class="juicerblog-main">
+      <h1 class="juicerblog-archive-title">All authors</h1>
+      <p class="juicerblog-archive-sub">
+        {{ if .authors.length = 1 }}1 author{{ else }}{{ .authors.length }} authors{{ end }} writing here.
+      </p>
+      <ul class="juicerblog-author-list">
+        {{ for a <- .authors }}
+        <li class="juicerblog-author-card">
+          {{ if a.avatar }}<img class="juicerblog-author-avatar" src="{{ a.avatar }}" alt="{{ a.name }}">{{ end }}
+          <div class="juicerblog-author-meta">
+            <h2 class="juicerblog-author-name">
+              <a href="{{ a.url }}">{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}</a>
+            </h2>
+            {{ if a.bio }}<p class="juicerblog-author-bio">{{ a.bio }}</p>{{ end }}
+            <p class="juicerblog-author-stats">
+              {{ if a.count = 1 }}1 post{{ else }}{{ a.count }} posts{{ end }}
+            </p>
+          </div>
+        </li>
+        {{ end }}
+      </ul>
+    </main>
+    {{ partial 'footer' . }}
+  </div>
+</body>
+</html>

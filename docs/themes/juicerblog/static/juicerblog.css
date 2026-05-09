@@ -516,6 +516,204 @@ blockquote {
 .juicerblog-footer a:hover { color: var(--brand); }
 
 /* ============================================================
+   Author archive
+   ============================================================ */
+.juicerblog-author-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem auto 3rem;
+  max-width: var(--measure);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.juicerblog-author-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.juicerblog-author-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  border: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+.juicerblog-author-avatar-lg {
+  width: 5rem;
+  height: 5rem;
+}
+.juicerblog-author-meta { flex: 1; min-width: 0; }
+.juicerblog-author-name {
+  font-size: 1.25rem;
+  margin: 0 0 0.25rem;
+  letter-spacing: -0.005em;
+}
+.juicerblog-author-name a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.juicerblog-author-name a:hover {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.juicerblog-author-bio {
+  margin: 0 0 0.5rem;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+.juicerblog-author-stats {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+}
+
+/* Author *page* — bigger header, links, then a post list. */
+.juicerblog-author-header {
+  max-width: var(--measure);
+  margin: 2rem auto 2.5rem;
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+.juicerblog-author-name-lg {
+  font-size: 2rem;
+  letter-spacing: -0.015em;
+  margin: 0 0 0.5rem;
+}
+.juicerblog-author-bio-lg {
+  margin: 0 0 0.75rem;
+  color: var(--ink-soft);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+.juicerblog-author-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+}
+.juicerblog-author-links a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.juicerblog-author-links a:hover {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.juicerblog-archive-section-title {
+  max-width: var(--measure);
+  margin: 2rem auto 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+.juicerblog-archive-count {
+  color: var(--ink-faint);
+  font-weight: 400;
+  font-size: 0.9375rem;
+  margin-left: 0.25rem;
+  font-family: var(--font-sans);
+}
+
+/* ============================================================
+   Date archives
+   ============================================================ */
+.juicerblog-month-roll {
+  list-style: none;
+  padding: 1rem 1.25rem;
+  margin: 1rem auto 1.5rem;
+  max-width: var(--measure);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 1.25rem;
+  row-gap: 0.375rem;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+}
+.juicerblog-month-roll a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.juicerblog-month-roll a:hover {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.juicerblog-month-count {
+  color: var(--ink-faint);
+  margin-left: 0.25rem;
+  font-size: 0.8125rem;
+}
+
+.juicerblog-breadcrumb {
+  max-width: var(--measure);
+  margin: 1.5rem auto 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+}
+.juicerblog-breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+.juicerblog-breadcrumb a:hover {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.juicerblog-breadcrumb .juicerblog-sep { margin: 0 0.5rem; }
+
+/* ============================================================
+   Static-page variant of file.html (no `date:` frontmatter)
+   ============================================================ */
+.juicerblog-post--static {
+  /* Same column + spacing as a dated post, but the title can sit lower
+     since there's no meta line beneath it. */
+  padding-top: 3rem;
+}
+.juicerblog-post--static .juicerblog-post-title {
+  margin-bottom: 1.5rem;
+}
+
+/* ============================================================
+   Alias / redirect page
+   ============================================================ */
+.juicerblog-redirect {
+  max-width: var(--measure);
+  margin: 5rem auto;
+  text-align: center;
+  font-family: var(--font-serif);
+}
+.juicerblog-redirect h1 {
+  font-size: 1.5rem;
+  letter-spacing: -0.005em;
+  margin: 0 0 0.75rem;
+}
+.juicerblog-redirect p { margin: 0.5rem 0; }
+.juicerblog-redirect-meta {
+  color: var(--ink-faint);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+}
+
+/* ============================================================
    404
    ============================================================ */
 .juicerblog-404 {
