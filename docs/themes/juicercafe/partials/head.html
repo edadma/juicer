@@ -1,0 +1,28 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{{ if .page.title }}<title>{{ .page.title }} — {{ .site.title }}</title>{{ else }}<title>{{ .site.title }}</title>{{ end }}
+{{ if .page.summary }}<meta name="description" content="{{ .page.summary }}">{{ end }}
+{{ if .page.permalink }}<link rel="canonical" href="{{ .page.permalink }}">{{ end }}
+
+<!-- OpenGraph / Twitter cards. Resolves image / description from frontmatter
+     (ogImage/image then ogDescription/description/summary), falling back to
+     site-wide ogImage / image. -->
+{{ ogTags .page }}
+
+<!-- Atom feed discovery — juicer always emits a site-wide feed. -->
+<link rel="alternate" type="application/atom+xml" title="{{ .site.title }}" href="{{ relURL '/feed.xml' }}">
+
+<link rel="stylesheet" href="{{ relURL '/juicercafe.css' }}">
+
+<!-- Per-site palette overrides emitted from site.toml [juicercafe]. -->
+{{ if .site.juicercafe }}
+<style>
+  :root {
+    {{ if .site.juicercafe.brand }}--brand: {{ .site.juicercafe.brand }};{{ end }}
+    {{ if .site.juicercafe.brandStrong }}--brand-strong: {{ .site.juicercafe.brandStrong }};{{ end }}
+    {{ if .site.juicercafe.brandSoft }}--brand-soft: {{ .site.juicercafe.brandSoft }};{{ end }}
+    {{ if .site.juicercafe.accent }}--accent: {{ .site.juicercafe.accent }};{{ end }}
+    {{ if .site.juicercafe.leaf }}--leaf: {{ .site.juicercafe.leaf }};{{ end }}
+  }
+</style>
+{{ end }}

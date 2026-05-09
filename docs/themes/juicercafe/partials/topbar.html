@@ -1,0 +1,17 @@
+<header class="juicercafe-topbar">
+  <div class="juicercafe-topbar-inner">
+    <a class="juicercafe-brand" href="{{ relURL '/' }}">{{ .site.title }}</a>
+    {{ if .site.tagline }}<span class="juicercafe-tagline">{{ .site.tagline }}</span>{{ end }}
+    <nav class="juicercafe-nav" aria-label="Main">
+      <a href="{{ relURL '/' }}">Home</a>
+      <a href="{{ relURL '/menu/' }}">Menu</a>
+      <a href="{{ relURL '/visit/' }}">Visit</a>
+      <a href="{{ relURL '/working/' }}">Working here</a>
+      <a href="{{ relURL '/events/' }}">Events</a>
+      <a href="{{ relURL '/photos/' }}">Photos</a>
+      <a href="{{ relURL '/about/' }}">About</a>
+      <a href="{{ relURL '/team/' }}">Team</a>
+      <a href="{{ relURL '/contact/' }}">Contact</a>
+    </nav>
+  </div>
+</header>

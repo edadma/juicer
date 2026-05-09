@@ -1,0 +1,13 @@
+<!-- Generic single-page layout — long-form content (visit, about,
+     working, contact, individual menu section, etc.). Stage-1
+     scaffolding: just title + content. Later stages will branch on
+     `layout:` overrides for menu items, events, photo albums, staff
+     bios. -->
+{{ define content }}
+  <article class="juicercafe-page-wrap">
+    <h1 class="juicercafe-page-title">{{ .page.title }}</h1>
+    <div class="juicercafe-content">
+      {{ .content }}
+    </div>
+  </article>
+{{ end }}

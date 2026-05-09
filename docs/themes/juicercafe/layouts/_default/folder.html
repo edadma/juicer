@@ -1,0 +1,31 @@
+<!-- Generic section index — used by /menu/, /events/, /photos/, /team/.
+     Stage-1 scaffolding: section intro + a flat list of child pages.
+     Later stages give menus their own sections-and-items grid, events
+     their upcoming/past split, photos their album cards, and staff
+     their bio cards. -->
+{{ define content }}
+  <article class="juicercafe-page-wrap">
+    <h1 class="juicercafe-page-title">{{ .page.title }}</h1>
+    {{ if .content }}
+    <div class="juicercafe-content">
+      {{ .content }}
+    </div>
+    {{ end }}
+
+    {{ if .section.pages }}
+      <ol class="juicercafe-postlist">
+        {{ for p <- .section.pages }}
+        <li>
+          <h2 class="juicercafe-postlist-title">
+            <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+          </h2>
+          <div class="juicercafe-postlist-meta">
+            {{ if p.date }}<time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time>{{ end }}
+          </div>
+          {{ if p.summary }}<p class="juicercafe-postlist-summary">{{ p.summary }}</p>{{ end }}
+        </li>
+        {{ end }}
+      </ol>
+    {{ end }}
+  </article>
+{{ end }}

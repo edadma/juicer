@@ -1,0 +1,83 @@
+# Example cafe-site — exercises the juicercafe theme. Stage-1
+# scaffolding: enough to render the home, hours widget, visit, menu
+# placeholder, working-from-here pitch, and contact pages with
+# real-ish demo content.
+#
+# Local preview:
+#   sbt 'juicerJVM/run serve -s examples/cafe-site -L'
+
+title    = "Stratus Coffee"
+tagline  = "Coffee, quiet hours, and outlets enough for everyone."
+author   = "Stratus Coffee"
+baseURL  = "http://localhost:8080"
+
+themeDir = "../../docs/themes"
+theme    = "juicercafe"
+
+htmlDir  = ""
+sortBy   = "date"
+
+# ============================================================
+# Hours — surfaced on the homepage, the footer, and /visit/.
+# Theme reads these from [[hours]] in this same file. Each row:
+#   day, open, close, optional note. closed = true makes the row
+#   render "closed" (italicized).
+# ============================================================
+[[hours]]
+day   = "Monday"
+open  = "7:00 AM"
+close = "8:00 PM"
+note  = "Quiet hours after 5pm"
+
+[[hours]]
+day   = "Tuesday"
+open  = "7:00 AM"
+close = "8:00 PM"
+note  = "Quiet hours after 5pm"
+
+[[hours]]
+day   = "Wednesday"
+open  = "7:00 AM"
+close = "8:00 PM"
+note  = "Quiet hours after 5pm"
+
+[[hours]]
+day   = "Thursday"
+open  = "7:00 AM"
+close = "9:00 PM"
+note  = "Open mic from 7pm"
+
+[[hours]]
+day   = "Friday"
+open  = "7:00 AM"
+close = "9:00 PM"
+
+[[hours]]
+day   = "Saturday"
+open  = "8:00 AM"
+close = "9:00 PM"
+
+[[hours]]
+day    = "Sunday"
+open   = "8:00 AM"
+close  = "6:00 PM"
+note   = "Bottomless drip $4"
+
+# ============================================================
+# Visit info — surfaced on the homepage and on /visit/.
+# ============================================================
+[visit]
+address     = "412 Cedar Lane"
+city        = "Portland"
+state       = "OR"
+zip         = "97214"
+mapURL      = "https://www.openstreetmap.org/?mlat=45.514&mlon=-122.642#map=16/45.514/-122.642"
+transit     = "5-min walk from SE Belmont · streetcar two blocks east"
+parkingNote = "Street parking + small lot off Pine Avenue. Bike racks at the front door."
+
+# Per-site palette overrides. Defaults are espresso/cream/caramel.
+# Uncomment to retune.
+#
+# [juicercafe]
+# brand  = "#0f766e"   # teal-700
+# accent = "#7c3aed"   # violet-600

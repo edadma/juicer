@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Not found — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicercafe.css' }}">
+</head>
+<body>
+  <div class="juicercafe-page">
+    <header class="juicercafe-topbar">
+      <div class="juicercafe-topbar-inner">
+        <a class="juicercafe-brand" href="{{ relURL '/' }}">{{ .site.title }}</a>
+      </div>
+    </header>
+    <main class="juicercafe-main">
+      <article class="juicercafe-page-wrap" style="text-align: center;">
+        <h1 class="juicercafe-page-title">Page not found</h1>
+        <p>That page isn't on the menu. Try the <a href="{{ relURL '/' }}">home page</a> or <a href="{{ relURL '/contact/' }}">drop us a line</a>.</p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

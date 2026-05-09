@@ -1,0 +1,507 @@
+/* juicercafe — a hand-coded cafe/coffeeshop theme for juicer.
+ *
+ * Conventions follow juicerblog and juicerchurch: CSS variables for
+ * tokens, [data-theme="dark"] overrides, semantic .juicercafe-* class
+ * names. No utility framework.
+ *
+ * Default palette is espresso + cream + caramel — third-wave coffee
+ * shop, warm wood and oat milk, intentional and quiet rather than
+ * bright corporate. Body type stays serif for long sits; menu prices
+ * and hours use a single-weight monospace so columns line up like a
+ * coffee bar's chalkboard. */
+
+/* ============================================================
+   Tokens
+   ============================================================ */
+:root {
+  /* Brand */
+  --brand:        #6f4e37;          /* espresso brown */
+  --brand-strong: #4a2c1f;          /* dark roast */
+  --brand-soft:   #f0e3d4;          /* latte foam */
+  --accent:       #b08968;          /* caramel */
+  --leaf:         #8a9a5b;          /* matcha (open / fresh-roast badges) */
+
+  /* Surfaces */
+  --bg:        #faf6ef;             /* oat milk cream */
+  --surface:   #ffffff;             /* card background */
+  --ink:       #2b1d12;             /* rich espresso (body text) */
+  --ink-soft:  #5b4434;             /* secondary text */
+  --ink-faint: #8a7763;             /* meta text */
+  --rule:      #e8dccb;             /* hairlines */
+  --rule-soft: #f3ebdc;             /* subtler hairlines */
+
+  /* Code */
+  --code-bg:     #f3ebdc;
+  --code-border: #e8dccb;
+  --code-ink:    #2b1d12;
+
+  /* Type */
+  --font-sans:   -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif:  "Iowan Old Style", "Source Serif Pro", "Charter", Georgia, "Times New Roman", serif;
+  --font-mono:   "SF Mono", "Menlo", "Consolas", "Roboto Mono", monospace;
+
+  /* Sizing */
+  --measure:     38rem;
+  --gutter:      1.5rem;
+  --gutter-wide: 3rem;
+
+  /* Radii + transitions */
+  --radius:     0.375rem;
+  --radius-lg:  0.625rem;
+  --transition: 0.15s ease;
+}
+
+[data-theme="dark"] {
+  --brand:        #c8a484;          /* lighter espresso for dark bg */
+  --brand-strong: #e6c9a8;
+  --brand-soft:   rgba(200, 164, 132, 0.18);
+  --accent:       #d4a373;          /* warm caramel, lifted */
+  --leaf:         #a3b380;
+
+  --bg:        #1c1410;             /* deep roasted */
+  --surface:   #2a1f18;
+  --ink:       #f0e6d8;
+  --ink-soft:  #c8b8a0;
+  --ink-faint: #8a7e6a;
+  --rule:      #3d2f24;
+  --rule-soft: #2a1f18;
+
+  --code-bg:     #2a1f18;
+  --code-border: #3d2f24;
+  --code-ink:    #f0e6d8;
+}
+
+/* ============================================================
+   Reset + base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: color var(--transition);
+}
+a:hover { color: var(--brand-strong); }
+
+img, video, svg { max-width: 100%; height: auto; display: block; }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 2rem 0;
+}
+
+code, pre, kbd, samp {
+  font-family: var(--font-mono);
+  font-size: 0.9375em;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.125rem;
+  overflow-x: auto;
+  line-height: 1.55;
+}
+
+/* ============================================================
+   Page shell — full-bleed sections inside, centered measure for prose
+   ============================================================ */
+.juicercafe-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.juicercafe-main {
+  flex: 1;
+}
+
+/* ============================================================
+   Topbar
+   ============================================================ */
+.juicercafe-topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+}
+.juicercafe-topbar-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.25rem var(--gutter);
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.juicercafe-brand {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--brand-strong);
+  text-decoration: none;
+}
+.juicercafe-brand:hover { color: var(--brand); }
+.juicercafe-tagline {
+  color: var(--ink-faint);
+  font-style: italic;
+  font-size: 0.9375rem;
+}
+.juicercafe-nav {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+}
+.juicercafe-nav a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 0.25rem 0;
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition), border-color var(--transition);
+}
+.juicercafe-nav a:hover {
+  color: var(--brand-strong);
+  border-bottom-color: var(--accent);
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.juicercafe-footer {
+  background: var(--brand-strong);
+  color: var(--brand-soft);
+  margin-top: 4rem;
+  padding: 2.5rem var(--gutter) 1.5rem;
+}
+.juicercafe-footer-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+.juicercafe-footer h3 {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin: 0 0 0.75rem;
+}
+.juicercafe-footer p {
+  margin: 0.25rem 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+.juicercafe-footer a {
+  color: var(--brand-soft);
+  text-decoration: none;
+}
+.juicercafe-footer a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.juicercafe-footer-attribution {
+  max-width: 72rem;
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  font-size: 0.8125rem;
+  color: var(--brand-soft);
+  opacity: 0.75;
+  text-align: center;
+}
+.juicercafe-footer-attribution a {
+  color: var(--brand-soft);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ============================================================
+   Hero — visitor-first home banner
+   ============================================================ */
+.juicercafe-hero {
+  background:
+    linear-gradient(180deg, rgba(111,78,55,0.05), rgba(111,78,55,0)),
+    var(--brand-soft);
+  border-bottom: 1px solid var(--rule);
+}
+.juicercafe-hero-inner {
+  max-width: 50rem;
+  margin: 0 auto;
+  padding: 4.5rem var(--gutter) 4rem;
+  text-align: center;
+}
+.juicercafe-hero-title {
+  font-family: var(--font-serif);
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 1rem;
+  color: var(--brand-strong);
+}
+.juicercafe-hero-tagline {
+  font-style: italic;
+  font-size: 1.25rem;
+  color: var(--ink-soft);
+  margin: 0 0 1.5rem;
+}
+.juicercafe-hero-intro {
+  margin: 0 auto 2rem;
+  max-width: var(--measure);
+  color: var(--ink-soft);
+}
+.juicercafe-hero-intro p { margin: 0.5rem 0; }
+.juicercafe-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+.juicercafe-hero-cta {
+  display: inline-block;
+  background: var(--brand-strong);
+  color: var(--brand-soft);
+  padding: 0.875rem 1.75rem;
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--transition), transform var(--transition);
+}
+.juicercafe-hero-cta:hover {
+  background: var(--brand);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.juicercafe-hero-cta--secondary {
+  background: transparent;
+  color: var(--brand-strong);
+  border: 1.5px solid var(--brand-strong);
+}
+.juicercafe-hero-cta--secondary:hover {
+  background: var(--brand-strong);
+  color: var(--brand-soft);
+}
+
+/* ============================================================
+   Hours widget — the cafe equivalent of "service times"
+   Single-weight monospace so day + range columns line up.
+   ============================================================ */
+.juicercafe-hours {
+  max-width: 36rem;
+  margin: -2rem auto 3rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 4px 16px rgba(75,44,31,0.06);
+}
+.juicercafe-hours-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.juicercafe-hours-title {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  margin: 0;
+}
+.juicercafe-hours-badge {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+}
+.juicercafe-hours-badge.is-open {
+  background: rgba(138,154,91,0.15);
+  color: var(--leaf);
+}
+.juicercafe-hours-badge.is-closed {
+  background: var(--rule-soft);
+  color: var(--ink-faint);
+}
+.juicercafe-hours-list {
+  display: grid;
+  gap: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+}
+.juicercafe-hours-row {
+  display: grid;
+  grid-template-columns: 6rem 1fr auto;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.juicercafe-hours-day {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.juicercafe-hours-range {
+  color: var(--ink);
+}
+.juicercafe-hours-note {
+  color: var(--ink-faint);
+  font-size: 0.8125rem;
+  font-family: var(--font-sans);
+}
+.juicercafe-hours-row.is-closed .juicercafe-hours-range {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+/* ============================================================
+   Visit card — used on home + /visit/
+   ============================================================ */
+.juicercafe-visit-card {
+  max-width: 36rem;
+  margin: 0 auto 3rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.75rem;
+}
+.juicercafe-visit-title {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  margin: 0 0 0.75rem;
+}
+.juicercafe-visit-card p {
+  margin: 0.25rem 0;
+  font-family: var(--font-serif);
+  color: var(--ink);
+}
+.juicercafe-visit-card a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.juicercafe-visit-card a:hover { color: var(--brand-strong); text-decoration: underline; }
+
+/* ============================================================
+   Generic page wrap — file.html, folder.html
+   ============================================================ */
+.juicercafe-page-wrap {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 3rem var(--gutter);
+}
+.juicercafe-page-title {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.5rem;
+  color: var(--brand-strong);
+}
+.juicercafe-content {
+  color: var(--ink);
+}
+.juicercafe-content h2 {
+  font-family: var(--font-serif);
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 2.25rem 0 0.75rem;
+  color: var(--brand-strong);
+}
+.juicercafe-content h3 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 1.75rem 0 0.5rem;
+  color: var(--ink);
+}
+.juicercafe-content p { margin: 0.75rem 0; }
+.juicercafe-content ul, .juicercafe-content ol {
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+.juicercafe-content li { margin: 0.25rem 0; }
+.juicercafe-content blockquote {
+  margin: 1.25rem 0;
+  padding: 0.5rem 1.25rem;
+  border-left: 3px solid var(--accent);
+  background: var(--brand-soft);
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+/* ============================================================
+   Section list — folder.html
+   ============================================================ */
+.juicercafe-postlist {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  display: grid;
+  gap: 1.5rem;
+}
+.juicercafe-postlist > li {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.juicercafe-postlist > li:last-child { border-bottom: none; }
+.juicercafe-postlist-title {
+  font-family: var(--font-serif);
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin: 0 0 0.375rem;
+}
+.juicercafe-postlist-title a {
+  color: var(--brand-strong);
+  text-decoration: none;
+}
+.juicercafe-postlist-title a:hover { color: var(--accent); text-decoration: underline; }
+.juicercafe-postlist-meta {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  margin: 0 0 0.5rem;
+}
+.juicercafe-postlist-summary {
+  margin: 0.5rem 0 0;
+  color: var(--ink-soft);
+}
+
+/* ============================================================
+   Mobile
+   ============================================================ */
+@media (max-width: 640px) {
+  .juicercafe-topbar-inner { flex-direction: column; align-items: flex-start; }
+  .juicercafe-nav { margin-left: 0; }
+  .juicercafe-hero-inner { padding: 3rem var(--gutter) 2.5rem; }
+  .juicercafe-hours-row { grid-template-columns: 5rem 1fr; }
+  .juicercafe-hours-note { grid-column: 2; }
+}

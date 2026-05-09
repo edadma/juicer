@@ -1,0 +1,29 @@
+<!-- Hours widget — the cafe equivalent of "service times". Reads
+     [[hours]] from site.toml. Each row: day · open–close · note.
+     Rows can be { closed = true } to show "closed" italicized. The
+     widget header carries an optional "Open now" badge if the site has
+     an `openNow` boolean set (computed at build time — caller's
+     responsibility, since .site.now is build-time and JS-free). -->
+<aside class="juicercafe-hours" aria-label="Hours">
+  <div class="juicercafe-hours-head">
+    <p class="juicercafe-hours-title">Hours</p>
+    {{ if .site.openNow }}
+    <span class="juicercafe-hours-badge is-open">Open now</span>
+    {{ else }}{{ if .site.hours }}
+    <span class="juicercafe-hours-badge is-closed">Today's hours below</span>
+    {{ end }}{{ end }}
+  </div>
+  {{ if .site.hours }}
+  <div class="juicercafe-hours-list">
+    {{ for h <- .site.hours }}
+    <div class="juicercafe-hours-row{{ if h.closed }} is-closed{{ end }}">
+      <span class="juicercafe-hours-day">{{ h.day }}</span>
+      <span class="juicercafe-hours-range">
+        {{ if h.closed }}closed{{ else }}{{ h.open }} – {{ h.close }}{{ end }}
+      </span>
+      {{ if h.note }}<span class="juicercafe-hours-note">{{ h.note }}</span>{{ end }}
+    </div>
+    {{ end }}
+  </div>
+  {{ end }}
+</aside>

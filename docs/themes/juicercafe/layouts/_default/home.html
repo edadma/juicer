@@ -1,0 +1,30 @@
+<!-- Visitor-first homepage. Hero with cafe name + tagline + welcome,
+     then THE hours widget (the universal "are you open?" answer), then
+     a visit card. Stage 1 stops here — Stage 2 layers in menu
+     highlights, recent events, and a featured-photos strip; Stage 3
+     adds the working-from-here CTA panel. -->
+{{ define content }}
+  <section class="juicercafe-hero">
+    <div class="juicercafe-hero-inner">
+      {{ if .page.title }}<h1 class="juicercafe-hero-title">{{ .page.title }}</h1>{{ end }}
+      {{ if .site.tagline }}<p class="juicercafe-hero-tagline">{{ .site.tagline }}</p>{{ end }}
+      {{ if .content }}<div class="juicercafe-hero-intro">{{ .content }}</div>{{ end }}
+      <div class="juicercafe-hero-actions">
+        <a class="juicercafe-hero-cta" href="{{ relURL '/menu/' }}">See the menu →</a>
+        <a class="juicercafe-hero-cta juicercafe-hero-cta--secondary" href="{{ relURL '/visit/' }}">Plan a visit</a>
+      </div>
+    </div>
+  </section>
+
+  {{ if .site.hours }}{{ partial 'hours-widget' . }}{{ end }}
+
+  {{ if .site.visit }}
+  <aside class="juicercafe-visit-card" aria-label="Visit">
+    <p class="juicercafe-visit-title">Find us</p>
+    <p>{{ .site.visit.address }}</p>
+    <p>{{ .site.visit.city }}, {{ .site.visit.state }} {{ .site.visit.zip }}</p>
+    {{ if .site.visit.transit }}<p style="color: var(--ink-faint); font-size: 0.9375rem;">{{ .site.visit.transit }}</p>{{ end }}
+    {{ if .site.visit.mapURL }}<p><a href="{{ .site.visit.mapURL }}">Open in maps →</a></p>{{ end }}
+  </aside>
+  {{ end }}
+{{ end }}

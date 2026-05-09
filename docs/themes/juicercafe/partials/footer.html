@@ -1,0 +1,32 @@
+<footer class="juicercafe-footer">
+  <div class="juicercafe-footer-inner">
+    <div>
+      <h3>Hours</h3>
+      {{ if .site.hours }}
+        {{ for h <- .site.hours }}
+        <p>{{ h.day }} · {{ if h.closed }}closed{{ else }}{{ h.open }}–{{ h.close }}{{ end }}</p>
+        {{ end }}
+      {{ else }}
+        <p>Open daily, 7am – 8pm.</p>
+      {{ end }}
+    </div>
+    <div>
+      <h3>Where to Find Us</h3>
+      {{ if .site.visit }}
+      <p>{{ .site.visit.address }}</p>
+      <p>{{ .site.visit.city }}, {{ .site.visit.state }} {{ .site.visit.zip }}</p>
+      {{ if .site.visit.mapURL }}<p><a href="{{ .site.visit.mapURL }}">Open in maps →</a></p>{{ end }}
+      {{ end }}
+    </div>
+    <div>
+      <h3>Stay In Touch</h3>
+      <p><a href="{{ relURL '/contact/' }}">Contact us</a></p>
+      <p><a href="{{ relURL '/working/' }}">Working from here?</a></p>
+      <p><a href="{{ relURL '/feed.xml' }}">RSS feed</a></p>
+    </div>
+  </div>
+  <div class="juicercafe-footer-attribution">
+    © {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }} ·
+    Built with <a href="https://github.com/edadma/juicer">juicer</a>
+  </div>
+</footer>
