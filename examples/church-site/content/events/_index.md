@@ -1,5 +1,6 @@
 ---
 title: Events
+layout: event-list
 summary: One-off events on the church calendar plus the regular weekly rhythms.
 ---
 

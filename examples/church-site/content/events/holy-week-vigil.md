@@ -1,5 +1,6 @@
 ---
 title: "Holy Week Prayer Vigil"
+layout: event
 date: 2025-04-17
 eventTime: "Maundy Thursday, 7 PM through Good Friday, 7 PM"
 eventLocation: "Sanctuary"

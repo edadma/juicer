@@ -1,5 +1,6 @@
 ---
 title: "Small Groups"
+layout: ministry
 leader: pastor-rachel
 contact: rachel@gracecommunity.example
 meets: "Various weeknights; groups of 8–12 in members' homes"

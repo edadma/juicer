@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Team — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerchurch.css' }}">
+  <!-- author-list / author-page render outside the baseof pipeline (engine
+       walks the registry directly and writes one HTML per author), so head +
+       chrome are inlined. juicerchurch deliberately renders the FULL
+       `.site.authorRegistry` here rather than the engine's `.authors` term
+       list — staff pages should show everyone on the team, not just the
+       people who have happened to preach a sermon recently. The per-author
+       archive page (only emitted when an author has at least one referenced
+       page) lives in `author-page.html`. -->
+</head>
+<body>
+  <div class="juicerchurch-page">
+    {{ partial 'topbar' . }}
+    <main class="juicerchurch-main">
+      <article class="juicerchurch-page-wrap">
+        <h1 class="juicerchurch-page-title">Our Team</h1>
+        <p class="juicerchurch-staff-intro">
+          The pastors and ministry leaders of {{ .site.title }}.
+        </p>
+
+        {{ if .site.authorRegistry }}
+        <ul class="juicerchurch-staff-list">
+          {{ for a <- .site.authorRegistry }}
+          {{ aid := a.id }}
+          {{ hasArchive := false }}
+          {{ for term <- $.authors }}{{ if term.id = aid }}{{ hasArchive := true }}{{ end }}{{ end }}
+          <li class="juicerchurch-staff-card juicerchurch-staff-card--lg">
+            {{ if a.avatar }}<img class="juicerchurch-staff-avatar juicerchurch-staff-avatar--lg" src="{{ a.avatar }}" alt="{{ a.name }}">{{ end }}
+            <div class="juicerchurch-staff-meta">
+              <h2 class="juicerchurch-staff-name">
+                {{ if hasArchive }}<a href="{{ relURL '/authors/' }}{{ a.id }}/">{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}</a>{{ else }}{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}{{ end }}
+              </h2>
+              {{ if a.role }}<p class="juicerchurch-staff-role">{{ a.role }}</p>{{ end }}
+              {{ if a.bio }}<p class="juicerchurch-staff-bio">{{ a.bio }}</p>{{ end }}
+              <ul class="juicerchurch-staff-links">
+                {{ if a.email }}<li><a href="mailto:{{ a.email }}">Email</a></li>{{ end }}
+                {{ if a.links }}{{ for link <- a.links }}<li><a href="{{ link.url }}" rel="me noopener">{{ link.label }}</a></li>{{ end }}{{ end }}
+                {{ if hasArchive }}<li><a href="{{ relURL '/authors/' }}{{ a.id }}/">Sermons →</a></li>{{ end }}
+              </ul>
+            </div>
+          </li>
+          {{ end }}
+        </ul>
+        {{ end }}
+      </article>
+    </main>
+    {{ partial 'footer' . }}
+  </div>
+</body>
+</html>

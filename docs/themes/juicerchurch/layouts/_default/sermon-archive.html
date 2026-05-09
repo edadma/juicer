@@ -1,0 +1,78 @@
+<!-- Sermons section index. Two passes through `.section.pages`: first to
+     pull every distinct series name (in date-desc order of first
+     appearance — squiggly's distinct preserves first-seen position),
+     then per-series to render an ordered card list. Standalone sermons
+     (no `series` frontmatter) get their own bottom block.
+
+     Section's _index.md picks this layout via `layout: sermon-archive`. -->
+{{ define content }}
+  {{ if .content }}
+  <article class="juicerchurch-page-wrap">
+    <h1 class="juicerchurch-page-title">{{ .page.title }}</h1>
+    <div class="juicerchurch-content">{{ .content }}</div>
+  </article>
+  {{ end }}
+
+  {{ if .section.pages }}
+    {{ rawSeries  := .section.pages | map `.series` }}
+    {{ realSeries := rawSeries | compact }}
+    {{ seriesNames := realSeries | distinct }}
+
+    {{ for sn <- seriesNames }}
+    <section class="juicerchurch-sermon-series">
+      <header class="juicerchurch-sermon-series-head">
+        <h2 class="juicerchurch-sermon-series-name">{{ sn }}</h2>
+        <p class="juicerchurch-sermon-series-meta">Sermon series</p>
+      </header>
+      {{ inSeries := $.section.pages | filter `.series = $sn` }}
+      <ol class="juicerchurch-sermon-list">
+        {{ for p <- inSeries }}
+        <li class="juicerchurch-sermon-card">
+          <div class="juicerchurch-sermon-card-meta">
+            {{ if p.seriesOrder }}<span class="juicerchurch-sermon-card-num">Part {{ p.seriesOrder }}</span>{{ end }}
+            {{ if p.date }}<time datetime="{{ p.dateISO }}" class="juicerchurch-sermon-card-date">{{ p.dateLong }}</time>{{ end }}
+          </div>
+          <h3 class="juicerchurch-sermon-card-title">
+            <a href="{{ p.url }}">{{ p.title }}</a>
+          </h3>
+          {{ if p.scripture }}<p class="juicerchurch-sermon-card-scripture">{{ p.scripture }}</p>{{ end }}
+          <div class="juicerchurch-sermon-card-foot">
+            {{ if p.author }}<span>{{ if p.author.name }}{{ p.author.name }}{{ else }}{{ p.author.id }}{{ end }}</span>{{ end }}
+            {{ if p.audioDuration }}<span>· {{ p.audioDuration }} audio</span>{{ end }}
+            {{ if p.videoDuration }}<span>· {{ p.videoDuration }} video</span>{{ end }}
+          </div>
+        </li>
+        {{ end }}
+      </ol>
+    </section>
+    {{ end }}
+
+    {{ standalone := .section.pages | filterNot `.series` }}
+    {{ if standalone }}
+    <section class="juicerchurch-sermon-series juicerchurch-sermon-series--standalone">
+      <header class="juicerchurch-sermon-series-head">
+        <h2 class="juicerchurch-sermon-series-name">Standalone sermons</h2>
+        <p class="juicerchurch-sermon-series-meta">Not part of a series</p>
+      </header>
+      <ol class="juicerchurch-sermon-list">
+        {{ for p <- standalone }}
+        <li class="juicerchurch-sermon-card">
+          <div class="juicerchurch-sermon-card-meta">
+            {{ if p.date }}<time datetime="{{ p.dateISO }}" class="juicerchurch-sermon-card-date">{{ p.dateLong }}</time>{{ end }}
+          </div>
+          <h3 class="juicerchurch-sermon-card-title">
+            <a href="{{ p.url }}">{{ p.title }}</a>
+          </h3>
+          {{ if p.scripture }}<p class="juicerchurch-sermon-card-scripture">{{ p.scripture }}</p>{{ end }}
+          <div class="juicerchurch-sermon-card-foot">
+            {{ if p.author }}<span>{{ if p.author.name }}{{ p.author.name }}{{ else }}{{ p.author.id }}{{ end }}</span>{{ end }}
+            {{ if p.audioDuration }}<span>· {{ p.audioDuration }} audio</span>{{ end }}
+            {{ if p.videoDuration }}<span>· {{ p.videoDuration }} video</span>{{ end }}
+          </div>
+        </li>
+        {{ end }}
+      </ol>
+    </section>
+    {{ end }}
+  {{ end }}
+{{ end }}

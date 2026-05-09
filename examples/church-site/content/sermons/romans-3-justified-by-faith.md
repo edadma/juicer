@@ -1,5 +1,6 @@
 ---
 title: "Justified by Faith"
+layout: sermon
 date: 2024-10-13
 author: pastor-tom
 scripture: "Romans 3:21–31"

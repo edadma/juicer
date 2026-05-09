@@ -1,5 +1,6 @@
 ---
 title: "Music Ministry"
+layout: ministry
 leader: miriam
 contact: music@gracecommunity.example
 meets: "Choir rehearsal Thursday evenings 7 PM; worship team Sundays 9 AM"

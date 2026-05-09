@@ -1,5 +1,6 @@
 ---
 title: "The Light Shines in the Darkness"
+layout: sermon
 date: 2024-12-15
 author: pastor-rachel
 scripture: "John 1:1–14"

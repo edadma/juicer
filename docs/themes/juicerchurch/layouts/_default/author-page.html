@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ if .author.name }}{{ .author.name }}{{ else }}{{ .author.id }}{{ end }} — {{ .site.title }}</title>
+  {{ if .author.bio }}<meta name="description" content="{{ .author.bio }}">{{ end }}
+  <link rel="stylesheet" href="{{ relURL '/juicerchurch.css' }}">
+</head>
+<body>
+  <div class="juicerchurch-page">
+    {{ partial 'topbar' . }}
+    <main class="juicerchurch-main">
+      <article class="juicerchurch-page-wrap">
+        <header class="juicerchurch-staff-page-header">
+          {{ if .author.avatar }}<img class="juicerchurch-staff-avatar juicerchurch-staff-avatar--lg" src="{{ .author.avatar }}" alt="{{ .author.name }}">{{ end }}
+          <div>
+            <h1 class="juicerchurch-staff-name juicerchurch-staff-name--lg">{{ if .author.name }}{{ .author.name }}{{ else }}{{ .author.id }}{{ end }}</h1>
+            {{ if .author.role }}<p class="juicerchurch-staff-role juicerchurch-staff-role--lg">{{ .author.role }}</p>{{ end }}
+            {{ if .author.bio }}<p class="juicerchurch-staff-bio juicerchurch-staff-bio--lg">{{ .author.bio }}</p>{{ end }}
+            <ul class="juicerchurch-staff-links">
+              {{ if .author.email }}<li><a href="mailto:{{ .author.email }}">Email</a></li>{{ end }}
+              {{ if .author.links }}{{ for link <- .author.links }}<li><a href="{{ link.url }}" rel="me noopener">{{ link.label }}</a></li>{{ end }}{{ end }}
+            </ul>
+          </div>
+        </header>
+
+        <h2 class="juicerchurch-staff-archive-head">
+          Sermons by {{ if .author.name }}{{ .author.name }}{{ else }}{{ .author.id }}{{ end }}
+          <span class="juicerchurch-staff-archive-count">·
+            {{ if .author.count = 1 }}1 sermon{{ else }}{{ .author.count }} sermons{{ end }}
+          </span>
+        </h2>
+        <ol class="juicerchurch-sermon-list">
+          {{ for p <- .author.pages }}
+          <li class="juicerchurch-sermon-card">
+            <div class="juicerchurch-sermon-card-meta">
+              {{ if p.date }}<time datetime="{{ p.dateISO }}" class="juicerchurch-sermon-card-date">{{ p.dateLong }}</time>{{ end }}
+              {{ if p.series }}<span class="juicerchurch-sermon-card-series">· {{ p.series }}</span>{{ end }}
+            </div>
+            <h3 class="juicerchurch-sermon-card-title">
+              <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+            </h3>
+            {{ if p.scripture }}<p class="juicerchurch-sermon-card-scripture">{{ p.scripture }}</p>{{ end }}
+          </li>
+          {{ else }}
+            <li class="juicerchurch-empty-row"><p class="juicerchurch-empty">{{ if .author.name }}{{ .author.name }}{{ else }}{{ .author.id }}{{ end }} doesn't have any published sermons yet.</p></li>
+          {{ end }}
+        </ol>
+
+        <p class="juicerchurch-staff-back">
+          <a href="{{ relURL '/authors/' }}">← Our team</a>
+        </p>
+      </article>
+    </main>
+    {{ partial 'footer' . }}
+  </div>
+</body>
+</html>

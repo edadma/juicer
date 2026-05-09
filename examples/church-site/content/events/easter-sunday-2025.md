@@ -1,5 +1,6 @@
 ---
 title: "Easter Sunday Service"
+layout: event
 date: 2025-04-20
 eventTime: "10:30 AM"
 eventLocation: "Sanctuary"

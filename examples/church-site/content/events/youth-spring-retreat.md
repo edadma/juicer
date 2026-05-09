@@ -1,5 +1,6 @@
 ---
 title: "Youth Spring Retreat"
+layout: event
 date: 2025-05-23
 eventTime: "Friday 5 PM through Sunday 1 PM"
 eventLocation: "Camp Hawthorne, Bloomington IL"

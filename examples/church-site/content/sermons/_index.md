@@ -1,5 +1,6 @@
 ---
 title: Sermons
+layout: sermon-archive
 summary: Recent sermons from Sunday morning, plus the full archive going back to 2014. Most preached by Pastor Tom; occasional guest preachers.
 ---
 

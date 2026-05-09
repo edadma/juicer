@@ -1,5 +1,6 @@
 ---
 title: "The Gospel of God"
+layout: sermon
 date: 2024-09-08
 author: pastor-tom
 scripture: "Romans 1:1–17"

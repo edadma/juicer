@@ -1,5 +1,6 @@
 ---
 title: "The Lord Is My Shepherd"
+layout: sermon
 date: 2024-08-25
 author: pastor-tom
 scripture: "Psalm 23"

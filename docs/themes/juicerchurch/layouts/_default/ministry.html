@@ -1,0 +1,59 @@
+<!-- Single ministry layout. Frontmatter `leader: <id>` resolves through
+     `.site.authorRegistry` (the full registry, regardless of whether the
+     leader has authored a referenced page). Header pairs the leader card
+     with a "Meets:" badge and a mailto CTA; body holds the long-form
+     description; footer repeats the contact CTA. Page picks this layout
+     via `layout: ministry` in frontmatter. -->
+{{ define content }}
+  <article class="juicerchurch-ministry">
+    <header class="juicerchurch-ministry-header">
+      <div class="juicerchurch-ministry-headline">
+        <h1 class="juicerchurch-ministry-title">{{ .page.title }}</h1>
+        {{ if .page.summary }}<p class="juicerchurch-ministry-tagline">{{ .page.summary }}</p>{{ end }}
+        <ul class="juicerchurch-ministry-facts">
+          {{ if .page.meets }}
+          <li>
+            <span class="juicerchurch-ministry-fact-label">Meets</span>
+            {{ .page.meets }}
+          </li>
+          {{ end }}
+          {{ if .page.contact }}
+          <li>
+            <span class="juicerchurch-ministry-fact-label">Contact</span>
+            <a href="mailto:{{ .page.contact }}">{{ .page.contact }}</a>
+          </li>
+          {{ end }}
+        </ul>
+      </div>
+
+      {{ if .page.leader }}
+      {{ for a <- .site.authorRegistry }}
+        {{ if a.id = $.page.leader }}
+        <aside class="juicerchurch-staff-card juicerchurch-ministry-leader" aria-label="Ministry leader">
+          {{ if a.avatar }}<img class="juicerchurch-staff-avatar" src="{{ a.avatar }}" alt="{{ a.name }}">{{ end }}
+          <div class="juicerchurch-staff-meta">
+            <p class="juicerchurch-staff-name">{{ if a.name }}{{ a.name }}{{ else }}{{ a.id }}{{ end }}</p>
+            {{ if a.role }}<p class="juicerchurch-staff-role">{{ a.role }}</p>{{ end }}
+            <p class="juicerchurch-staff-relation">Leader of this ministry</p>
+          </div>
+        </aside>
+        {{ end }}
+      {{ end }}
+      {{ end }}
+    </header>
+
+    <div class="juicerchurch-ministry-body juicerchurch-content">
+      {{ .content }}
+    </div>
+
+    {{ if .page.contact }}
+    <p class="juicerchurch-ministry-cta">
+      Want to get involved? <a href="mailto:{{ .page.contact }}">Email {{ if .page.leader }}{{ for a <- .site.authorRegistry }}{{ if a.id = $.page.leader }}{{ if a.name }}{{ a.name }}{{ else }}us{{ end }}{{ end }}{{ end }}{{ else }}us{{ end }} →</a>
+    </p>
+    {{ end }}
+
+    <p class="juicerchurch-ministry-back">
+      <a href="{{ relURL '/ministries/' }}">← All ministries</a>
+    </p>
+  </article>
+{{ end }}

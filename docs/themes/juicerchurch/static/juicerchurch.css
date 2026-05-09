@@ -461,7 +461,646 @@ pre {
 }
 
 /* ============================================================
-   Small screens
+   Sermon — single page (sermon.html)
+   ============================================================ */
+.juicerchurch-sermon {
+  max-width: 44rem;
+  margin: 2rem auto 4rem;
+  padding: 0 var(--gutter);
+}
+.juicerchurch-sermon-header { margin-bottom: 2rem; }
+.juicerchurch-scripture-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: rgba(160, 82, 45, 0.07);
+  border: 1px solid rgba(160, 82, 45, 0.2);
+  border-radius: var(--radius);
+  padding: 0.375rem 0.75rem;
+  margin: 0 0 0.75rem;
+}
+.juicerchurch-scripture-badge-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.juicerchurch-sermon-title {
+  font-family: var(--font-serif);
+  font-size: 2.25rem;
+  line-height: 1.2;
+  margin: 0 0 1rem;
+}
+.juicerchurch-sermon-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 1rem 0;
+}
+.juicerchurch-sermon-byline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.juicerchurch-sermon-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--brand-soft);
+}
+.juicerchurch-sermon-author {
+  margin: 0;
+  font-weight: 600;
+  font-family: var(--font-sans);
+}
+.juicerchurch-sermon-role {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  font-family: var(--font-sans);
+}
+.juicerchurch-sermon-date {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+.juicerchurch-sermon-player {
+  margin: 1.5rem 0 2rem;
+  background: var(--brand-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+}
+.juicerchurch-sermon-player audio { width: 100%; display: block; }
+.juicerchurch-sermon-video-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.juicerchurch-sermon-video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.juicerchurch-sermon-duration {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  text-align: right;
+}
+
+.juicerchurch-sermon-body { margin-top: 1.5rem; }
+
+.juicerchurch-series-nav {
+  margin: 2.5rem 0 1.5rem;
+  background: var(--surface);
+  border-left: 3px solid var(--brand);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 0 var(--rule-soft);
+}
+.juicerchurch-series-nav-label {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  margin: 0;
+}
+.juicerchurch-series-nav-name {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  margin: 0.125rem 0 0.5rem;
+  color: var(--brand-strong);
+}
+.juicerchurch-series-nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+}
+.juicerchurch-series-nav-list li { padding: 0.25rem 0; }
+.juicerchurch-series-nav-list li.is-current {
+  color: var(--ink);
+  font-weight: 600;
+}
+.juicerchurch-series-num {
+  display: inline-block;
+  min-width: 1.75rem;
+  color: var(--ink-faint);
+}
+
+.juicerchurch-sermon-back,
+.juicerchurch-event-back,
+.juicerchurch-ministry-back,
+.juicerchurch-staff-back {
+  margin-top: 2rem;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+}
+
+/* ============================================================
+   Sermon — archive (sermon-archive.html)
+   ============================================================ */
+.juicerchurch-sermon-series {
+  max-width: 50rem;
+  margin: 2rem auto;
+  padding: 0 var(--gutter);
+}
+.juicerchurch-sermon-series-head {
+  border-bottom: 2px solid var(--brand);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+.juicerchurch-sermon-series-name {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--brand-strong);
+  margin: 0;
+}
+.juicerchurch-sermon-series-meta {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.juicerchurch-sermon-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.juicerchurch-sermon-card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  transition: var(--transition);
+}
+.juicerchurch-sermon-card:hover {
+  border-color: var(--brand);
+  box-shadow: 0 4px 12px rgba(63, 87, 57, 0.07);
+}
+.juicerchurch-sermon-card-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+}
+.juicerchurch-sermon-card-num {
+  font-weight: 700;
+  color: var(--accent);
+}
+.juicerchurch-sermon-card-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  margin: 0.25rem 0 0.25rem;
+}
+.juicerchurch-sermon-card-title a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.juicerchurch-sermon-card-title a:hover {
+  color: var(--brand-strong);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.juicerchurch-sermon-card-scripture {
+  margin: 0.125rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--accent);
+}
+.juicerchurch-sermon-card-foot {
+  margin-top: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+}
+.juicerchurch-sermon-card-series {
+  font-family: var(--font-sans);
+  color: var(--ink-faint);
+}
+
+/* ============================================================
+   Event — single page (event.html)
+   ============================================================ */
+.juicerchurch-event {
+  max-width: 44rem;
+  margin: 2rem auto 4rem;
+  padding: 0 var(--gutter);
+}
+.juicerchurch-event-header {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 1.5rem;
+}
+.juicerchurch-event-datechip {
+  background: var(--brand);
+  color: #fff;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  padding: 1rem 0.75rem;
+  font-family: var(--font-sans);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.juicerchurch-event-datechip-month {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+.juicerchurch-event-datechip-day {
+  margin: 0.25rem 0 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+.juicerchurch-event-title {
+  font-family: var(--font-serif);
+  font-size: 2.125rem;
+  line-height: 1.15;
+  margin: 0 0 0.75rem;
+}
+.juicerchurch-event-facts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+}
+.juicerchurch-event-facts li {
+  padding: 0.375rem 0;
+  border-top: 1px solid var(--rule-soft);
+}
+.juicerchurch-event-facts li:first-child { border-top: 0; }
+.juicerchurch-event-fact-label {
+  display: inline-block;
+  width: 4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.juicerchurch-event-recurring-badge {
+  background: rgba(101, 163, 13, 0.12);
+  color: var(--leaf);
+  width: auto;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius);
+}
+.juicerchurch-event-body { margin-top: 1.5rem; }
+
+/* ============================================================
+   Event — archive (event-list.html)
+   ============================================================ */
+.juicerchurch-event-group {
+  max-width: 50rem;
+  margin: 2rem auto;
+  padding: 0 var(--gutter);
+}
+.juicerchurch-event-group-head {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--brand-strong);
+  border-bottom: 2px solid var(--brand);
+  padding-bottom: 0.5rem;
+  margin: 0 0 1rem;
+}
+.juicerchurch-event-group--past .juicerchurch-event-group-head {
+  color: var(--ink-faint);
+  border-bottom-color: var(--rule);
+}
+.juicerchurch-event-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.juicerchurch-event-card {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  transition: var(--transition);
+}
+.juicerchurch-event-card:hover {
+  border-color: var(--brand);
+  box-shadow: 0 4px 12px rgba(63, 87, 57, 0.07);
+}
+.juicerchurch-event-card.is-recurring {
+  background: linear-gradient(180deg, rgba(101, 163, 13, 0.04) 0%, var(--surface) 60%);
+}
+.juicerchurch-event-card-datechip {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  border-radius: var(--radius);
+  text-align: center;
+  padding: 0.625rem 0.5rem;
+  font-family: var(--font-sans);
+}
+.juicerchurch-event-card.is-recurring .juicerchurch-event-card-datechip {
+  background: rgba(101, 163, 13, 0.1);
+  color: var(--leaf);
+}
+.juicerchurch-event-card-month {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.juicerchurch-event-card-day {
+  margin: 0.125rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+}
+.juicerchurch-event-card.is-recurring .juicerchurch-event-card-day { color: var(--leaf); }
+.juicerchurch-event-card-title {
+  font-family: var(--font-serif);
+  font-size: 1.1875rem;
+  margin: 0 0 0.25rem;
+}
+.juicerchurch-event-card-title a { color: var(--ink); text-decoration: none; }
+.juicerchurch-event-card-title a:hover {
+  color: var(--brand-strong);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.juicerchurch-event-card-loc {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--accent);
+}
+.juicerchurch-event-card-summary {
+  margin: 0.25rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+.juicerchurch-event-card--past {
+  opacity: 0.78;
+  background: transparent;
+  border-style: dashed;
+}
+.juicerchurch-event-card--past:hover { opacity: 1; }
+.juicerchurch-event-list--past .juicerchurch-event-card-datechip {
+  background: var(--rule-soft);
+  color: var(--ink-faint);
+}
+
+/* ============================================================
+   Ministry — single page (ministry.html)
+   ============================================================ */
+.juicerchurch-ministry {
+  max-width: 50rem;
+  margin: 2rem auto 4rem;
+  padding: 0 var(--gutter);
+}
+.juicerchurch-ministry-header {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+@media (min-width: 720px) {
+  .juicerchurch-ministry-header {
+    grid-template-columns: 1fr 18rem;
+    align-items: start;
+  }
+}
+.juicerchurch-ministry-title {
+  font-family: var(--font-serif);
+  font-size: 2.25rem;
+  line-height: 1.15;
+  margin: 0 0 0.5rem;
+}
+.juicerchurch-ministry-tagline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.0625rem;
+  color: var(--ink-soft);
+  margin: 0 0 1rem;
+  max-width: var(--measure);
+}
+.juicerchurch-ministry-facts {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+}
+.juicerchurch-ministry-facts li {
+  padding: 0.375rem 0;
+  border-top: 1px solid var(--rule-soft);
+}
+.juicerchurch-ministry-facts li:first-child { border-top: 0; }
+.juicerchurch-ministry-fact-label {
+  display: inline-block;
+  width: 4.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.juicerchurch-ministry-leader { margin: 0; }
+.juicerchurch-ministry-cta {
+  margin: 2rem 0 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--brand-soft);
+  border-left: 3px solid var(--brand);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+}
+.juicerchurch-ministry-cta a {
+  color: var(--brand-strong);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Staff card — used inline on ministry pages and in the staff
+   directory. The "--lg" modifier upsizes for the directory view.
+   ============================================================ */
+.juicerchurch-staff-card {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+}
+.juicerchurch-staff-card--lg {
+  grid-template-columns: 6rem 1fr;
+  padding: 1.25rem 1.5rem;
+}
+.juicerchurch-staff-avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--brand-soft);
+}
+.juicerchurch-staff-avatar--lg {
+  width: 6rem;
+  height: 6rem;
+}
+.juicerchurch-staff-name {
+  font-family: var(--font-serif);
+  font-size: 1.1875rem;
+  margin: 0 0 0.125rem;
+}
+.juicerchurch-staff-name--lg {
+  font-size: 2rem;
+  line-height: 1.15;
+  margin-bottom: 0.25rem;
+}
+.juicerchurch-staff-name a { color: var(--ink); text-decoration: none; }
+.juicerchurch-staff-name a:hover {
+  color: var(--brand-strong);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.juicerchurch-staff-role {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+.juicerchurch-staff-role--lg { font-size: 1rem; }
+.juicerchurch-staff-bio {
+  margin: 0.5rem 0;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+.juicerchurch-staff-bio--lg {
+  font-size: 1.0625rem;
+  margin: 0.75rem 0 1rem;
+  max-width: var(--measure);
+}
+.juicerchurch-staff-relation {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  font-style: italic;
+}
+.juicerchurch-staff-links {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+}
+.juicerchurch-staff-links a {
+  color: var(--brand-strong);
+  text-decoration: none;
+}
+.juicerchurch-staff-links a:hover { text-decoration: underline; }
+
+/* ============================================================
+   Staff directory (author-list.html) + staff archive page
+   ============================================================ */
+.juicerchurch-staff-intro {
+  max-width: var(--measure);
+  margin: 0 0 2rem;
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  color: var(--ink-soft);
+}
+.juicerchurch-staff-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+.juicerchurch-staff-page-header {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+@media (min-width: 720px) {
+  .juicerchurch-staff-page-header {
+    grid-template-columns: 8rem 1fr;
+    align-items: start;
+  }
+}
+.juicerchurch-staff-archive-head {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  border-bottom: 2px solid var(--brand);
+  padding-bottom: 0.5rem;
+  margin: 1rem 0 1rem;
+}
+.juicerchurch-staff-archive-count {
+  color: var(--ink-faint);
+  font-size: 1rem;
+  font-weight: normal;
+}
+.juicerchurch-empty {
+  text-align: center;
+  color: var(--ink-faint);
+  font-style: italic;
+  padding: 1.5rem;
+  background: var(--rule-soft);
+  border-radius: var(--radius);
+}
+.juicerchurch-empty-row { list-style: none; }
+
+/* ============================================================
+   Dark-mode overrides for new components
+   ============================================================ */
+[data-theme="dark"] .juicerchurch-scripture-badge {
+  background: rgba(245, 158, 11, 0.10);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+[data-theme="dark"] .juicerchurch-sermon-card-scripture,
+[data-theme="dark"] .juicerchurch-event-card-loc { color: #fbbf24; }
+[data-theme="dark"] .juicerchurch-event-card.is-recurring {
+  background: linear-gradient(180deg, rgba(132, 204, 22, 0.05) 0%, var(--surface) 60%);
+}
+
+/* ============================================================
+   Small screens — Stage 2 additions
    ============================================================ */
 @media (max-width: 640px) {
   body { font-size: 1rem; }
@@ -471,4 +1110,19 @@ pre {
   .juicerchurch-topbar-inner { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
   .juicerchurch-page-title { font-size: 1.75rem; }
   .juicerchurch-content h2 { font-size: 1.375rem; }
+  .juicerchurch-sermon-title { font-size: 1.75rem; }
+  .juicerchurch-event-title { font-size: 1.625rem; }
+  .juicerchurch-ministry-title { font-size: 1.75rem; }
+  .juicerchurch-event-header,
+  .juicerchurch-event-card {
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.75rem;
+  }
+  .juicerchurch-staff-card,
+  .juicerchurch-staff-card--lg {
+    grid-template-columns: 4rem 1fr;
+    padding: 1rem;
+  }
+  .juicerchurch-staff-avatar--lg { width: 4rem; height: 4rem; }
+  .juicerchurch-staff-name--lg { font-size: 1.5rem; }
 }

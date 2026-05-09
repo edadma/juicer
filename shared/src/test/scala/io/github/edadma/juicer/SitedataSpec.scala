@@ -43,6 +43,65 @@ class SitedataSpec extends AnyFlatSpec with Matchers with JuicerTestSupport {
     out("index.html").trim shouldBe "[Newer][Older]"
   }
 
+  it should "expose .site.authorRegistry as the raw [[authors]] list in declaration order" in {
+    writeAt(
+      "site.toml",
+      """title = "S"
+        |baseURL = "http://x"
+        |
+        |[[authors]]
+        |id = "alice"
+        |name = "Alice Author"
+        |role = "Founder"
+        |
+        |[[authors]]
+        |id = "bob"
+        |name = "Bob Builder"
+        |role = "Volunteer"
+        |""".stripMargin,
+    )
+    writeAt("content/_index.md", "---\ntitle: H\n---\n")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/folder.html",
+      "{{ for a <- .site.authorRegistry }}[{{ a.id }}|{{ a.name }}|{{ a.role }}]{{ end }}",
+    )
+
+    build()
+
+    // Both authors render in declaration order, regardless of whether they
+    // have any referencing pages — that's the registry shape needed for
+    // staff-directory layouts.
+    out("index.html").trim shouldBe "[alice|Alice Author|Founder][bob|Bob Builder|Volunteer]"
+  }
+
+  it should "expose .site.now with iso/date/long/year keys captured at build time" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n")
+    writeAt("layouts/_default/file.html", "x")
+    writeAt(
+      "layouts/_default/folder.html",
+      "iso={{ .site.now.iso }}|date={{ .site.now.date }}|long={{ .site.now.long }}|year={{ .site.now.year }}",
+    )
+
+    build()
+
+    val rendered = out("index.html").trim
+    // ISO: `YYYY-MM-DDTHH:MM:SS<offset>`. Just match the date prefix to avoid
+    // race-y minute boundaries.
+    val today = java.time.OffsetDateTime
+      .now(java.time.ZoneOffset.UTC)
+      .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+    val year  = java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC).getYear
+
+    rendered should include(s"iso=${today}T")
+    rendered should include(s"date=$today")
+    rendered should include(s"year=$year")
+    // long is "Month D, YYYY" — just confirm the year is there at the end of
+    // that piece.
+    rendered should include regex s"""long=[A-Z][a-z]+ \\d{1,2}, $year"""
+  }
+
   it should "expose .site.pagesByYear grouping the same posts list by year, year descending" in {
     writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
     writeAt("content/_index.md", "---\ntitle: H\n---\n")

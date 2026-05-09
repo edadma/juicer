@@ -1,5 +1,6 @@
 ---
 title: "Men's Breakfast"
+layout: event
 date: 2025-05-03
 eventTime: "8:00 AM"
 eventLocation: "Fellowship Hall"

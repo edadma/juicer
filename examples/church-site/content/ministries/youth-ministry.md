@@ -1,5 +1,6 @@
 ---
 title: "Youth Ministry"
+layout: ministry
 leader: ben
 contact: ben@gracecommunity.example
 meets: "Wednesday evenings 7–8:30 PM, plus retreats and service projects"

@@ -1,0 +1,83 @@
+<!-- Single sermon layout — branches on whether `audioURL` or `videoURL` is
+     set in frontmatter. Scripture badge at top, speaker byline (resolves
+     through the [[authors]] registry via .page.author), audio or video
+     player, optional series sidebar with prev/next links pulled from the
+     same series.
+
+     Page picks this layout via `layout: sermon` in frontmatter. -->
+{{ define content }}
+  <article class="juicerchurch-sermon">
+    <header class="juicerchurch-sermon-header">
+      {{ if .page.scripture }}
+      <p class="juicerchurch-scripture-badge" aria-label="Scripture reference">
+        <span class="juicerchurch-scripture-badge-label">Text</span>
+        {{ .page.scripture }}
+      </p>
+      {{ end }}
+
+      <h1 class="juicerchurch-sermon-title">{{ .page.title }}</h1>
+
+      <div class="juicerchurch-sermon-meta">
+        {{ if .page.author }}
+        <div class="juicerchurch-sermon-byline">
+          {{ if .page.author.avatar }}<img class="juicerchurch-sermon-avatar" src="{{ .page.author.avatar }}" alt="{{ .page.author.name }}">{{ end }}
+          <div>
+            <p class="juicerchurch-sermon-author">{{ if .page.author.name }}{{ .page.author.name }}{{ else }}{{ .page.author.id }}{{ end }}</p>
+            {{ if .page.author.role }}<p class="juicerchurch-sermon-role">{{ .page.author.role }}</p>{{ end }}
+          </div>
+        </div>
+        {{ end }}
+        {{ if .page.date }}
+        <div class="juicerchurch-sermon-date">
+          <time datetime="{{ .page.dateISO }}">{{ .page.dateLong }}</time>
+        </div>
+        {{ end }}
+      </div>
+    </header>
+
+    {{ if .page.audioURL }}
+    <div class="juicerchurch-sermon-player juicerchurch-sermon-player--audio">
+      <audio controls preload="none" src="{{ .page.audioURL }}">
+        Your browser does not support the audio element.
+        <a href="{{ .page.audioURL }}">Download the audio file</a>.
+      </audio>
+      {{ if .page.audioDuration }}<p class="juicerchurch-sermon-duration">Duration: {{ .page.audioDuration }}</p>{{ end }}
+    </div>
+    {{ else }}{{ if .page.videoURL }}
+    <div class="juicerchurch-sermon-player juicerchurch-sermon-player--video">
+      <div class="juicerchurch-sermon-video-frame">
+        <iframe
+          src="{{ .page.videoURL }}"
+          title="{{ .page.title }}"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
+      </div>
+      {{ if .page.videoDuration }}<p class="juicerchurch-sermon-duration">Duration: {{ .page.videoDuration }}</p>{{ end }}
+    </div>
+    {{ end }}{{ end }}
+
+    <div class="juicerchurch-sermon-body juicerchurch-content">
+      {{ .content }}
+    </div>
+
+    {{ if .page.series }}
+    <aside class="juicerchurch-series-nav" aria-label="In this series">
+      <p class="juicerchurch-series-nav-label">Part of the series</p>
+      <p class="juicerchurch-series-nav-name">{{ .page.series.name }}</p>
+      <ol class="juicerchurch-series-nav-list">
+        {{ for p <- .page.series.pages }}
+          <li{{ if p.url = $.page.url }} class="is-current"{{ end }}>
+            {{ if p.seriesOrder }}<span class="juicerchurch-series-num">{{ p.seriesOrder }}.</span> {{ end }}
+            {{ if p.url = $.page.url }}{{ p.title }}{{ else }}<a href="{{ p.url }}">{{ p.title }}</a>{{ end }}
+          </li>
+        {{ end }}
+      </ol>
+    </aside>
+    {{ end }}
+
+    <p class="juicerchurch-sermon-back">
+      <a href="{{ relURL '/sermons/' }}">← All sermons</a>
+    </p>
+  </article>
+{{ end }}

@@ -637,17 +637,23 @@ object App {
     //
     // Authors with at least one referencing page get a `/authors/<id>/`
     // archive page (gated by an optional `author-page.html` layout).
-    val authorRegistry: Map[String, Map[String, Any]] = confdata.get("authors") match {
+    // Raw `[[authors]]` list in declaration order — useful for staff
+    // directories where the full team needs to render even if some members
+    // haven't authored a referenced page (`.site.authors` filters to those
+    // who have). Surfaced on `.site.authorRegistry`.
+    val authorRegistryList: List[Map[String, Any]] = confdata.get("authors") match {
       case Some(xs: List[?]) =>
         xs.collect {
           case m: Map[?, ?] =>
-            val mm = m.asInstanceOf[Map[Any, Any]]
-            mm.get("id").collect { case s: String => s }.map(id => id -> mm.collect {
-              case (k: String, v) => k -> v
-            }.toMap)
-        }.flatten.toMap
-      case _ => Map.empty[String, Map[String, Any]]
+            m.asInstanceOf[Map[Any, Any]].collect { case (k: String, v) => k -> v }.toMap
+        }
+      case _ => Nil
     }
+
+    val authorRegistry: Map[String, Map[String, Any]] =
+      authorRegistryList.flatMap { m =>
+        m.get("id").collect { case s: String => s }.map(id => id -> m)
+      }.toMap
 
     /** Resolve a frontmatter `author` / `authors` field to a list of
       * registry-rich author records. Unknown ids fall back to a stub
@@ -1127,6 +1133,28 @@ object App {
       weightedSorted ::: restSorted
     }
 
+    // ----- Build-time "now" (Phase 4-ish) -----
+    //
+    // Themes that need to filter on "is this date in the past?" — most often
+    // an events section splitting Upcoming vs Past — get a small `now` record
+    // on `.site`. Four shapes so the right one's always at hand:
+    //   .site.now.iso   — full ISO offset, machine-friendly
+    //   .site.now.date  — YYYY-MM-DD, lexicographically comparable to
+    //                     `.page.dateShort` for the past/future filter
+    //   .site.now.long  — "May 9, 2026", same formatter as `.page.dateLong`
+    //   .site.now.year  — BigDecimal, useful for footer copyright
+    //
+    // Captured once per build; the static-site model means "now" is
+    // legitimately frozen at build time, and downstream tooling
+    // (live-reload) re-runs the build on every change.
+    val nowInst = java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC)
+    val nowMap = Map[String, Any](
+      "iso"  -> nowInst.format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+      "date" -> nowInst.format(dateShortFormatter),
+      "long" -> formatDateLong(nowInst),
+      "year" -> BigDecimal(nowInst.getYear),
+    )
+
     val sitedata = confdata +
       ("toc"             -> sitetoc.toList) +
       ("start"           -> start) +
@@ -1140,7 +1168,9 @@ object App {
       ("i18n"            -> i18nStrings) +
       ("tags"            -> tagTerms.map(termToMap)) +
       ("categories"      -> categoryTerms.map(termToMap)) +
-      ("authors"         -> authorTerms)
+      ("authors"         -> authorTerms) +
+      ("authorRegistry"  -> authorRegistryList) +
+      ("now"             -> nowMap)
 
     def findLayout(folders: List[String], name: String): Option[TemplateFile] =
       site.layoutTemplates

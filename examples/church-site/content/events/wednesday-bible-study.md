@@ -1,5 +1,6 @@
 ---
 title: "Wednesday Evening Bible Study"
+layout: event
 date: 2024-09-04
 recurring: weekly
 recurringDay: Wednesday

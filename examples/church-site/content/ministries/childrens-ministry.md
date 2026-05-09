@@ -1,5 +1,6 @@
 ---
 title: "Children's Ministry"
+layout: ministry
 leader: ben
 contact: ben@gracecommunity.example
 meets: "Sunday mornings during the 10:30 service"
