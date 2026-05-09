@@ -1,0 +1,102 @@
+# Example church-site — exercises the juicerchurch theme. Stage-1
+# scaffolding: enough to render every shape (home, sermons, events,
+# calendar, ministries, staff, beliefs, visit, contact) with skeletal
+# real-ish content so theme iteration has something to land on.
+#
+# Local preview:
+#   sbt 'juicerJVM/run serve -s examples/church-site -L'
+
+title    = "Grace Community Church"
+tagline  = "A community gathered around the gospel."
+author   = "Grace Community Church"
+baseURL  = "http://localhost:8080"
+
+themeDir = "../../docs/themes"
+theme    = "juicerchurch"
+
+htmlDir  = ""
+sortBy   = "date"
+
+# Sermons sit under their date so the URL survives a re-tagging or
+# series rename. Other sections (events, ministries, etc.) keep their
+# default physical-path URL.
+[permalinks]
+sermons = ":year/:month/:slug/"
+
+# Date archives for the sermons section roll up nicely as
+# "by year / by month" navigation. Theme will surface this only on
+# /sermons/<year>/.
+dateArchives = true
+
+# ============================================================
+# Service times — surfaced on the homepage hero, the topbar (compact),
+# and the footer (always visible). Structured data, not markdown body.
+# Theme reads these from [[services]] in this same file.
+# ============================================================
+[[services]]
+name      = "Sunday Morning"
+day       = "Sunday"
+time      = "10:30 AM"
+note      = "Traditional liturgy + sermon. Childcare provided for ages 0–4."
+
+[[services]]
+name      = "Wednesday Evening"
+day       = "Wednesday"
+time      = "7:00 PM"
+note      = "Hymn sing + Bible study. All ages welcome."
+
+# ============================================================
+# Visit info — surfaced on the homepage and on /visit/.
+# ============================================================
+[visit]
+address     = "123 Main Street"
+city        = "Springfield"
+state       = "IL"
+zip         = "62701"
+mapURL      = "https://www.openstreetmap.org/?mlat=39.798&mlon=-89.654#map=15/39.798/-89.654"
+parkingNote = "Free lot behind the building, accessible from Oak Avenue."
+
+# ============================================================
+# Staff registry — rides the engine's [[authors]] machinery, just
+# named "Our Team" in the theme copy. Each post that lists a sermon
+# preacher uses these IDs in `author:` / `authors:`.
+# ============================================================
+[[authors]]
+id     = "pastor-tom"
+name   = "Tom Whitfield"
+role   = "Lead Pastor"
+bio    = "Tom has served Grace since 2014. Husband to Linda, dad to three. Preaches mostly through books of the Bible, slowly."
+avatar = "/img/pastor-tom.png"
+email  = "tom@gracecommunity.example"
+
+[[authors.links]]
+label = "Email"
+url   = "mailto:tom@gracecommunity.example"
+
+[[authors]]
+id     = "pastor-rachel"
+name   = "Rachel Inouye"
+role   = "Associate Pastor — Discipleship"
+bio    = "Rachel oversees small groups and adult education. Joined the staff in 2020 after ten years overseas in Japan."
+avatar = "/img/pastor-rachel.png"
+
+[[authors]]
+id     = "ben"
+name   = "Ben Carter"
+role   = "Director of Children's Ministry"
+bio    = "Ben runs Sunday-morning kids' programming and the Wednesday-night youth group."
+avatar = "/img/ben.png"
+
+[[authors]]
+id     = "miriam"
+name   = "Miriam Olesinski"
+role   = "Music Director"
+bio    = "Miriam leads the choir and the worship team. Classically trained organist; teaches piano on the side."
+avatar = "/img/miriam.png"
+
+# Per-site palette overrides. Defaults are sage/terracotta/parchment.
+# Uncomment to retune.
+#
+# [juicerchurch]
+# brand  = "#0f766e"   # teal-700
+# accent = "#7c3aed"   # violet-600

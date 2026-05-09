@@ -1,0 +1,16 @@
+<header class="juicerchurch-topbar">
+  <div class="juicerchurch-topbar-inner">
+    <a class="juicerchurch-brand" href="{{ relURL '/' }}">{{ .site.title }}</a>
+    {{ if .site.tagline }}<span class="juicerchurch-tagline">{{ .site.tagline }}</span>{{ end }}
+    <nav class="juicerchurch-nav" aria-label="Main">
+      <a href="{{ relURL '/' }}">Home</a>
+      <a href="{{ relURL '/visit/' }}">Visit</a>
+      <a href="{{ relURL '/sermons/' }}">Sermons</a>
+      <a href="{{ relURL '/events/' }}">Events</a>
+      <a href="{{ relURL '/calendar/' }}">Calendar</a>
+      <a href="{{ relURL '/ministries/' }}">Ministries</a>
+      <a href="{{ relURL '/beliefs/' }}">Beliefs</a>
+      <a href="{{ relURL '/contact/' }}">Contact</a>
+    </nav>
+  </div>
+</header>

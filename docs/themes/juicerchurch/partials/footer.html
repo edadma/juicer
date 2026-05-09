@@ -1,0 +1,32 @@
+<footer class="juicerchurch-footer">
+  <div class="juicerchurch-footer-inner">
+    <div>
+      <h3>Service Times</h3>
+      {{ if .site.services }}
+        {{ for s <- .site.services }}
+        <p>{{ s.day }} · {{ s.time }} <span style="color: var(--ink-faint);">— {{ s.name }}</span></p>
+        {{ end }}
+      {{ else }}
+        <p>Sundays at 10:30 AM</p>
+      {{ end }}
+    </div>
+    <div>
+      <h3>Where to Find Us</h3>
+      {{ if .site.visit }}
+      <p>{{ .site.visit.address }}</p>
+      <p>{{ .site.visit.city }}, {{ .site.visit.state }} {{ .site.visit.zip }}</p>
+      {{ if .site.visit.mapURL }}<p><a href="{{ .site.visit.mapURL }}">Open in maps →</a></p>{{ end }}
+      {{ end }}
+    </div>
+    <div>
+      <h3>Stay In Touch</h3>
+      <p><a href="{{ relURL '/contact/' }}">Contact the office</a></p>
+      <p><a href="{{ relURL '/feed.xml' }}">Sermon feed (RSS)</a></p>
+      <p><a href="{{ relURL '/visit/' }}">Plan your first visit</a></p>
+    </div>
+  </div>
+  <div class="juicerchurch-footer-attribution">
+    © {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }} ·
+    Built with <a href="https://github.com/edadma/juicer">juicer</a>
+  </div>
+</footer>

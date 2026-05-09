@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Not found — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerchurch.css' }}">
+</head>
+<body>
+  <div class="juicerchurch-page">
+    <header class="juicerchurch-topbar">
+      <div class="juicerchurch-topbar-inner">
+        <a class="juicerchurch-brand" href="{{ relURL '/' }}">{{ .site.title }}</a>
+      </div>
+    </header>
+    <main class="juicerchurch-main">
+      <article class="juicerchurch-page-wrap" style="text-align: center;">
+        <h1 class="juicerchurch-page-title">Page not found</h1>
+        <p>The page you're looking for isn't here. Try the <a href="{{ relURL '/' }}">home page</a> or <a href="{{ relURL '/contact/' }}">contact the office</a> for help.</p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

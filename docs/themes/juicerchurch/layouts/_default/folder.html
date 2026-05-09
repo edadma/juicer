@@ -1,0 +1,30 @@
+<!-- Generic section index — used by /sermons/, /events/, /ministries/.
+     Stage-1 scaffolding: section intro + a flat list of child pages. Stage 2
+     will give sermons their own card layout (with audio/video previews) and
+     events their own upcoming/past split. -->
+{{ define content }}
+  <article class="juicerchurch-page-wrap">
+    <h1 class="juicerchurch-page-title">{{ .page.title }}</h1>
+    {{ if .content }}
+    <div class="juicerchurch-content">
+      {{ .content }}
+    </div>
+    {{ end }}
+  </article>
+
+  {{ if .section.pages }}
+    <ol class="juicerchurch-postlist">
+      {{ for p <- .section.pages }}
+      <li>
+        <h2 class="juicerchurch-postlist-title">
+          <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+        </h2>
+        <div class="juicerchurch-postlist-meta">
+          {{ if p.date }}<time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time>{{ end }}
+        </div>
+        {{ if p.summary }}<p class="juicerchurch-postlist-summary">{{ p.summary }}</p>{{ end }}
+      </li>
+      {{ end }}
+    </ol>
+  {{ end }}
+{{ end }}

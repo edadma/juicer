@@ -1,0 +1,14 @@
+<!-- Generic single-page layout — long-form content (visit, beliefs, contact,
+     individual sermon, individual event, individual ministry). Stage-1
+     scaffolding: just title + content. Stage 2 will branch on whether the
+     page is a sermon (audio/video player + scripture meta), an event
+     (date/time/location), a ministry (leader + meeting time + contact),
+     or generic prose. -->
+{{ define content }}
+  <article class="juicerchurch-page-wrap">
+    <h1 class="juicerchurch-page-title">{{ .page.title }}</h1>
+    <div class="juicerchurch-content">
+      {{ .content }}
+    </div>
+  </article>
+{{ end }}

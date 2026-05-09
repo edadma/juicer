@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="{{ if .page.lang }}{{ .page.lang }}{{ else }}en{{ end }}">
+<head>
+  {{ partial 'head' . }}
+</head>
+<body>
+  <div class="juicerchurch-page">
+    {{ partial 'topbar' . }}
+    <main class="juicerchurch-main">
+      {{ block content . }}{{ end }}
+    </main>
+    {{ partial 'footer' . }}
+  </div>
+</body>
+</html>

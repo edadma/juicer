@@ -1,0 +1,32 @@
+<!-- Visitor-first homepage. Hero with site title + tagline + welcome
+     paragraph, then THE service-times widget (the universal "when does
+     church meet?" answer), then a "Plan your visit" CTA, then a strip
+     of recent sermons + upcoming events.
+
+     Stage 1 has the hero, services widget, and visit CTA. Stage 2 will
+     add the recent-sermons and upcoming-events strips with proper
+     filtering. -->
+{{ define content }}
+  <section class="juicerchurch-hero">
+    <div class="juicerchurch-hero-inner">
+      {{ if .page.title }}<h1 class="juicerchurch-hero-title">{{ .page.title }}</h1>{{ end }}
+      {{ if .site.tagline }}<p class="juicerchurch-hero-tagline">{{ .site.tagline }}</p>{{ end }}
+      {{ if .content }}<div class="juicerchurch-hero-intro">{{ .content }}</div>{{ end }}
+      <a class="juicerchurch-hero-cta" href="{{ relURL '/visit/' }}">
+        Plan your visit →
+      </a>
+    </div>
+  </section>
+
+  {{ if .site.services }}
+  <section class="juicerchurch-services" aria-label="Service times">
+    {{ for s <- .site.services }}
+    <div class="juicerchurch-service">
+      <p class="juicerchurch-service-name">{{ s.name }}</p>
+      <p class="juicerchurch-service-when">{{ s.day }} · {{ s.time }}</p>
+      {{ if s.note }}<p class="juicerchurch-service-note">{{ s.note }}</p>{{ end }}
+    </div>
+    {{ end }}
+  </section>
+  {{ end }}
+{{ end }}
