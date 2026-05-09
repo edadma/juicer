@@ -146,6 +146,9 @@ pre {
   gap: 1rem;
 }
 .juicercafe-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   font-family: var(--font-serif);
   font-size: 1.5rem;
   font-weight: 700;
@@ -154,6 +157,11 @@ pre {
   text-decoration: none;
 }
 .juicercafe-brand:hover { color: var(--brand); }
+.juicercafe-brand-logo {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+.juicercafe-brand-name { display: inline; }
 .juicercafe-tagline {
   color: var(--ink-faint);
   font-style: italic;

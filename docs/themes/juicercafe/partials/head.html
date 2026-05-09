@@ -15,7 +15,10 @@
 
 <link rel="stylesheet" href="{{ relURL '/juicercafe.css' }}">
 
-<!-- Per-site palette overrides emitted from site.toml [juicercafe]. -->
+<!-- Per-site palette overrides emitted from site.toml [juicercafe].
+     Light-mode tokens land on :root; the *Dark variants land on
+     [data-theme="dark"] so they cleanly override the theme's hardcoded
+     dark palette without leaking into light mode. -->
 {{ if .site.juicercafe }}
 <style>
   :root {
@@ -24,6 +27,13 @@
     {{ if .site.juicercafe.brandSoft }}--brand-soft: {{ .site.juicercafe.brandSoft }};{{ end }}
     {{ if .site.juicercafe.accent }}--accent: {{ .site.juicercafe.accent }};{{ end }}
     {{ if .site.juicercafe.leaf }}--leaf: {{ .site.juicercafe.leaf }};{{ end }}
+  }
+  [data-theme="dark"] {
+    {{ if .site.juicercafe.brandDark }}--brand: {{ .site.juicercafe.brandDark }};{{ end }}
+    {{ if .site.juicercafe.brandStrongDark }}--brand-strong: {{ .site.juicercafe.brandStrongDark }};{{ end }}
+    {{ if .site.juicercafe.brandSoftDark }}--brand-soft: {{ .site.juicercafe.brandSoftDark }};{{ end }}
+    {{ if .site.juicercafe.accentDark }}--accent: {{ .site.juicercafe.accentDark }};{{ end }}
+    {{ if .site.juicercafe.leafDark }}--leaf: {{ .site.juicercafe.leafDark }};{{ end }}
   }
 </style>
 {{ end }}

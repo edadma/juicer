@@ -151,6 +151,9 @@ pre {
   flex-wrap: wrap;
 }
 .juicerchurch-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   font-family: var(--font-serif);
   font-size: 1.5rem;
   font-weight: 700;
@@ -159,6 +162,11 @@ pre {
   text-decoration: none;
 }
 .juicerchurch-brand:hover { color: var(--brand-strong); }
+.juicerchurch-brand-logo {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+.juicerchurch-brand-name { display: inline; }
 .juicerchurch-tagline {
   color: var(--ink-faint);
   font-size: 0.95rem;

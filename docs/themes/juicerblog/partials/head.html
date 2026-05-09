@@ -19,13 +19,23 @@
 
 <!-- Per-site palette overrides emitted from site.toml [juicerblog] block.
      Same pattern as juicerdocs — sites can pin brand/accent without forking
-     the theme CSS. -->
+     the theme CSS. Light tokens land on :root; *Dark variants land on
+     [data-theme="dark"] so they cleanly override the theme's dark palette. -->
 {{ if .site.juicerblog }}
 <style>
   :root {
     {{ if .site.juicerblog.brand }}--brand: {{ .site.juicerblog.brand }};{{ end }}
+    {{ if .site.juicerblog.brandStrong }}--brand-strong: {{ .site.juicerblog.brandStrong }};{{ end }}
+    {{ if .site.juicerblog.brandSoft }}--brand-soft: {{ .site.juicerblog.brandSoft }};{{ end }}
     {{ if .site.juicerblog.accent }}--accent: {{ .site.juicerblog.accent }};{{ end }}
     {{ if .site.juicerblog.leaf }}--leaf: {{ .site.juicerblog.leaf }};{{ end }}
+  }
+  [data-theme="dark"] {
+    {{ if .site.juicerblog.brandDark }}--brand: {{ .site.juicerblog.brandDark }};{{ end }}
+    {{ if .site.juicerblog.brandStrongDark }}--brand-strong: {{ .site.juicerblog.brandStrongDark }};{{ end }}
+    {{ if .site.juicerblog.brandSoftDark }}--brand-soft: {{ .site.juicerblog.brandSoftDark }};{{ end }}
+    {{ if .site.juicerblog.accentDark }}--accent: {{ .site.juicerblog.accentDark }};{{ end }}
+    {{ if .site.juicerblog.leafDark }}--leaf: {{ .site.juicerblog.leafDark }};{{ end }}
   }
 </style>
 {{ end }}

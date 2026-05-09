@@ -1,6 +1,9 @@
 <header class="juicercafe-topbar">
   <div class="juicercafe-topbar-inner">
-    <a class="juicercafe-brand" href="{{ relURL '/' }}">{{ .site.title }}</a>
+    <a class="juicercafe-brand" href="{{ relURL '/' }}">
+      {{ if .site.juicercafe.logo }}<img class="juicercafe-brand-logo" src="{{ relURL .site.juicercafe.logo }}" alt="">{{ end }}
+      <span class="juicercafe-brand-name">{{ .site.title }}</span>
+    </a>
     {{ if .site.tagline }}<span class="juicercafe-tagline">{{ .site.tagline }}</span>{{ end }}
     <nav class="juicercafe-nav" aria-label="Main">
       <a href="{{ relURL '/' }}">Home</a>

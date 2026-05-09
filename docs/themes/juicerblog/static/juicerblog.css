@@ -175,6 +175,9 @@ blockquote {
   flex-wrap: wrap;
 }
 .juicerblog-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   font-family: var(--font-serif);
   font-size: 1.5rem;
   font-weight: 700;
@@ -183,6 +186,11 @@ blockquote {
   text-decoration: none;
 }
 .juicerblog-brand:hover { color: var(--brand); }
+.juicerblog-brand-logo {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+.juicerblog-brand-name { display: inline; }
 .juicerblog-tagline {
   color: var(--ink-faint);
   font-size: 0.95rem;

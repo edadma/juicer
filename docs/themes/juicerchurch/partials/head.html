@@ -15,13 +15,25 @@
 
 <link rel="stylesheet" href="{{ relURL '/juicerchurch.css' }}">
 
-<!-- Per-site palette overrides emitted from site.toml [juicerchurch]. -->
+<!-- Per-site palette overrides emitted from site.toml [juicerchurch].
+     Light-mode tokens land on :root; the *Dark variants land on
+     [data-theme="dark"] so they cleanly override the theme's hardcoded
+     dark palette without leaking into light mode. -->
 {{ if .site.juicerchurch }}
 <style>
   :root {
     {{ if .site.juicerchurch.brand }}--brand: {{ .site.juicerchurch.brand }};{{ end }}
+    {{ if .site.juicerchurch.brandStrong }}--brand-strong: {{ .site.juicerchurch.brandStrong }};{{ end }}
+    {{ if .site.juicerchurch.brandSoft }}--brand-soft: {{ .site.juicerchurch.brandSoft }};{{ end }}
     {{ if .site.juicerchurch.accent }}--accent: {{ .site.juicerchurch.accent }};{{ end }}
     {{ if .site.juicerchurch.leaf }}--leaf: {{ .site.juicerchurch.leaf }};{{ end }}
+  }
+  [data-theme="dark"] {
+    {{ if .site.juicerchurch.brandDark }}--brand: {{ .site.juicerchurch.brandDark }};{{ end }}
+    {{ if .site.juicerchurch.brandStrongDark }}--brand-strong: {{ .site.juicerchurch.brandStrongDark }};{{ end }}
+    {{ if .site.juicerchurch.brandSoftDark }}--brand-soft: {{ .site.juicerchurch.brandSoftDark }};{{ end }}
+    {{ if .site.juicerchurch.accentDark }}--accent: {{ .site.juicerchurch.accentDark }};{{ end }}
+    {{ if .site.juicerchurch.leafDark }}--leaf: {{ .site.juicerchurch.leafDark }};{{ end }}
   }
 </style>
 {{ end }}

@@ -205,6 +205,35 @@ hr {
   width: var(--rail-w);
 }
 
+/* Sidebar / rail scrollbars — keep them visually quiet so the side
+   columns feel like ambient navigation, not chrome. The OS-default
+   scrollbar is too bulky and (in dark mode) too bright. Firefox uses
+   the standard `scrollbar-*` properties; Chromium/Safari use the
+   ::-webkit-scrollbar pseudo-element. Both target `--border` for the
+   thumb, which is already token-aware so dark mode auto-dims. */
+.juicerdocs-sidebar-aside,
+.juicerdocs-rail-aside {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.juicerdocs-sidebar-aside::-webkit-scrollbar,
+.juicerdocs-rail-aside::-webkit-scrollbar {
+  width: 8px;
+}
+.juicerdocs-sidebar-aside::-webkit-scrollbar-track,
+.juicerdocs-rail-aside::-webkit-scrollbar-track {
+  background: transparent;
+}
+.juicerdocs-sidebar-aside::-webkit-scrollbar-thumb,
+.juicerdocs-rail-aside::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+.juicerdocs-sidebar-aside::-webkit-scrollbar-thumb:hover,
+.juicerdocs-rail-aside::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-soft);
+}
+
 @media (max-width: 1023px) {
   .juicerdocs-sidebar-aside { display: none; }
 }

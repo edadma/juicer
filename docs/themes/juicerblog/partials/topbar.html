@@ -1,6 +1,9 @@
 <header class="juicerblog-topbar">
   <div class="juicerblog-topbar-inner">
-    <a class="juicerblog-brand" href="{{ relURL '/' }}">{{ .site.title }}</a>
+    <a class="juicerblog-brand" href="{{ relURL '/' }}">
+      {{ if .site.juicerblog.logo }}<img class="juicerblog-brand-logo" src="{{ relURL .site.juicerblog.logo }}" alt="">{{ end }}
+      <span class="juicerblog-brand-name">{{ .site.title }}</span>
+    </a>
     {{ if .site.tagline }}<span class="juicerblog-tagline">{{ .site.tagline }}</span>{{ end }}
     <nav class="juicerblog-nav" aria-label="Main">
       <a href="{{ relURL '/' }}">Home</a>
