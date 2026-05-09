@@ -374,6 +374,23 @@ blockquote {
   line-height: 1.75;
 }
 .juicerblog-content > * + * { margin-top: 1.25rem; }
+
+/* Prose-link polish — keep the always-visible underline (WCAG) but grow
+   it on hover. Subtle: 1px → 2px thickness and a 1px lift toward the
+   text. Reads as "the link reacts" without the cartoonish color flip. */
+.juicerblog-content a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition:
+    text-decoration-thickness var(--transition),
+    text-underline-offset    var(--transition),
+    color                    var(--transition);
+}
+.juicerblog-content a:hover {
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
 .juicerblog-content h2 {
   font-size: 1.625rem;
   margin: 2.5rem 0 0.75rem;
@@ -594,6 +611,92 @@ blockquote {
 }
 .juicerblog-footer a { color: inherit; }
 .juicerblog-footer a:hover { color: var(--brand); }
+
+/* ============================================================
+   Code-block enhancements (language label + copy button)
+   ============================================================
+   Both surfaces require `<pre>` to be a positioning context — already
+   the case once these absolutely-position children are added below.
+   The language label and copy button are wired by juicerblog.js:
+   - language label = `data-language="X"` lifted from `code.language-X`
+   - copy button    = `<button class="juicerblog-copy-btn">Copy</button>`
+                      appended as the last child of the <pre>. */
+.juicerblog-content pre {
+  position: relative;
+  /* Make headroom for the small uppercase language chip + the copy
+     button, which both sit above the first code line. Plain blocks
+     without a language still benefit visually from the headroom — keep
+     it consistent across all <pre>s rather than branching on attr. */
+  padding-top: 1.875rem;
+}
+.juicerblog-content pre[data-language]::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0.5rem;
+  left: 1.125rem;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+
+.juicerblog-copy-btn {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.5rem;
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  cursor: pointer;
+  /* Keeps the button out of the way until the user hovers/focuses the
+     <pre>. Becomes opaque on hover so it doesn't compete with the code
+     for visual weight while reading. */
+  opacity: 0;
+  transition: opacity var(--transition), color var(--transition),
+              border-color var(--transition), background var(--transition);
+}
+.juicerblog-content pre:hover .juicerblog-copy-btn,
+.juicerblog-copy-btn:focus-visible {
+  opacity: 1;
+}
+.juicerblog-copy-btn:hover {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+/* Reading-progress hairline — fixed 2px bar at the very top of the
+   viewport, fills left-to-right via scaleX as the reader scrolls
+   through a dated post. Only attached by juicerblog.js when the
+   page actually has a `.juicerblog-post--dated` article. */
+.juicerblog-reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--brand);
+  transform: scaleX(0);
+  transform-origin: 0 0;
+  z-index: 1000;
+  pointer-events: none;
+  /* Smooth out the per-frame jumps on fast scrolls. */
+  transition: transform 60ms linear;
+}
+
+.juicerblog-copy-btn.is-copied {
+  color: var(--leaf);
+  border-color: var(--leaf);
+  background: color-mix(in srgb, var(--leaf) 12%, transparent);
+  /* Force visibility once the user actually clicked, regardless of
+     whether the cursor is still over the <pre>. */
+  opacity: 1;
+}
 
 /* ============================================================
    Syntax highlighting
