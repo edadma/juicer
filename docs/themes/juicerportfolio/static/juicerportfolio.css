@@ -819,6 +819,12 @@ code, pre, kbd, samp {
     gap: 1.5rem;
   }
 
+  /* Hero on mobile — cap at 60vh so the writeup is visible without
+     a second scroll, and the project hero doesn't read as a totally
+     separate page from the body. */
+  .juicerportfolio-project-hero { margin-bottom: 2.5rem; }
+  .juicerportfolio-project-hero img { max-height: 60vh; }
+
   .juicerportfolio-project-nav-inner {
     flex-direction: column;
     gap: 1.5rem;
@@ -841,6 +847,9 @@ code, pre, kbd, samp {
   .juicerportfolio-project-title { font-size: 1.875rem; }
   .juicerportfolio-project-content { grid-column: 1; }
 
+  .juicerportfolio-page-wrap { padding: 2.5rem var(--gutter); }
+  .juicerportfolio-page-title { font-size: 1.875rem; }
+
   .juicerportfolio-topbar-inner {
     flex-direction: column;
     align-items: flex-start;
@@ -850,7 +859,38 @@ code, pre, kbd, samp {
 
 @media (max-width: 540px) {
   .juicerportfolio-brand-tagline { display: none; }
-  .juicerportfolio-nav { gap: 1rem; }
+  /* Topnav: allow wrapping when there are many items (CV / Press /
+     Contact / About on top of Work) so the row doesn't overflow. */
+  .juicerportfolio-nav {
+    gap: 0.5rem 1rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .juicerportfolio-nav a { font-size: 0.875rem; }
+
+  /* Footer collapses to a single column on phone — brand + contact
+     above, links below. */
+  .juicerportfolio-footer-inner {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
+
+/* ============================================================
+   Print — give the CV a clean printable look
+   ============================================================ */
+@media print {
+  body { background: #fff; color: #000; font-size: 10.5pt; }
+  .juicerportfolio-topbar,
+  .juicerportfolio-footer,
+  .juicerportfolio-theme-toggle,
+  .juicerportfolio-project-back,
+  .juicerportfolio-project-nav { display: none; }
+  .juicerportfolio-page-wrap { padding: 0; max-width: none; }
+  .juicerportfolio-content { max-width: none; font-size: 10.5pt; line-height: 1.5; }
+  .juicerportfolio-content h2 { margin-top: 1.25rem; page-break-after: avoid; }
+  .juicerportfolio-content h3 { margin-top: 1rem; page-break-after: avoid; }
+  a { color: #000; border-bottom-color: #999; }
 }
 
 /* ============================================================

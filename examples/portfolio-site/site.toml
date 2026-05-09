@@ -35,6 +35,18 @@ url   = "/"
 label = "About"
 url   = "/about/"
 
+[[topnav]]
+label = "CV"
+url   = "/cv/"
+
+[[topnav]]
+label = "Press"
+url   = "/press/"
+
+[[topnav]]
+label = "Contact"
+url   = "/contact/"
+
 # Footer contact line + links. Both optional.
 [contact]
 email    = "studio@atelierhahn.example"
