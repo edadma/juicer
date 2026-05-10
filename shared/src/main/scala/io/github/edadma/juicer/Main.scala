@@ -25,6 +25,10 @@ import scopt.OParser
     val cur = c.cmd.collect { case s: ThemeAddCommand => s }.getOrElse(ThemeAddCommand())
     c.copy(cmd = Some(f(cur)))
 
+  def updateThemeUpgrade(c: Args, f: ThemeUpgradeCommand => ThemeUpgradeCommand): Args =
+    val cur = c.cmd.collect { case s: ThemeUpgradeCommand => s }.getOrElse(ThemeUpgradeCommand())
+    c.copy(cmd = Some(f(cur)))
+
   val builder = OParser.builder[Args]
   val parser =
     import builder._
@@ -99,17 +103,38 @@ import scopt.OParser
               opt[String]('n', "name")
                 .valueName("<name>")
                 .action((n, c) => updateThemeAdd(c, _.copy(name = Some(n))))
-                .text("install under this theme name (default: derived from URL)"),
+                .text("install under this theme name (default: derived from URL or --subdir)"),
               opt[String]('r', "ref")
                 .valueName("<branch|tag|sha>")
                 .action((r, c) => updateThemeAdd(c, _.copy(ref = Some(r))))
                 .text("branch, tag, or commit to check out (default: repo HEAD)"),
+              opt[String]("subdir")
+                .valueName("<path>")
+                .action((p, c) => updateThemeAdd(c, _.copy(subdir = Some(p))))
+                .text("install only this subdirectory of the cloned repo as the theme"),
               opt[Unit]("force")
                 .action((_, c) => updateThemeAdd(c, _.copy(force = true)))
                 .text("overwrite an existing theme directory"),
               arg[String]("<git-url>")
                 .action((u, c) => updateThemeAdd(c, _.copy(url = u)))
                 .text("HTTPS or SSH git URL of the theme repo"),
+            ),
+          cmd("upgrade")
+            .action((_, c) => c.copy(cmd = Some(ThemeUpgradeCommand())))
+            .text("    Re-fetch installed themes from their recorded source")
+            .children(
+              opt[String]('s', "source")
+                .valueName("<path>")
+                .action((s, c) => updateThemeUpgrade(c, _.copy(src = Path(s))))
+                .text("site sources directory path"),
+              opt[String]('r', "ref")
+                .valueName("<branch|tag|sha>")
+                .action((r, c) => updateThemeUpgrade(c, _.copy(ref = Some(r))))
+                .text("override the recorded ref for this upgrade only"),
+              arg[String]("<name>")
+                .optional()
+                .action((n, c) => updateThemeUpgrade(c, _.copy(name = Some(n))))
+                .text("theme to upgrade (default: every theme with .juicer-theme.toml metadata)"),
             ),
         ),
       cmd("serve")
