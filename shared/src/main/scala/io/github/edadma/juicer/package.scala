@@ -162,6 +162,59 @@ package object juicer {
     * semantic class names (`hl-keyword`, `hl-string`, etc.) that themes
     * style — see juicerblog's hand-written palette. Pass `InlineMode(theme)`
     * if you want fixed-color inline-styled spans instead. */
+  /** Common short-name → canonical-grammar aliases. The fenced code block's
+    * tag is matched verbatim against the loaded highlighter map, so
+    * ` ```js ` would miss `javascript.tmLanguage.json`. After loading the
+    * grammar files, we register each canonical that's present under any of
+    * its aliases too — but only if the alias isn't already taken by a
+    * site-supplied grammar. So a site CAN override (drop your own
+    * `sh.tmLanguage.json` to win) while every dev gets the obvious
+    * conventions for free.
+    *
+    * Keep this list focused on the unambiguous cases. `c`/`cpp`, `bash`,
+    * `python`, etc. are already canonical and need no alias.
+    */
+  private[juicer] val grammarAliases: Map[String, String] = Map(
+    // Web
+    "js"         -> "javascript",
+    "jsx"        -> "javascript",
+    "mjs"        -> "javascript",
+    "cjs"        -> "javascript",
+    "ts"         -> "typescript",
+    // Shells
+    "sh"         -> "bash",
+    "zsh"        -> "bash",
+    "shell"      -> "bash",
+    "console"    -> "bash",
+    // Data / config
+    "yml"        -> "yaml",
+    "tml"        -> "toml",
+    "jsonl"      -> "json",
+    "json5"      -> "jsonc",
+    // Languages by short extension
+    "py"         -> "python",
+    "rb"         -> "ruby",
+    "rs"         -> "rust",
+    "kt"         -> "kotlin",
+    "kts"        -> "kotlin",
+    "cs"         -> "csharp",
+    "cxx"        -> "cpp",
+    "cc"         -> "cpp",
+    "h"          -> "c",
+    "hpp"        -> "cpp",
+    "tf"         -> "terraform",
+    "hcl2"       -> "hcl",
+    "ps1"        -> "powershell",
+    "pwsh"       -> "powershell",
+    "docker"     -> "dockerfile",
+    "Dockerfile" -> "dockerfile",
+    "make"       -> "makefile",
+    "Makefile"   -> "makefile",
+    "md"         -> "markdown",
+    "patch"      -> "diff",
+    "gql"        -> "graphql",
+  )
+
   def loadHighlighters(
       grammarsDir: io.github.edadma.path.Path,
       mode:        io.github.edadma.highlighter.RenderMode = io.github.edadma.highlighter.ClassMode("hl-"),
@@ -177,6 +230,13 @@ package object juicer {
           case Right(hl) => builder += (lang -> hl)
           case Left(err) => onError(entry.name, err)
         }
+      }
+    }
+    // Backfill aliases — only if the canonical is loaded AND the alias
+    // isn't already taken by a site-supplied grammar with that exact name.
+    for ((alias, canonical) <- grammarAliases) {
+      if (!builder.contains(alias) && builder.contains(canonical)) {
+        builder += (alias -> builder(canonical))
       }
     }
     builder.toMap
