@@ -219,9 +219,21 @@ object App {
       def isInEventsSection(c: ContentFile): Boolean = {
         if (c.srcPath eq null) false
         else {
-          val p = c.srcPath.normalize.toAbsolutePath
-          p.toString.startsWith(eventsRoot.toString + java.io.File.separator) ||
-          p.toString == eventsRoot.toString
+          // Cross-platform prefix check: accept both `/` and `\` as the
+          // segment separator. `java.io.File.separator` would be cleaner
+          // on JVM but is unavailable in Scala.js, breaking the shared
+          // build. The Path library normalises paths internally; in
+          // practice this always sees `/` on macOS / Linux / Native /
+          // Node, and `\` on Windows JVM — admitting both is correct
+          // everywhere.
+          val p   = c.srcPath.normalize.toAbsolutePath.toString
+          val ev  = eventsRoot.toString
+          if p == ev then true
+          else if !p.startsWith(ev) then false
+          else {
+            val next = p.charAt(ev.length)
+            next == '/' || next == '\\'
+          }
         }
       }
       def fmStr(c: ContentFile): Option[String] = c.page match {

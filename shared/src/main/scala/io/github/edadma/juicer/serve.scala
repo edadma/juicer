@@ -32,10 +32,10 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
   * reconnects), so connection slots are freed continuously and the
   * accumulation pattern can't form.
   *
-  * Bind retry: microserve's `Server.listen(...)(onListening, onError)`
-  * surfaces port-in-use errors via `onError`. When `port` is taken we scan
-  * upward (up to 20 attempts) and use the first free one, matching the prior
-  * JVM-only behaviour.
+  * Bind retry: delegates to `microserve.Server.bindWithRetry`, which surfaces
+  * port conflicts as `BindError.AddressInUse` and climbs to the next free port
+  * (up to 20 attempts). Other categorised failures (`InvalidHost`,
+  * `PermissionDenied`) get a hint message and propagate.
   */
 def serve(
     root:       Path,
@@ -62,15 +62,30 @@ def serve(
       // had ever happened, producing an infinite reload loop.
       serveStatic(root, htmlDir, injectLiveReload = liveReload, longPoll.currentVersion, req, res)
 
-  bindWithRetry(handler, host, port, retriesLeft = 20) { boundServer =>
-    val actualPort = boundServer.actualPort
-    println(s"juicer serve: http://$host:$actualPort/")
-    println(s"  root: $root")
-    if liveReload then
-      println("  live reload: enabled")
-      if watchRoot != null then startWatcher(watchRoot, excludeDir, rebuild, longPoll)
-    println("Press Ctrl+C to stop.")
-  }
+  Server.bindWithRetry(handler)(
+    startPort    = port,
+    host         = host,
+    retries      = 20,
+    onPortBumped = (busy, next) => println(s"[juicer] port $busy is in use; trying $next…"),
+  )(
+    onBound = (_, actualPort) =>
+      println(s"juicer serve: http://$host:$actualPort/")
+      println(s"  root: $root")
+      if liveReload then
+        println("  live reload: enabled")
+        if watchRoot != null then startWatcher(watchRoot, excludeDir, rebuild, longPoll)
+      println("Press Ctrl+C to stop."),
+    onError = e =>
+      // Categorised by microserve — log a hint that matches the variant
+      // instead of dumping the raw exception text.
+      val hint = e match
+        case _: BindError.AddressInUse     => s"every port from $port to ${port + 20} was in use"
+        case _: BindError.InvalidHost      => s"host '$host' is invalid or unresolvable"
+        case _: BindError.PermissionDenied => s"permission denied binding to $host:$port (try a higher port)"
+        case _                             => e.getMessage
+      Console.err.println(s"[juicer] could not start server: $hint")
+      throw e,
+  )
 
   // Block on the platform's loop until something stops it. JVM/Native block
   // here; JS returns immediately because Node owns its loop and Ctrl+C exits
@@ -345,45 +360,32 @@ end startWatcher
 
 /** Pure helper, exposed for unit testing. Returns true when an event at
   * `eventPath` should trigger a rebuild — i.e. it is *not* under the build
-  * output directory `excludedAbs`. A trailing separator is appended before
-  * the prefix check so a sibling directory whose name happens to share a
-  * prefix (e.g. `public2/` next to `public/`) is not accidentally excluded.
+  * output directory `excludedAbs`. A sibling directory whose name happens
+  * to share a prefix (e.g. `public2/` next to `public/`) must NOT be
+  * accidentally excluded — so after the prefix match we verify the next
+  * character is an actual path separator.
+  *
+  * Recognises both `/` and `\` as separators. The previous version used
+  * `java.io.File.separator` for "the right thing on this platform", but
+  * that class isn't available in Scala.js, breaking the cross-platform
+  * build. Recognising both is correct everywhere we ship: macOS / Linux
+  * / Native always use `/`; Windows JVM uses `\`; Node on Windows
+  * normalises to `/`. There's no platform where allowing both would be
+  * wrong.
+  *
   * `excludedAbs == null` disables filtering and every event is relevant. */
 private[juicer] def isWatchEventRelevant(eventPath: String, excludedAbs: String): Boolean =
   if excludedAbs == null then true
   else
-    val sep = java.io.File.separator
-    val withSep = if excludedAbs.endsWith(sep) then excludedAbs else excludedAbs + sep
-    !eventPath.startsWith(withSep) && eventPath != excludedAbs
+    // Strip a trailing separator off `excludedAbs` so its length lines up
+    // with the segment boundary in `eventPath` for the prefix check.
+    val ex =
+      if excludedAbs.endsWith("/") || excludedAbs.endsWith("\\") then
+        excludedAbs.dropRight(1)
+      else excludedAbs
+    if eventPath == ex then false
+    else if !eventPath.startsWith(ex) then true
+    else
+      val next = eventPath.charAt(ex.length)
+      next != '/' && next != '\\'
 
-// ===== Bind with retry =======================================================
-
-/** Try to bind a fresh microserve `Server` on `host:startPort`. If the port
-  * is in use, scan upward up to `retriesLeft` times and use the first free
-  * one. Calls `onBound(server)` with the successfully-bound server; logs
-  * each port bump so the user knows what happened. Throws after exhausting
-  * `retriesLeft` — better than silently picking some far-away port the user
-  * didn't ask for. */
-private[juicer] def bindWithRetry(
-    handler:     RequestHandler,
-    host:        String,
-    startPort:   Int,
-    retriesLeft: Int,
-)(onBound: Server => Unit)(using runtime: Runtime, ec: ExecutionContext): Unit =
-  def attempt(port: Int, remaining: Int): Unit =
-    val server = createServer(handler)
-    server.listen(port, host)(
-      onListening = () => onBound(server),
-      onError = e =>
-        if remaining <= 0 then
-          // Surface the failure on the loop's reportFailure path. Throwing
-          // from a Future continuation would be swallowed; printing matches
-          // the dev-tool ergonomics of the prior JVM serve.
-          Console.err.println(s"[juicer] could not bind: ${e.getMessage}")
-          throw e
-        else
-          println(s"[juicer] port $port is in use; trying ${port + 1}…")
-          attempt(port + 1, remaining - 1),
-    )
-  attempt(startPort, retriesLeft)
-end bindWithRetry
