@@ -8,7 +8,7 @@ Squiggly is the template language juicer uses. It's Go-template-like. This page 
 
 ## Substitution
 
-```
+```squiggly
 {{ .name }}              value at .name in the data context
 {{ .page.title }}        nested
 {{ .args[0] }}           list element by index (in shortcodes)
@@ -30,7 +30,7 @@ Call them as expressions:
 
 ## Conditionals
 
-```
+```squiggly
 {{ if .page.summary }}
   <p class="lead">{{ .page.summary }}</p>
 {{ end }}
@@ -46,7 +46,7 @@ Call them as expressions:
 
 Logical operators: `and`, `or`, prefix `not`.
 
-```
+```squiggly
 {{ if .page.prev or .page.next }}
   <nav>...</nav>
 {{ end }}
@@ -54,7 +54,7 @@ Logical operators: `and`, `or`, prefix `not`.
 
 ## Loops
 
-```
+```squiggly
 {{ for p <- .section.pages }}
   <li><a href="{{ p.url }}">{{ p.title }}</a></li>
 {{ end }}
@@ -66,14 +66,14 @@ Logical operators: `and`, `or`, prefix `not`.
 
 ## Partials
 
-```
+```squiggly
 {{ partial 'topbar' . }}              call partials/topbar.html with the current data
 {{ partial 'page-toc' .page }}        with a different data context
 ```
 
 ## Defines & blocks
 
-```
+```squiggly
 {{ define main }}
   <article>{{ .content }}</article>
 {{ end }}
@@ -87,7 +87,7 @@ Logical operators: `and`, `or`, prefix `not`.
 
 Most squiggly builtins work as either a function or a pipe target:
 
-```
+```squiggly
 {{ trim .page.summary }}
 {{ .page.summary | trim }}
 {{ .name | upper }}
@@ -118,6 +118,6 @@ Useful ones:
 
 ## Comments
 
-```
+```squiggly
 {{ // squiggly's not too noisy in templates }}
 ```

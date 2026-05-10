@@ -60,7 +60,7 @@ Themes do **not** ship content (no `content/` directory inside a theme is ever r
 [= tab "Partial" =]
 A *partial* is a reusable HTML fragment called from another template. It receives whatever data context you pass in.
 
-```html
+```squiggly
 {{ partial 'topbar' . }}
 {{ partial 'topbar' .page }}
 ```

@@ -64,7 +64,7 @@ The same names with `category-list.html` / `category-page.html` cover the catego
 
 The data your tag layouts see:
 
-```
+```squiggly
 {{ .terms }}                 // List of every term — for tag-list.html
 {{ .terms[0].name }}         // "scala"
 {{ .terms[0].slug }}         // "scala"
@@ -85,7 +85,7 @@ If a layout is missing, the corresponding archive is silently skipped. So a docs
 
 Templates that aren't tag archives — say, your `topbar.html` — can still iterate over every tag the site uses:
 
-```
+```squiggly
 {{ .site.tags }}            // List of every tag, sorted by count desc
 {{ .site.categories }}      // Same shape, for categories
 ```
@@ -147,7 +147,7 @@ A handful of short, alphabetised notes.
 
 The data layouts see — both `_index` layouts and tag archives:
 
-```
+```squiggly
 {{ .section.paginator.current }}     // 1-based index of THIS slice
 {{ .section.paginator.total }}       // total slice count
 {{ .section.paginator.pages }}       // pages on THIS slice (already sliced)
@@ -159,7 +159,7 @@ The data layouts see — both `_index` layouts and tag archives:
 
 A typical pagination footer:
 
-```html
+```squiggly
 {{ if .section.paginator.prevURL }}
   <a href="{{ .section.paginator.prevURL }}">← Newer</a>
 {{ end }}
@@ -194,7 +194,7 @@ Three pre-formatted helpers ride alongside the parsed value, so templates don't 
 
 A standard post-meta line:
 
-```html
+```squiggly
 <time datetime="{{ .page.dateISO }}">{{ .page.dateLong }}</time>
 ```
 
@@ -213,11 +213,11 @@ Two more fields automatically computed for every page:
 
 The 200-words-per-minute figure is the Medium-popularized average. If you want a different cadence, render `wordCount` directly and divide it yourself in the template:
 
-```html
+```squiggly
 {{ .page.readingTime }} min read
 ```
 
-```html
+```squiggly
 about {{ .page.wordCount }} words
 ```
 
@@ -353,7 +353,7 @@ you're not."
 
 The `date-year.html` layout sees:
 
-```
+```squiggly
 {{ .year }}                // 2024 (BigDecimal)
 {{ .pages }}               // every dated post in 2024, newest first
 {{ .pages[0].title }}      // most recent post's title
@@ -367,7 +367,7 @@ The `date-year.html` layout sees:
 
 A typical year-archive layout:
 
-```html
+```squiggly
 <h1>{{ .year }}</h1>
 <ol>
   {{ for m <- .months }}
@@ -383,14 +383,14 @@ A typical year-archive layout:
 
 The `date-month.html` layout sees:
 
-```
+```squiggly
 {{ .year }}        // 2024
 {{ .month }}       // 3 (BigDecimal)
 {{ .monthName }}   // "March"
 {{ .pages }}       // posts in March 2024, newest first
 ```
 
-```html
+```squiggly
 <h1>{{ .monthName }} {{ .year }}</h1>
 <ol>
   {{ for p <- .pages }}
@@ -466,7 +466,7 @@ linked. Each one sees a `.page.series` block:
 
 A typical "in this series" sidebar:
 
-```html
+```squiggly
 {{ if .page.series }}
 <aside aria-label="In this series">
   <h2>{{ .page.series.name }}</h2>
@@ -573,7 +573,7 @@ Each record carries every key from the registry — `id`, `name`, `bio`,
 `avatar`, `links[]` — so a per-post byline can render the avatar, name,
 and external links directly:
 
-```html
+```squiggly
 {{ if .page.author }}
 <div class="byline">
   {{ if .page.author.avatar }}
@@ -607,7 +607,7 @@ optional layout:
 
 The `author-list.html` layout sees:
 
-```
+```squiggly
 {{ .authors }}                  // List of records, in registry order
 {{ .authors[0].name }}
 {{ .authors[0].url }}           // "/authors/ed/"
@@ -617,7 +617,7 @@ The `author-list.html` layout sees:
 
 The `author-page.html` layout sees:
 
-```
+```squiggly
 {{ .author }}                   // single record
 {{ .author.name }}
 {{ .author.bio }}
@@ -634,7 +634,7 @@ keeps a partially-populated `[[authors]]` registry from emitting empty
 Like `.site.tags` and `.site.categories`, the same author records are
 exposed site-wide for use in any template:
 
-```html
+```squiggly
 {{ for a <- .site.authors }}
 <a href="{{ a.url }}">{{ a.name }} ({{ a.count }})</a>
 {{ end }}
@@ -683,7 +683,7 @@ That's the **built-in default**. It works without any theme. If you
 want different markup — branded styling, custom copy, JavaScript
 fallback — drop a layout at `layouts/_default/alias.html`:
 
-```html
+```squiggly
 <!doctype html>
 <html lang="en">
 <head>
@@ -735,7 +735,7 @@ preview built from a small block of `<meta>` tags in the page's
 `<head>`. Juicer ships a `{{ ogTags .page }}` template builtin that
 emits the canonical block in one line:
 
-```html
+```squiggly
 <head>
   ...
   {{ ogTags .page }}

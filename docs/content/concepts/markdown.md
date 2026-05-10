@@ -135,7 +135,7 @@ Orange
 
 ## Code blocks with language
 
-```html
+```squiggly
 <!DOCTYPE html>
 <html>
 <head><title>{{ .page.title }}</title></head>

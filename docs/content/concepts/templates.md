@@ -36,7 +36,7 @@ This pattern lets a single `baseof.html` provide the entire page chrome (head, h
 
 [= tabs =]
 [= tab "baseof.html" =]
-```html
+```squiggly
 <!DOCTYPE html>
 <html>
 <head><title>{{ .page.title }}</title></head>
@@ -50,7 +50,7 @@ This pattern lets a single `baseof.html` provide the entire page chrome (head, h
 ```
 [= /tab =]
 [= tab "file.html" =]
-```html
+```squiggly
 {{ define main }}
   <article class="prose">
     <h1>{{ .page.title }}</h1>
@@ -60,7 +60,7 @@ This pattern lets a single `baseof.html` provide the entire page chrome (head, h
 ```
 [= /tab =]
 [= tab "folder.html" =]
-```html
+```squiggly
 {{ define main }}
   <article class="prose">
     <h1>{{ .page.title }}</h1>

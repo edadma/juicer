@@ -137,7 +137,7 @@ Drop a template at `<theme>/shortcodes/<name>.html` (or `<site>/shortcodes/<name
 
 Use the `markdownify` builtin to render the body as markdown:
 
-```html
+```squiggly
 <div class="my-callout">
   {{ markdownify .content }}
 </div>

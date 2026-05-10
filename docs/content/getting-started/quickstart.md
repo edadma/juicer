@@ -32,7 +32,7 @@ mkdir -p layouts/_default
 ```
 
 `layouts/_default/folder.html`:
-```html
+```squiggly
 <!DOCTYPE html>
 <html>
 <head><title>{{ .page.title }} – {{ .site.title }}</title></head>
@@ -44,7 +44,7 @@ mkdir -p layouts/_default
 ```
 
 `layouts/_default/file.html`:
-```html
+```squiggly
 {{ partial 'folder' . }}
 ```
 
