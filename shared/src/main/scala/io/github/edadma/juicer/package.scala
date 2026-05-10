@@ -135,6 +135,7 @@ package object juicer {
       callouts          = true,
       definitionLists   = true,
       emoji             = io.github.edadma.markdown.EmojiConfig.Unicode,
+      math              = true,
       codeHighlighter   = codeHighlighter,
     )
 
