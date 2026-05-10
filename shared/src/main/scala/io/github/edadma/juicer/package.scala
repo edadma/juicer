@@ -245,12 +245,52 @@ package object juicer {
   /** Build a `(code, lang) => Option[html]` callback from a highlighter map.
     * The returned function is what [[buildMarkdownConfig]]'s `codeHighlighter`
     * expects. Returns `None` for unknown languages, which leaves the markdown
-    * lib to emit a plain `<pre><code class="language-X">…</code></pre>`. */
+    * lib to emit a plain `<pre><code class="language-X">…</code></pre>`.
+    *
+    * Robust against runaway regex matchers: VS Code's TextMate grammars
+    * are written for the Oniguruma engine, and a few patterns trigger
+    * catastrophic backtracking under java.util.regex (the bash grammar's
+    * `#qstring-double` inner patterns on `"$variable"` is the canonical
+    * offender — runs for minutes and OOMs a 1GB heap). The highlighter's
+    * `highlightInterruptible` runs on a daemon thread and polls
+    * `Thread.interrupted()` between regex calls and inside each match
+    * (via an `InterruptibleCharSequence` wrapper inside the tokenizer);
+    * we kill it after `HighlightTimeoutMs` and the affected block falls
+    * back to plain `<pre><code>` so the rest of the site still builds. */
+  private val HighlightTimeoutMs = 5000L
+
   def buildCodeHighlighter(
       highlighters: Map[String, io.github.edadma.highlighter.Highlighter],
   ): Option[(String, String) => Option[String]] =
     if (highlighters.isEmpty) None
-    else Some((code, lang) => highlighters.get(lang).map(_.highlight(code)))
+    else Some { (code, lang) =>
+      highlighters.get(lang).flatMap { hl =>
+        val ref = new java.util.concurrent.atomic.AtomicReference[Either[Throwable, String]](null)
+        val worker = new Thread({ () =>
+          try ref.set(Right(hl.highlight(code)))
+          catch { case t: Throwable => ref.set(Left(t)) }
+        }, s"highlight-$lang")
+        worker.setDaemon(true)
+        worker.start()
+        worker.join(HighlightTimeoutMs)
+        if (worker.isAlive) {
+          worker.interrupt()
+          worker.join(500)
+          Console.err.println(
+            s"[juicer] highlighter timed out on $lang block (${code.length} chars) — falling back to plain code"
+          )
+          None
+        } else ref.get match {
+          case null        => None
+          case Right(html) => Some(html)
+          case Left(t) =>
+            Console.err.println(
+              s"[juicer] highlighter threw on $lang block (${code.length} chars): ${t.getClass.getSimpleName}: ${Option(t.getMessage).getOrElse("(no message)")}"
+            )
+            None
+        }
+      }
+    }
 
   /** Parse markdown text into a [[Document]] AST using the default (no-
     * highlighting) config. Call sites that need highlighting use the
