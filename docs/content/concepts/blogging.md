@@ -14,7 +14,7 @@ Every feature on this page is **opt-in**. A docs site that doesn't set `tags` fr
 
 Add a `tags` field to a post's frontmatter to mark it. Either a list or a single string is accepted:
 
-```markdown
+```yaml
 ---
 title: Whirlwind tour of Scala 3 enums
 date: 2024-03-12
@@ -22,7 +22,7 @@ tags: [scala, language]
 ---
 ```
 
-```markdown
+```yaml
 ---
 title: A short note
 tags: meta
@@ -40,7 +40,7 @@ Tag names are slugified for URLs — lowercased, ASCII-folded (`café` → `cafe
 
 `categories` is parsed identically and treated as a **separate axis**. You can use both or neither — sites that want a single way to group posts pick one and ignore the other:
 
-```markdown
+```yaml
 ---
 title: Setting up the studio
 date: 2024-03-12
@@ -436,7 +436,7 @@ Some posts read better as a series — three parts on debugging, four on
 setting up a project, twelve on writing your own OS. Juicer joins
 related posts into a navigable series via two frontmatter fields:
 
-```markdown
+```yaml
 ---
 title: OS Internals, Part 1 — The Boot Process
 series: OS Internals
@@ -444,7 +444,7 @@ seriesOrder: 1
 ---
 ```
 
-```markdown
+```yaml
 ---
 title: OS Internals, Part 2 — The Memory Subsystem
 series: OS Internals
@@ -547,14 +547,14 @@ avatar = "/img/alice.jpg"
 
 Then point a post at one (or more) of the registered ids:
 
-```markdown
+```yaml
 ---
 title: A solo post
 author: ed
 ---
 ```
 
-```markdown
+```yaml
 ---
 title: A co-authored post
 authors: [ed, alice]
@@ -650,7 +650,7 @@ URL breaks. Aliases stop the bleeding without server-side rewrites.
 
 Add the old URL(s) to the new page's frontmatter:
 
-```markdown
+```yaml
 ---
 title: Setting up a Scala 3 project
 date: 2024-03-12
@@ -784,7 +784,7 @@ To set a different card title or summary than the page's own title and
 summary, add `ogTitle` / `ogDescription` / `ogImage` to the post's
 frontmatter:
 
-```markdown
+```yaml
 ---
 title: A long, descriptive, SEO-targeted post title
 summary: A long summary that's good for the page's own list-page meta…

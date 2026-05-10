@@ -80,7 +80,7 @@ A page whose parsed `date:` frontmatter is in the future is **skipped** during a
 [= steps =]
 ## Set the publication date in frontmatter
 
-```markdown
+```yaml
 ---
 title: Big announcement
 date: 2024-12-25T09:00:00Z
