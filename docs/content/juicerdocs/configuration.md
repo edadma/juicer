@@ -59,6 +59,14 @@ leafDark        = "#34d399"
 
 The default value points at the bundled `juicer-logo.png` shipped with the theme — fine if you're previewing juicerdocs on its own, but you'll want your own logo for any real deployment.
 
+### Hero call-to-action
+
+| Key                       | Type | Default | What |
+|---------------------------|------|---------|------|
+| `juicerdocs.getStarted`   | bool | `false` | When true, the homepage hero shows a primary "Get started" button linking to `/getting-started/`. Leave unset for sites that don't have a getting-started section. |
+
+The hero also shows a secondary "Star on GitHub" button when the top-level `repoURL` is set (see [Theming reference → Site-wide chrome keys](/reference/theming/#site-wide-chrome-keys)). When **both** are off — `getStarted` unset and no `repoURL` — the action row collapses entirely and the hero ends at its summary paragraph (no reserved empty space).
+
 ### Brand colors (light mode)
 
 | Key                          | Type   | Default     | What |
