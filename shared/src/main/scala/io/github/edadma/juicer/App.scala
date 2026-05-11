@@ -32,7 +32,7 @@ object App {
       // try the prefixed path on miss. Without this, nested content (under
       // `<dst>/html/...` by default) is unreachable since URLs strip the
       // `html/` segment.
-      val htmlDir = config(src.normalize.toAbsolutePath, baseConfig).getString("htmlDir").getOrElse("")
+      val htmlDir = config(src.toAbsolutePath.normalize, baseConfig).getString("htmlDir").getOrElse("")
       serve(
         outDir,
         host,
@@ -76,7 +76,16 @@ object App {
   ): Path = {
     showSteps = verbose
 
-    val src1 = src.normalize.toAbsolutePath
+    // Canonicalize the user-supplied source path *after* making it absolute.
+    // `Path.normalize` can't fold a leading `..` against an empty segment
+    // vector, so an earlier `.normalize.toAbsolutePath` left `-s ../foo`
+    // shaped paths as `<cwd>/../foo` with the `..` intact. `Process` then
+    // computed its theme/public excludes with another `.normalize` after
+    // concatenation (which DID fold), so the walked-dir set and the
+    // exclude set never compared equal — vendored themes leaked into the
+    // site's "other templates" pass and tripped a NoSuchFileException on
+    // the theme's `404.html` layout. See `RelativeSourcePathSpec`.
+    val src1 = src.toAbsolutePath.normalize
 
     show(s"source path = $src1")
 
@@ -141,7 +150,7 @@ object App {
     // wrapper by overlaying the explicit baseURL on top of the parsed doc.
     val conf = new ConfigWrapper(confdoc.copy(root = confdoc.root + ("baseURL" -> TomlValue.Str(baseURLstr))))
 
-    val dst1 = if (dst eq null) (src1 / conf.publicDir).normalize.toAbsolutePath else dst.normalize.toAbsolutePath
+    val dst1 = if (dst eq null) (src1 / conf.publicDir).toAbsolutePath.normalize else dst.toAbsolutePath.normalize
 
     show(s"destination path = $dst1")
 
@@ -2070,7 +2079,7 @@ object App {
   ): Unit = {
     if (url.isEmpty) problem("theme add: a git URL is required")
 
-    val src1     = src.normalize.toAbsolutePath
+    val src1     = src.toAbsolutePath.normalize
     if (!isDir(src1)) problem(s"not a readable directory: $src1")
 
     val confdoc  = config(src1, baseConfig)
@@ -2123,7 +2132,7 @@ object App {
       name:        Option[String],
       refOverride: Option[String],
   ): Unit = {
-    val src1     = src.normalize.toAbsolutePath
+    val src1     = src.toAbsolutePath.normalize
     if (!isDir(src1)) problem(s"not a readable directory: $src1")
 
     val confdoc  = config(src1, baseConfig)
