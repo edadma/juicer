@@ -1874,6 +1874,11 @@ object App {
     for (TemplateFile(path, _, template) <- site.otherTemplates) {
       show(s"template: write file $path")
       val rendered = renderToString(templateRenderer, Map("site" -> sitedata), template)
+      // Defensive: site authors can put templates in nested subdirs that
+      // don't yet exist under `dst`. Without this, `writeText` raises
+      // NoSuchFileException — which was how the relative-source-path
+      // theme-exclude bug surfaced (see `RelativeSourcePathSpec`).
+      path.parent.foreach(_.createDirectories())
       path.writeText(rendered)
     }
 
