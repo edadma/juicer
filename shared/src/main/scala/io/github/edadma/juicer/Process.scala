@@ -73,9 +73,16 @@ object Process {
       // HTML as squiggly templates the moment a user passes `-d` to a
       // different path. The `dst` exclude (added later) only catches the
       // active dst, not the default one when `-d` redirects elsewhere.
+      //
+      // Finally, fold in any `excludeDirs` from `site.toml`. Each entry is
+      // a path relative to `src`; nested paths work (`assets/raw`). These
+      // aren't glob patterns — exact directory matches only — and they
+      // apply to every depth of the walk (the recursion-time check uses
+      // structural Path equality against this set).
       excludes       = themeRoots.toSet
         ++ (if (themeDirName.nonEmpty) Set((src / themeDirName).normalize) else Set.empty)
-        + (src / conf.publicDir).normalize,
+        + (src / conf.publicDir).normalize
+        ++ conf.excludeDirs.map(d => (src / Path(d)).normalize),
       otherTemplates = true,
     )
 

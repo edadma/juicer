@@ -96,6 +96,27 @@ class ConfigWrapper(c: TomlDocument) extends Dynamic {
   def defaultLanguage: String =
     c.getString("defaultLanguage").getOrElse(languages.headOption.getOrElse(""))
 
+  /** Extra directories to skip during the site walk, expressed as paths
+    * relative to the source root. Accepts a single string or an array of
+    * strings; absent means "no extras".
+    *
+    * The walk already skips `themeDir`, the active themes, the `publicDir`,
+    * and the build's `dst`. Use `excludeDirs` for anything else that lives
+    * under the source root and isn't part of the site: `node_modules`,
+    * `scratch`, vendored tooling, drafts, generated assets you write
+    * elsewhere, etc. Entries are joined to `src`, normalized, and added to
+    * the recursion-time exclude set — they're not glob patterns.
+    *
+    * Example:
+    *   excludeDirs = ["node_modules", "scratch", "assets/raw"]
+    */
+  def excludeDirs: List[String] = c.get("excludeDirs") match {
+    case Some(TomlValue.Str(s))     => List(s)
+    case Some(TomlValue.Arr(elems)) => elems.toList.collect { case TomlValue.Str(s) => s }
+    case None                       => Nil
+    case _                          => fail("excludeDirs", "string or array of strings")
+  }
+
   /** When true, the default language's URLs live at the site root (no
     * `/<lang>/` prefix); other languages still get prefixed. Default false
     * — every language carries its prefix, which is the easier story for a

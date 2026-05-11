@@ -87,24 +87,41 @@ Use layouts for: the actual `<html>` skeleton and the per-page-kind structural r
 
 ## Bundled themes
 
-Two themes ship in the juicer repo. Pick the one closest to what you're
-building and override individual files from your own `layouts/` or `static/`:
+Six themes ship in the juicer repo, each tuned for a different shape of
+site. Pick the closest match and override individual files from your own
+`layouts/` or `static/`:
 
-| Theme         | Where it lives              | What it's for |
-|---------------|-----------------------------|----------------|
-| `juicerdocs`  | `docs/themes/juicerdocs/`   | Documentation sites — sidebar nav, "On this page" rail, callout shortcodes |
-| `juicerblog`  | `docs/themes/juicerblog/`   | Blogs — post lists with pagination, tag archives, prev/next nav, post-meta line |
+| Theme              | Where it lives                  | What it's for |
+|--------------------|---------------------------------|----------------|
+| `juicerdocs`       | `docs/themes/juicerdocs/`       | Documentation sites — sidebar nav, "On this page" rail, 16 callout shortcodes. Powers this site. |
+| `juicerblog`       | `docs/themes/juicerblog/`       | Blogs — post lists with pagination, tag/category/year archives, series nav, author bylines, server-side syntax highlighting. |
+| `juicerlanding`    | `docs/themes/juicerlanding/`    | Product / SaaS landing pages — single-page section stack (hero, features, pricing, testimonials, FAQ) driven entirely from `site.toml`. |
+| `juicerportfolio`  | `docs/themes/juicerportfolio/`  | Designer / studio portfolios — image-first project grid, per-project hero + meta sidebar + gallery. |
+| `juicercafe`       | `docs/themes/juicercafe/`       | Cafés, small businesses, restaurants — hours widget, menu sections, photo albums, events list. |
+| `juicerchurch`     | `docs/themes/juicerchurch/`     | Churches, ministries — sermon archive, recurring-event calendar grid, ministries section, photo albums. |
 
-`juicerblog` is the canonical demo for the blogging features documented under
-[Concepts → Blogging features](../blogging/). A working example site lives at
-`examples/blog-site/` in the juicer repo — six posts, pagination set to three,
-sorted by date — that you can copy as a starting point.
+Each theme has its own section in these docs (linked from the sidebar)
+with a "what's in the box" overview and a configuration page that
+catalogues every `[juicerXxx]` token, top-level chrome key, and
+per-page frontmatter convention.
+
+A working example site lives under `examples/` for every bundled theme
+— for instance, `examples/blog-site/` mirrors `juicerblog`'s feature
+matrix, and `examples/landing-site/` exercises every section block in
+`juicerlanding`. Start from the closest example and edit downward:
+
+```bash
+sbt 'juicerJVM/run serve -s examples/blog-site -L'
+sbt 'juicerJVM/run serve -s examples/portfolio-site -L'
+```
 
 ## Building your own
 
-Reading through `themes/juicerdocs/` or `themes/juicerblog/` end-to-end is a
-quick tour of the conventions. `juicerdocs` exercises every theme primitive
-(layouts, partials, shortcodes, static); `juicerblog` is the smallest theme
-that touches the blog-specific features.
+Reading through any bundled theme end-to-end is a quick tour of the
+conventions. `juicerdocs` is the most complete demo of every theme
+primitive (layouts, partials, shortcodes, static); `juicerblog` is the
+smallest theme that touches the blog-specific engine features;
+`juicerlanding` is the cleanest demo of a frontmatter-driven page that
+assembles itself from `site.toml` blocks.
 
 [= github "edadma/juicer" /=]

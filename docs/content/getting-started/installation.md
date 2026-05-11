@@ -21,7 +21,7 @@ You'll see the usage banner. If sbt prints anything other than the help output, 
 Juicer is mostly an *application* — the CLI does what most users need — but the build pipeline is exposed as a library too. Add it to your `build.sbt`:
 
 ```scala
-libraryDependencies += "io.github.edadma" %%% "juicer" % "0.1.0"
+libraryDependencies += "io.github.edadma" %%% "juicer" % "0.2.0"
 ```
 
 The `%%%` form picks the right artifact for whichever Scala platform you're on (`juicerJVM`, `juicerJS`, `juicerNative`).

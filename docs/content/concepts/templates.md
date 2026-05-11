@@ -94,9 +94,14 @@ Inside `.page`:
 
 - `.page.title`, `.page.summary` — from frontmatter (summary is auto-derived if absent)
 - `.page.url`, `.page.relPermalink`, `.page.permalink` — three URL flavors
-- `.page.parent`, `.page.ancestors` — section navigation
-- `.page.next`, `.page.prev` — sibling navigation
+- `.page.parent`, `.page.ancestors` — section navigation (parent's `_index` record, then the root → parent chain)
+- `.page.next`, `.page.prev` — sibling navigation (by section page order)
 - `.page.isSection` — `true` for `_index.md` pages
+- `.page.pages`, `.page.subsections` — children — populated only on `_index.md` pages
+- `.page.date`, `.page.dateISO`, `.page.dateLong`, `.page.dateShort` — set when frontmatter `date:` is present (or mtime fallback)
+- `.page.tags`, `.page.categories` — always lists (a single string in frontmatter is wrapped)
+- `.page.author`, `.page.authors` — resolved author registry records
+- `.page.wordCount`, `.page.readingTime` — auto-computed from the rendered body
 - Plus any custom frontmatter key
 
 See [Reference / Template data](/reference/template-data/) for the full set.

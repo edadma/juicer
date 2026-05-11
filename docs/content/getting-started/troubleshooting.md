@@ -142,9 +142,9 @@ If `compile` succeeds but `run` doesn't, the issue is dependency resolution — 
 
 ### Live-reload doesn't fire when I save a markdown file
 
-**Cause.** The `-L` (or `--live-reload`) flag wasn't passed, OR your browser silently failed to subscribe to the SSE endpoint, OR the file you saved is outside the watched directory.
+**Cause.** The `-L` (or `--live-reload`) flag wasn't passed, OR your browser stopped polling the live-reload endpoint, OR the file you saved is outside the watched directory.
 
-**Fix.** Confirm the startup banner says `live reload: enabled`. Open browser devtools → Network → filter on `EventSource` and reload the page; you should see a long-lived connection to `/__juicer/live`. Saves are debounced 150ms — don't expect saves faster than that to coalesce, but anything slower should reload within a second.
+**Fix.** Confirm the startup banner says `live reload: enabled`. Open browser devtools → Network and reload the page; you should see a long-lived `fetch` to `/__juicer/wait?since=N` (the live-reload script is injected before `</body>` in every HTML response). Saves are debounced 150ms — don't expect saves faster than that to coalesce, but anything slower should reload within a second. If the page hasn't been opened with the dev server (e.g., a `file://` URL or a stale cached tab), the script never loaded and reloads never fire — open the page through `http://localhost:<port>/`.
 
 ### Browser shows old content even after a save
 
