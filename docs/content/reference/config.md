@@ -62,7 +62,83 @@ The `norme` baseline is here because Quebec's Charter of the French Language req
 | Key            | Default | What |
 |----------------|---------|------|
 | `stripPrefix`  | `true`  | Strip leading numeric prefixes from filenames in URLs (`01-foo.md` → `foo`) |
-| `headingShift` | `2`     | Add this much to every markdown heading level (1-clamped) |
+| `headingShift` | `2`     | Add this much to every markdown heading level. The default `2` exists because layouts typically emit an outer `<h1>{{ .page.title }}</h1>` and most theme CSS expects body markdown to start at `<h2>`. Set to `0` when a theme renders the page heading from the markdown body itself. |
+| `feeds`        | `true`  | Emit Atom and RSS feed files alongside the rendered HTML. Set `false` for sites that don't want feeds (single-page landings, internal wikis). |
+
+### Navigation — `nav`
+
+Top-level array that drives `.site.toc` (the sidebar / topbar nav).
+When `nav` is **absent**, juicer auto-builds the nav by walking the
+content tree. When `nav` is set, juicer walks the array entries:
+
+- A **string** ending in a markdown extension (`.md`, `.markdown`,
+  `.mkd`, `.mkdn`, `.mdown`) is a reference to a content file
+  (path relative to `contentDir`). The page record at that path is
+  pulled into the nav at the array's position.
+- Any other **string** is a section **label** — a non-clickable
+  group heading.
+- A **single-key table** maps an explicit label to a content path —
+  useful when the file's frontmatter title isn't the right label
+  for the nav.
+
+```toml
+nav = [
+  "Getting Started",                       # label
+  "getting-started/_index.md",             # link, title from frontmatter
+  "getting-started/installation.md",
+  { "Get help" = "getting-started/troubleshooting.md" },   # link, explicit label
+  "Reference",                             # label
+  "reference/cli.md",
+  "reference/config.md",
+]
+```
+
+The same array is also walked by themes' "previous / next" partials
+when `nav` is set, so the order you write here is the order readers
+flip through.
+
+### i18n — `languages`, `defaultLanguage`
+
+Two opt-in keys that turn on multi-language mode. The engine doesn't
+duplicate content for you (one markdown file per language is still
+the convention) — it surfaces the active language to templates so
+themes can render language-aware chrome and pull strings from a
+translation table.
+
+| Key               | Default                  | What |
+|-------------------|--------------------------|------|
+| `languages`       | unset (single-language)  | Array of language codes the site supports — `["en", "fr", "ja"]`. When unset, juicer is in single-language mode and `.page.lang` is the empty string. |
+| `defaultLanguage` | first entry / `""`       | Language used when a page's URL prefix doesn't match any of `languages`. Falls back to the first entry of `languages` when not set. |
+
+Translation strings live in `<src>/i18n/<lang>.toml`, one file per
+declared language, as flat `key = "value"` tables:
+
+```toml
+# i18n/en.toml
+home          = "Home"
+browse_docs   = "Browse the docs"
+read_more     = "Read more"
+```
+
+```toml
+# i18n/fr.toml
+home          = "Accueil"
+browse_docs   = "Parcourir la documentation"
+read_more     = "Lire la suite"
+```
+
+Templates look strings up with the `i18n` helper, passing the page's
+language:
+
+```squiggly
+<a href="/">{{ i18n .page.lang 'home' }}</a>
+<a href="/docs/">{{ i18n .page.lang 'browse_docs' }}</a>
+```
+
+Lookups fall back to `defaultLanguage` when a key is missing in the
+requested language; if the key is missing in both, the literal key
+is returned (so a missing translation is visible during authoring
+without crashing the build).
 
 ### Blog features
 

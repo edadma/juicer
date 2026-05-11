@@ -107,17 +107,27 @@ Useful ones:
 | `split 'sep'` | String split |
 | `join 'sep'` | List join |
 
-## Juicer-specific helpers
-
-| Builtin | What |
-|---------|------|
-| `relURL '...'` | Site-relative URL (prepends `baseURL.path`) |
-| `absURL '...'` | Absolute URL (prepends `baseURL.base + baseURL.path`) |
-| `markdownify '...'` | Render a markdown string to HTML |
-| `emojify '...'` | `:smile:` → 😄 substitution |
-
 ## Comments
 
 ```squiggly
 {{ // squiggly's not too noisy in templates }}
 ```
+
+## Scope inside loops
+
+Inside a `{{ for x <- coll }}` block, `.foo` resolves against the
+**current iterated element**, not the outer page context. Use `$.foo`
+to reach back up to the top-level data root:
+
+```squiggly
+{{ for p <- .section.pages }}
+  <li>
+    <a href="{{ p.url }}">{{ p.title }}</a>
+    {{ if eq p.url $.page.url }}<span>(this page)</span>{{ end }}
+  </li>
+{{ end }}
+```
+
+A common pitfall: writing `{{ .site.title }}` inside a loop and
+getting nothing. Use `{{ $.site.title }}` — `.site` doesn't exist on
+the iterated element.
