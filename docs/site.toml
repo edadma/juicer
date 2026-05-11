@@ -34,3 +34,6 @@ version = "v0.2.0"
 # templates. The theme now omits the <img>/<link> elements entirely when
 # `logo` is unset, so the juicer.run site has to declare it explicitly.
 logo = "/juicer-logo.png"
+# Surface the homepage "Get started" hero button (links to /getting-started/).
+# Off by default — sites without a getting-started section leave it unset.
+getStarted = true
