@@ -4,6 +4,7 @@ summary: A back-of-the-envelope number for what "deep time" actually means.
 weight: 1
 author: a slow reader
 minutes: 2
+toc: true
 ---
 
 The earth is, on the standard reading, about $4.54 \times 10^9$ years

@@ -25,9 +25,11 @@
       </div>
     </main>
 
+    {{ if .page.toc }}
     <aside class="juicerstudy-rail-aside">
       {{ partial 'page-toc' . }}
     </aside>
+    {{ end }}
   </div>
 
   {{ partial 'footer' . }}
