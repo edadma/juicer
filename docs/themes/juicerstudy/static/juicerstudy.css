@@ -1,0 +1,1579 @@
+/*
+ * juicerstudy — hand-rolled stylesheet for the juicer documentation theme.
+ *
+ *   1.  Reset + base
+ *   2.  Tokens (light + dark palette, sizing)
+ *   3.  Generic helpers
+ *   4.  Layout (topbar + 3-col grid)
+ *   5.  Topbar
+ *   6.  Sidebar
+ *   7.  Right-rail TOC
+ *   8.  Breadcrumbs + prev/next
+ *   9.  Hero / cards / buttons
+ *  10.  Markdown content typography
+ *  11.  Shortcodes (callouts, steps, tabs, kbd, badge, collapse, filetree, …)
+ *  12.  JS-driven state (copy buttons, search popup, mobile sidebar)
+ *  13.  404 page
+ *  14.  Footer
+ *  15.  Misc text utilities
+ */
+
+
+/* ============================================================
+ * 1. Reset + base
+ * ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+  text-rendering: optimizeLegibility;
+}
+
+img, svg, video { display: block; max-width: 100%; }
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+::selection { background: var(--brand-soft); color: var(--brand-strong); }
+
+
+/* ============================================================
+ * 2. Tokens
+ * ============================================================ */
+
+:root {
+  /* Palette — light theme (default).
+     Tuned to the logo: magenta-pink primary + purple accent + leaf-green
+     supporting note. Surfaces stay neutral so the brand colors carry the
+     personality without the page reading "purple". */
+  --bg:           #ffffff;
+  --bg-soft:      #fafafa;
+  --surface:      #f5f4f7;
+  --surface-2:    #fbfafc;
+  --border:       #e7e3ec;
+  --border-soft:  #f1eef5;
+  --fg:           #18181b;
+  --fg-soft:      #27272a;
+  --muted:        #71717a;
+
+  --brand:        #d61472;
+  --brand-strong: #a30d57;
+  --brand-soft:   #fce7f3;
+  --accent:       #6f1f9e;
+  --leaf:         #65a30d;
+
+  --code-bg:      #faf7fa;
+  --code-fg:      #1f1b24;
+  --code-border:  #ead5e6;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.04), 0 1px 1px rgba(0,0,0,.03);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.05);
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Sizing */
+  --topbar-h:     3.5rem;
+  --sidebar-w:    16rem;
+  --rail-w:       18rem;
+  --content-max:  48rem;
+  --site-max:     90rem;
+  --radius-sm:    0.25rem;
+  --radius-md:    0.375rem;
+  --radius-lg:    0.5rem;
+}
+
+[data-theme="dark"] {
+  --bg:           #0b0a10;
+  --bg-soft:      #0f0e15;
+  --surface:      #16141d;
+  --surface-2:    #1c1925;
+  --border:       #2a2533;
+  --border-soft:  #1e1a26;
+  --fg:           #f4f4f5;
+  --fg-soft:      #d4d4d4;
+  --muted:        #a1a1aa;
+
+  --brand:        #ec4899;
+  --brand-strong: #f472b6;
+  --brand-soft:   rgba(236,72,153,0.18);
+  --accent:       #c084fc;
+  --leaf:         #a3e635;
+
+  --code-bg:      #15131c;
+  --code-fg:      #ececf1;
+  --code-border:  #2a2533;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.5), 0 2px 4px -2px rgba(0,0,0,.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.6), 0 4px 6px -4px rgba(0,0,0,.5);
+}
+
+
+/* ============================================================
+ * 3. Generic helpers
+ * ============================================================ */
+
+.juicerstudy-sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+[hidden] { display: none !important; }
+
+
+/* ============================================================
+ * 4. Layout
+ * ============================================================ */
+
+.juicerstudy-page {
+  display: flex;
+  max-width: var(--site-max);
+  margin: 0 auto;
+}
+
+.juicerstudy-main {
+  flex: 1;
+  min-width: 0;
+  padding: 2rem 1rem;
+}
+
+.juicerstudy-content {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+.juicerstudy-sidebar-aside,
+.juicerstudy-rail-aside {
+  flex-shrink: 0;
+  position: sticky;
+  top: var(--topbar-h);
+  align-self: flex-start;
+  max-height: calc(100vh - var(--topbar-h));
+  overflow-y: auto;
+  padding: 2rem 1rem;
+}
+
+.juicerstudy-sidebar-aside {
+  width: var(--sidebar-w);
+  border-right: 1px solid var(--border);
+}
+
+.juicerstudy-rail-aside {
+  width: var(--rail-w);
+}
+
+/* Sidebar / rail / content scrollbars — keep them visually quiet so the
+   side columns feel like ambient navigation and so a long horizontal code
+   block doesn't grow a chunky OS-default scrollbar across the bottom.
+   Firefox uses the standard `scrollbar-*` properties; Chromium/Safari use
+   the ::-webkit-scrollbar pseudo-element. Both target `--border` for the
+   thumb, which is already token-aware so dark mode auto-dims.
+
+   Vertical: sidebar + rail (8px wide). Horizontal: every overflowing
+   content scroller — code blocks (<pre>), tables, the filetree shortcode,
+   anything else inside the prose column with `overflow-x: auto`. */
+.juicerstudy-sidebar-aside,
+.juicerstudy-rail-aside,
+.juicerstudy-content pre,
+.juicerstudy-content table,
+.juicerstudy-content .juicerstudy-filetree {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.juicerstudy-sidebar-aside::-webkit-scrollbar,
+.juicerstudy-rail-aside::-webkit-scrollbar,
+.juicerstudy-content pre::-webkit-scrollbar,
+.juicerstudy-content table::-webkit-scrollbar,
+.juicerstudy-content .juicerstudy-filetree::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.juicerstudy-sidebar-aside::-webkit-scrollbar-track,
+.juicerstudy-rail-aside::-webkit-scrollbar-track,
+.juicerstudy-content pre::-webkit-scrollbar-track,
+.juicerstudy-content table::-webkit-scrollbar-track,
+.juicerstudy-content .juicerstudy-filetree::-webkit-scrollbar-track {
+  background: transparent;
+}
+.juicerstudy-sidebar-aside::-webkit-scrollbar-thumb,
+.juicerstudy-rail-aside::-webkit-scrollbar-thumb,
+.juicerstudy-content pre::-webkit-scrollbar-thumb,
+.juicerstudy-content table::-webkit-scrollbar-thumb,
+.juicerstudy-content .juicerstudy-filetree::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+.juicerstudy-sidebar-aside::-webkit-scrollbar-thumb:hover,
+.juicerstudy-rail-aside::-webkit-scrollbar-thumb:hover,
+.juicerstudy-content pre::-webkit-scrollbar-thumb:hover,
+.juicerstudy-content table::-webkit-scrollbar-thumb:hover,
+.juicerstudy-content .juicerstudy-filetree::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-soft);
+}
+
+@media (max-width: 1023px) {
+  .juicerstudy-sidebar-aside { display: none; }
+}
+@media (max-width: 1279px) {
+  .juicerstudy-rail-aside { display: none; }
+}
+
+
+/* ============================================================
+ * 5. Topbar
+ * ============================================================ */
+
+.juicerstudy-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: var(--topbar-h);
+  border-bottom: 1px solid var(--border);
+  background: rgb(from var(--bg) r g b / 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.juicerstudy-topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 100%;
+  max-width: var(--site-max);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.juicerstudy-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  color: var(--fg);
+}
+.juicerstudy-brand:hover { text-decoration: none; }
+
+.juicerstudy-brand-logo {
+  width: 2rem;
+  height: 2rem;
+}
+
+.juicerstudy-brand-name {
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+@media (max-width: 639px) {
+  .juicerstudy-brand-name { display: none; }
+}
+
+.juicerstudy-search {
+  flex: 1;
+  max-width: 28rem;
+  position: relative;
+  margin: 0 auto;
+}
+
+.juicerstudy-search-wrap {
+  position: relative;
+}
+
+.juicerstudy-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.juicerstudy-search-input {
+  width: 100%;
+  padding: 0.375rem 0.75rem 0.375rem 2.25rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--fg);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.juicerstudy-search-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+.juicerstudy-search-popup {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
+  max-height: 24rem;
+  overflow-y: auto;
+  z-index: 40;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.juicerstudy-result {
+  display: block;
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--fg);
+  text-decoration: none;
+  transition: background 0.1s, color 0.1s;
+}
+.juicerstudy-result:last-child { border-bottom: none; }
+.juicerstudy-result:hover,
+.juicerstudy-result.is-active {
+  background: var(--brand-soft);
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.juicerstudy-result-title {
+  display: block;
+  font-weight: 500;
+}
+.juicerstudy-result-snippet {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-top: 0.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.juicerstudy-result-empty {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.juicerstudy-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  color: var(--fg-soft);
+  border: 1px solid transparent;
+  background: transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.juicerstudy-icon-btn:hover {
+  color: var(--brand);
+  background: var(--brand-soft);
+  text-decoration: none;
+}
+.juicerstudy-icon-btn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.juicerstudy-icon-light { display: none; }
+.juicerstudy-icon-dark  { display: block; }
+[data-theme="dark"] .juicerstudy-icon-light { display: block; }
+[data-theme="dark"] .juicerstudy-icon-dark  { display: none; }
+
+.juicerstudy-sidebar-toggle { display: none; }
+@media (max-width: 1023px) {
+  .juicerstudy-sidebar-toggle { display: inline-flex; }
+}
+
+
+/* ============================================================
+ * 6. Sidebar
+ * ============================================================ */
+
+.juicerstudy-nav {
+  font-size: 0.875rem;
+}
+
+.juicerstudy-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.juicerstudy-nav-section {
+  margin-bottom: 1.25rem;
+}
+
+.juicerstudy-nav-heading {
+  display: block;
+  padding: 0.375rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+}
+.juicerstudy-nav-heading:hover {
+  color: var(--brand);
+  text-decoration: none;
+}
+/* Section heading is the active link when the user is on the
+   section's `_index` page. Mirrors the .juicerstudy-nav-link.is-active
+   colour treatment (without the border-left accent, since the heading
+   sits outside the bordered child list). */
+.juicerstudy-nav-heading.is-active {
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.juicerstudy-nav-children {
+  list-style: none;
+  margin: 0.25rem 0 0 0;
+  padding: 0;
+  border-left: 1px solid var(--border-soft);
+}
+
+.juicerstudy-nav-link {
+  display: block;
+  padding: 0.375rem 0.75rem;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  color: var(--fg-soft);
+  text-decoration: none;
+  transition: color 0.1s, background 0.1s, border-color 0.1s;
+}
+.juicerstudy-nav-link:hover {
+  color: var(--brand);
+  background: var(--brand-soft);
+  text-decoration: none;
+}
+.juicerstudy-nav-link.is-active {
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-left-color: var(--brand);
+  font-weight: 500;
+}
+
+
+/* ============================================================
+ * 7. Right-rail TOC
+ * ============================================================ */
+
+.juicerstudy-toc-wrap {
+  font-size: 0.875rem;
+}
+
+.juicerstudy-toc-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.juicerstudy-toc {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 1px solid var(--border);
+}
+.juicerstudy-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.juicerstudy-toc-link {
+  display: block;
+  padding: 0.25rem 0;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  color: var(--muted);
+  text-decoration: none;
+  line-height: 1.4;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  transition: color 0.1s, border-color 0.1s;
+}
+.juicerstudy-toc-link:hover {
+  color: var(--fg);
+  text-decoration: none;
+}
+.juicerstudy-toc-link.is-active {
+  color: var(--brand);
+  border-left-color: var(--brand);
+  font-weight: 500;
+}
+.juicerstudy-toc-link[data-toc-level="2"] { padding-left: 0.75rem; }
+.juicerstudy-toc-link[data-toc-level="3"] { padding-left: 1.5rem; }
+.juicerstudy-toc-link[data-toc-level="4"] { padding-left: 2.25rem; font-size: 0.8125rem; }
+.juicerstudy-toc-link[data-toc-level="5"] { padding-left: 3rem;    font-size: 0.8125rem; }
+
+
+/* ============================================================
+ * 8. Breadcrumbs + prev/next
+ * ============================================================ */
+
+.juicerstudy-breadcrumbs {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+
+.juicerstudy-breadcrumbs ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+.juicerstudy-breadcrumbs li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.juicerstudy-breadcrumbs-link { color: inherit; }
+.juicerstudy-breadcrumbs-link:hover {
+  color: var(--brand);
+  text-decoration: none;
+}
+.juicerstudy-breadcrumbs-current {
+  color: var(--fg-soft);
+  font-weight: 500;
+}
+.juicerstudy-breadcrumbs-sep {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.juicerstudy-prevnext {
+  margin-top: 3rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.juicerstudy-prevnext-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  color: var(--fg);
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.juicerstudy-prevnext-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  text-decoration: none;
+}
+.juicerstudy-prevnext-card-next { text-align: right; }
+
+.juicerstudy-prevnext-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.juicerstudy-prevnext-title {
+  font-weight: 600;
+  color: var(--fg);
+  margin-top: 0.25rem;
+}
+
+
+/* ============================================================
+ * 9. Hero / cards / buttons
+ * ============================================================ */
+
+.juicerstudy-hero {
+  position: relative;
+  padding: 3.5rem 1rem 2rem;
+  margin: 0 -1rem;
+  overflow: hidden;
+}
+.juicerstudy-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(800px 400px at 20% 0%,  var(--brand-soft), transparent 60%),
+    radial-gradient(600px 300px at 90% 30%, rgb(from var(--accent) r g b / 0.10), transparent 60%);
+  z-index: -1;
+}
+
+.juicerstudy-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.juicerstudy-hero-logo {
+  width: 3.5rem;
+  height: 3.5rem;
+}
+.juicerstudy-hero-version {
+  font-size: 0.875rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+.juicerstudy-hero-title {
+  margin: 0;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+  color: var(--fg);
+}
+
+.juicerstudy-grad {
+  background: linear-gradient(135deg, var(--brand), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.juicerstudy-hero-summary {
+  max-width: 42rem;
+  margin: 1rem 0 0 0;
+  font-size: 1.125rem;
+  color: var(--fg-soft);
+  line-height: 1.6;
+}
+
+.juicerstudy-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.juicerstudy-cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+  margin-top: 3rem;
+}
+@media (min-width: 768px) {
+  .juicerstudy-cards { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 1024px) {
+  .juicerstudy-cards { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+.juicerstudy-card {
+  display: block;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--fg);
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.juicerstudy-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  text-decoration: none;
+}
+.juicerstudy-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: var(--brand-soft);
+  color: var(--brand);
+  margin-bottom: 0.75rem;
+}
+.juicerstudy-card-icon svg { width: 1.25rem; height: 1.25rem; }
+.juicerstudy-card-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--fg);
+}
+.juicerstudy-card-summary {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.juicerstudy-section-heading {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 3rem 0 1rem;
+  color: var(--fg);
+}
+
+.juicerstudy-page-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.juicerstudy-page-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.375rem 0;
+}
+.juicerstudy-page-list a {
+  color: var(--brand);
+  font-weight: 500;
+}
+.juicerstudy-page-list-summary {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.juicerstudy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.05s;
+  cursor: pointer;
+}
+.juicerstudy-btn:hover { text-decoration: none; }
+.juicerstudy-btn:active { transform: translateY(1px); }
+.juicerstudy-btn svg { width: 1rem; height: 1rem; }
+
+.juicerstudy-btn-primary {
+  background: var(--brand);
+  color: #ffffff;
+}
+.juicerstudy-btn-primary:hover {
+  background: var(--brand-strong);
+  color: #ffffff;
+}
+[data-theme="dark"] .juicerstudy-btn-primary { color: #0a0a0a; }
+[data-theme="dark"] .juicerstudy-btn-primary:hover { color: #0a0a0a; }
+
+.juicerstudy-btn-secondary {
+  background: var(--surface);
+  color: var(--fg);
+  border-color: var(--border);
+}
+.juicerstudy-btn-secondary:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.juicerstudy-lead {
+  font-size: 1.125rem;
+  color: var(--fg-soft);
+  margin: 0 0 2rem 0;
+  line-height: 1.6;
+}
+
+
+/* ============================================================
+ * 10. Markdown content typography
+ *
+ * Anything inside .juicerstudy-content is server-rendered Markdown.
+ * Default styles target unprefixed tags so authors can write plain
+ * Markdown and still get the polished look.
+ * ============================================================ */
+
+.juicerstudy-content {
+  color: var(--fg);
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+.juicerstudy-content > * + * { margin-top: 1.25em; }
+
+.juicerstudy-content h1,
+.juicerstudy-content h2,
+.juicerstudy-content h3,
+.juicerstudy-content h4,
+.juicerstudy-content h5,
+.juicerstudy-content h6 {
+  color: var(--fg);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  scroll-margin-top: calc(var(--topbar-h) + 1.5rem);
+  line-height: 1.25;
+}
+.juicerstudy-content h1 {
+  font-size: 2.25rem;
+  margin: 0 0 1.25rem 0;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+.juicerstudy-content h2 {
+  font-size: 1.75rem;
+  margin-top: 2.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid var(--border);
+}
+.juicerstudy-content h3 {
+  font-size: 1.375rem;
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+}
+.juicerstudy-content h4 {
+  font-size: 1.125rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+.juicerstudy-content h5,
+.juicerstudy-content h6 {
+  font-size: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.juicerstudy-content p {
+  margin: 0;
+  color: var(--fg-soft);
+}
+
+/* Markdown-body links — scoped via :not() so the rule doesn't bleed into
+   buttons / cards / prev-next anchors, which own their own colors. */
+.juicerstudy-content a:not([class*="juicerstudy-"]) {
+  color: var(--brand);
+  text-decoration: underline;
+  text-decoration-color: rgb(from var(--brand) r g b / 0.4);
+  text-underline-offset: 2px;
+  transition: text-decoration-color 0.15s;
+}
+.juicerstudy-content a:not([class*="juicerstudy-"]):hover {
+  text-decoration-color: var(--brand);
+}
+
+.juicerstudy-content strong { color: var(--fg); font-weight: 700; }
+.juicerstudy-content em { color: inherit; }
+
+.juicerstudy-content ul,
+.juicerstudy-content ol {
+  padding-left: 1.5rem;
+  color: var(--fg-soft);
+}
+.juicerstudy-content ul { list-style: disc; }
+.juicerstudy-content ol { list-style: decimal; }
+.juicerstudy-content li { margin: 0.375rem 0; }
+.juicerstudy-content li > p { margin: 0; }
+.juicerstudy-content li::marker { color: var(--muted); }
+
+.juicerstudy-content ul ul,
+.juicerstudy-content ul ol,
+.juicerstudy-content ol ol,
+.juicerstudy-content ol ul {
+  margin-top: 0.375rem;
+  margin-bottom: 0.375rem;
+}
+
+.juicerstudy-content blockquote {
+  margin: 1.5rem 0;
+  padding: 0.5rem 0 0.5rem 1rem;
+  border-left: 3px solid var(--brand);
+  color: var(--fg-soft);
+  font-style: italic;
+  background: var(--bg-soft);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.juicerstudy-content hr {
+  margin: 2.5rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.juicerstudy-content img {
+  max-width: 100%;
+  border-radius: var(--radius-md);
+}
+
+.juicerstudy-content figure { margin: 1.5rem 0; }
+.juicerstudy-content figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Inline code */
+.juicerstudy-content :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  padding: 0.15em 0.375em;
+  border-radius: var(--radius-sm);
+  background: var(--brand-soft);
+  color: var(--brand);
+  border: 1px solid rgb(from var(--brand) r g b / 0.15);
+  white-space: nowrap;
+}
+
+/* Block code */
+.juicerstudy-content pre {
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: var(--code-bg);
+  color: var(--code-fg);
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  box-shadow: var(--shadow-sm);
+}
+.juicerstudy-content pre code {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  padding: 0;
+  color: inherit;
+  border: 0;
+  white-space: pre;
+}
+.juicerstudy-content pre[data-language]::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0.375rem;
+  left: 0.875rem;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  pointer-events: none;
+}
+.juicerstudy-content pre[data-language] {
+  padding-top: 1.75rem;
+}
+
+/* ============================================================
+   Syntax highlighting
+   ============================================================
+   Server-side via the `highlighter` lib (TextMate grammars). When juicer
+   sees a `<src>/grammars/<lang>.tmLanguage.json`, it parses each one
+   once, wires markdown's `codeHighlighter` callback, and emits
+   `<span class="hl-keyword">…</span>` etc. inside the existing
+   `<pre><code>`. The theme owns the colors via these classes; sites
+   without a grammars/ dir get plain `<pre><code>` and these styles
+   are inert.
+
+   Palette lives in juicerstudy's magenta/purple/leaf color space —
+   keywords carry the brand magenta, strings stay leaf-green, types
+   pick up the accent violet so the page reads as one piece. Dark-mode
+   swaps to lighter, slightly cooler tones so the accents don't burn
+   against the deep code background. */
+.juicerstudy-content .hl-keyword     { color: #a30d57; font-weight: 600; }
+.juicerstudy-content .hl-string      { color: #4d7c0f; }
+.juicerstudy-content .hl-comment     { color: #71717a; font-style: italic; }
+.juicerstudy-content .hl-number      { color: #b91c1c; }
+.juicerstudy-content .hl-type        { color: #6f1f9e; }
+.juicerstudy-content .hl-function    { color: #1d4ed8; }
+.juicerstudy-content .hl-variable    { color: inherit; }
+.juicerstudy-content .hl-operator    { color: #52525b; }
+.juicerstudy-content .hl-punctuation { color: #71717a; }
+
+[data-theme="dark"] .juicerstudy-content .hl-keyword     { color: #f472b6; }
+[data-theme="dark"] .juicerstudy-content .hl-string      { color: #a3e635; }
+[data-theme="dark"] .juicerstudy-content .hl-comment     { color: #a1a1aa; }
+[data-theme="dark"] .juicerstudy-content .hl-number      { color: #fb7185; }
+[data-theme="dark"] .juicerstudy-content .hl-type        { color: #c084fc; }
+[data-theme="dark"] .juicerstudy-content .hl-function    { color: #93c5fd; }
+[data-theme="dark"] .juicerstudy-content .hl-operator    { color: #d4d4d8; }
+[data-theme="dark"] .juicerstudy-content .hl-punctuation { color: #a1a1aa; }
+
+/* Tables */
+.juicerstudy-content table {
+  width: 100%;
+  margin: 1.5rem 0;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.juicerstudy-content thead {
+  background: var(--surface);
+  border-top: 2px solid var(--brand);
+}
+.juicerstudy-content th {
+  text-align: left;
+  padding: 0.625rem 0.875rem;
+  font-weight: 600;
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
+}
+.juicerstudy-content td {
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--fg-soft);
+}
+.juicerstudy-content tbody tr:nth-child(even) { background: var(--bg-soft); }
+.juicerstudy-content tbody tr:hover { background: var(--brand-soft); }
+.juicerstudy-content tr:last-child td { border-bottom: 0; }
+
+/* Definition lists */
+.juicerstudy-content dl { margin: 1rem 0; }
+.juicerstudy-content dt { font-weight: 600; color: var(--fg); margin-top: 0.75rem; }
+.juicerstudy-content dd { margin-left: 1.5rem; color: var(--fg-soft); }
+
+
+/* ============================================================
+ * 11. Shortcodes
+ * ============================================================ */
+
+/* ----- Callouts (note / tip / warning / danger) ----- */
+
+.juicerstudy-callout {
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 1rem 1rem 1rem 2.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--callout-border, var(--border));
+  background: var(--callout-bg, var(--surface-2));
+  color: var(--fg);
+}
+.juicerstudy-callout::before {
+  content: "";
+  position: absolute;
+  left: 0.875rem;
+  top: 1.0625rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: var(--callout-accent, var(--muted));
+  -webkit-mask-image: var(--callout-icon);
+          mask-image: var(--callout-icon);
+  -webkit-mask-size: contain;
+          mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+          mask-position: center;
+}
+.juicerstudy-callout > strong {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--callout-accent, var(--fg));
+}
+.juicerstudy-callout-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--fg-soft);
+}
+.juicerstudy-callout-body > *:first-child { margin-top: 0; }
+.juicerstudy-callout-body > *:last-child  { margin-bottom: 0; }
+.juicerstudy-callout-body p { margin: 0.5rem 0; }
+.juicerstudy-callout-body p:first-child { margin-top: 0; }
+.juicerstudy-callout-body p:last-child  { margin-bottom: 0; }
+.juicerstudy-callout-body code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  padding: 0.1em 0.3em;
+  border-radius: var(--radius-sm);
+  background: rgb(from var(--callout-accent, var(--brand)) r g b / 0.15);
+  color: var(--callout-accent, var(--brand));
+}
+
+.juicerstudy-callout-note {
+  --callout-accent:  #2563eb;
+  --callout-bg:      #eff6ff;
+  --callout-border:  #bfdbfe;
+  --callout-icon:    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'/></svg>");
+}
+[data-theme="dark"] .juicerstudy-callout-note {
+  --callout-accent: #60a5fa;
+  --callout-bg:     rgba(37,99,235,0.10);
+  --callout-border: rgba(37,99,235,0.35);
+}
+
+.juicerstudy-callout-tip {
+  --callout-accent: #16a34a;
+  --callout-bg:     #f0fdf4;
+  --callout-border: #bbf7d0;
+  --callout-icon:   url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547Z'/></svg>");
+}
+[data-theme="dark"] .juicerstudy-callout-tip {
+  --callout-accent: #4ade80;
+  --callout-bg:     rgba(22,163,74,0.10);
+  --callout-border: rgba(22,163,74,0.35);
+}
+
+.juicerstudy-callout-warning {
+  --callout-accent: #ca8a04;
+  --callout-bg:     #fefce8;
+  --callout-border: #fde68a;
+  --callout-icon:   url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z'/></svg>");
+}
+[data-theme="dark"] .juicerstudy-callout-warning {
+  --callout-accent: #facc15;
+  --callout-bg:     rgba(202,138,4,0.10);
+  --callout-border: rgba(202,138,4,0.35);
+}
+
+.juicerstudy-callout-danger {
+  --callout-accent: #dc2626;
+  --callout-bg:     #fef2f2;
+  --callout-border: #fecaca;
+  --callout-icon:   url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'/></svg>");
+}
+[data-theme="dark"] .juicerstudy-callout-danger {
+  --callout-accent: #f87171;
+  --callout-bg:     rgba(220,38,38,0.10);
+  --callout-border: rgba(220,38,38,0.35);
+}
+
+
+/* ----- Steps ----- */
+
+.juicerstudy-steps {
+  margin: 2rem 0;
+  counter-reset: jd-step;
+}
+.juicerstudy-steps > ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.juicerstudy-steps > ol > li {
+  position: relative;
+  padding-left: 3rem;
+  padding-bottom: 1.5rem;
+  border-left: 2px solid var(--border);
+  margin-left: 1rem;
+  counter-increment: jd-step;
+}
+.juicerstudy-steps > ol > li:last-child {
+  border-left-color: transparent;
+  padding-bottom: 0;
+}
+.juicerstudy-steps > ol > li::before {
+  content: counter(jd-step);
+  position: absolute;
+  left: -1rem;
+  top: -0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+[data-theme="dark"] .juicerstudy-steps > ol > li::before { color: #0a0a0a; }
+
+
+/* ----- Tabs ----- */
+
+.juicerstudy-tabs {
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.juicerstudy-tabs-bar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 0.5rem 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.juicerstudy-tabs-button {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s;
+}
+.juicerstudy-tabs-button:hover { color: var(--fg); }
+.juicerstudy-tabs-button.is-active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+.juicerstudy-tab-panel {
+  padding: 1rem 1.25rem;
+  display: none;
+}
+.juicerstudy-tab-panel.is-active { display: block; }
+
+
+/* ----- Filetree ----- */
+
+.juicerstudy-filetree {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--fg-soft);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+
+/* ----- kbd ----- */
+
+.juicerstudy-kbd {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+}
+
+
+/* ----- Collapse ----- */
+
+.juicerstudy-collapse {
+  margin: 1rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+.juicerstudy-collapse > summary {
+  cursor: pointer;
+  padding: 0.625rem 1rem;
+  font-weight: 500;
+  color: var(--fg);
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.juicerstudy-collapse > summary::-webkit-details-marker { display: none; }
+.juicerstudy-collapse > summary::before {
+  content: "";
+  width: 0.75rem;
+  height: 0.75rem;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M9 6 15 12 9 18Z'/></svg>");
+          mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M9 6 15 12 9 18Z'/></svg>");
+  -webkit-mask-size: contain;
+          mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+          mask-position: center;
+  transition: transform 0.2s;
+}
+.juicerstudy-collapse[open] > summary::before { transform: rotate(90deg); }
+.juicerstudy-collapse > summary:hover { background: var(--surface); }
+.juicerstudy-collapse[open] > summary { border-bottom: 1px solid var(--border); }
+.juicerstudy-collapse-body {
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--fg-soft);
+}
+.juicerstudy-collapse-body > *:first-child { margin-top: 0; }
+.juicerstudy-collapse-body > *:last-child  { margin-bottom: 0; }
+
+
+/* ----- Badge ----- */
+
+.juicerstudy-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+
+/* ----- Figure ----- */
+
+.juicerstudy-figure {
+  margin: 1.5rem 0;
+}
+.juicerstudy-figure img {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+.juicerstudy-figure figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+
+/* ----- YouTube ----- */
+
+.juicerstudy-youtube {
+  margin: 1.5rem 0;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.juicerstudy-youtube iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+
+/* ----- GitHub repo card ----- */
+
+.juicerstudy-github {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--fg);
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.juicerstudy-github:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+.juicerstudy-github svg { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
+.juicerstudy-github-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.juicerstudy-github-name {
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.juicerstudy-github-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+
+/* ----- Buttons row ----- */
+
+.juicerstudy-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+
+/* ============================================================
+ * 12. JS-driven state
+ * ============================================================ */
+
+/* ----- Code block "copy" buttons ----- */
+
+.juicerstudy-copy {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  background: rgb(from var(--fg) r g b / 0.08);
+  border: 1px solid rgb(from var(--fg) r g b / 0.12);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+.juicerstudy-content pre:hover .juicerstudy-copy,
+.juicerstudy-copy:focus-visible { opacity: 1; }
+.juicerstudy-copy:hover {
+  color: var(--fg);
+  background: rgb(from var(--fg) r g b / 0.16);
+}
+.juicerstudy-copy.is-copied {
+  color: var(--leaf);
+  opacity: 1;
+}
+
+
+/* ----- Mobile sidebar overlay ----- */
+
+.juicerstudy-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 1023px) {
+  body[data-sidebar-open="true"] .juicerstudy-sidebar-aside {
+    display: block;
+    position: fixed;
+    top: var(--topbar-h);
+    left: 0;
+    bottom: 0;
+    z-index: 40;
+    width: var(--sidebar-w);
+    max-width: 80vw;
+    overflow-y: auto;
+    background: var(--bg);
+    box-shadow: var(--shadow-lg);
+  }
+  body[data-sidebar-open="true"] .juicerstudy-sidebar-backdrop {
+    display: block;
+  }
+}
+
+
+/* ============================================================
+ * 13. 404
+ * ============================================================ */
+
+.juicerstudy-404 {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+.juicerstudy-404-inner { max-width: 24rem; }
+.juicerstudy-404-logo {
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto 1.5rem;
+  opacity: 0.9;
+}
+.juicerstudy-404-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+.juicerstudy-404-msg {
+  margin: 0 0 2rem 0;
+  font-size: 1.125rem;
+  color: var(--muted);
+}
+
+
+/* ============================================================
+ * 14. Footer
+ * ============================================================ */
+
+.juicerstudy-footer {
+  margin-top: 4rem;
+  border-top: 1px solid var(--border);
+}
+.juicerstudy-footer-inner {
+  max-width: var(--site-max);
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+@media (min-width: 640px) {
+  .juicerstudy-footer-inner {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+.juicerstudy-footer p { margin: 0; }
+.juicerstudy-footer a { color: var(--brand); }
+.juicerstudy-footer a:hover { text-decoration: underline; }
+
+
+/* ============================================================
+ * 15. Misc text utilities (used outside .juicerstudy-content)
+ * ============================================================ */
+
+.juicerstudy-text-muted { color: var(--muted); }
+.juicerstudy-text-soft  { color: var(--fg-soft); }
+.juicerstudy-text-brand { color: var(--brand); }
+.juicerstudy-mono       { font-family: var(--font-mono); }

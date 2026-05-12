@@ -1,0 +1,20 @@
+{{ if .page.prev or .page.next }}
+  <nav class="juicerstudy-prevnext" aria-label="Page navigation">
+    {{ if .page.prev }}
+      <a href="{{ .page.prev.url }}" class="juicerstudy-prevnext-card">
+        <span class="juicerstudy-prevnext-label">← Previous</span>
+        <span class="juicerstudy-prevnext-title">{{ .page.prev.title }}</span>
+      </a>
+    {{ else }}
+      <div></div>
+    {{ end }}
+    {{ if .page.next }}
+      <a href="{{ .page.next.url }}" class="juicerstudy-prevnext-card juicerstudy-prevnext-card-next">
+        <span class="juicerstudy-prevnext-label">Next →</span>
+        <span class="juicerstudy-prevnext-title">{{ .page.next.title }}</span>
+      </a>
+    {{ else }}
+      <div></div>
+    {{ end }}
+  </nav>
+{{ end }}
