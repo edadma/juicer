@@ -59,27 +59,3 @@ sbt 'juicerJVM/run serve -s docs/demos/juicerblog -L'
 
 A future enhancement could wire a single `juicer serve` invocation
 to build the docs + all demos and serve them under one tree.
-
-## Known issue: demo build
-
-`bin/build-demos.sh` currently fails for the **juicerblog** and
-**juicerchurch** demos. Both themes reference `.site.authorsPath` in
-their partials, and squiggly resolves it to nothing at render time —
-`relURL` is then called with zero arguments and errors out:
-
-```
-cannot apply function 'relURL' to arguments '()'
- relURL .site.authorsPath
- ^
-```
-
-The engine sets `authorsPath` to `/authors/` by default
-(`shared/src/main/scala/io/github/edadma/juicer/App.scala`:732–745) and
-adds it to the site map at line 1468, but the value doesn't reach the
-partial's `.site` context. The juicercafe demo builds fine because
-its `site.toml` explicitly sets `authorsPath = "/team/"`.
-
-The `Build per-theme demo sites` step in `docs.yml` is marked
-`continue-on-error: true` so deploys don't break on this. Once the
-template-vs-site resolution gap is fixed, drop the flag and re-add
-the affected demos to the deploy.
