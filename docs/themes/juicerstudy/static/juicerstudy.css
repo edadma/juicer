@@ -1188,7 +1188,7 @@ hr {
   font-size: 1rem;
 }
 
-.juicerstudy-content > * + * { margin-top: 1.5em; }
+.juicerstudy-content > * + * { margin-top: 2em; }
 
 /* Headings — serif, modest weight. The display-bold (800) +
    negative tracking pattern is for product/interface typography;
