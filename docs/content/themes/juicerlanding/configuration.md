@@ -250,3 +250,54 @@ Most pages on a juicerlanding site are the home page (`layout: home`) and a hand
 | `summary` | `String` | Subtitle under the page title; also `<meta name="description">` for that page. |
 | `date`    | `Date`   | Sort key for `folder.html` listings. Optional. |
 | `lang`    | `String` | Sets `<html lang>` for the page. Defaults to `en`. |
+
+## SEO
+
+Every juicer theme ships a shared SEO partial (`partials/seo.html`) that emits the standard meta block: description (with site-level fallback), canonical link, author meta, robots `noindex`, OpenGraph + Twitter cards (via the `ogTags` builtin), Atom feed discovery, and theme-specific JSON-LD. The engine separately writes `sitemap.xml` and `robots.txt`.
+
+### Site-wide keys
+
+```toml
+description = "The fastest way to ship docs that look like you wrote them yourself."
+ogImage     = "/og/hero.png"
+
+robots   = true
+noindex  = false                  # set true for staging/preview domains
+disallow = ["/private/"]
+
+# Optional: Organization JSON-LD on the homepage. Drives Google's
+# Knowledge Panel for the brand.
+[organization]
+name   = "Juicer Labs"            # defaults to .site.title when omitted
+logo   = "/img/logo-square.png"
+email  = "hello@juicerlabs.io"
+sameAs = ["https://github.com/edadma/juicer", "https://twitter.com/juicerlabs"]
+```
+
+### Per-page frontmatter
+
+```yaml
+---
+title: Pricing
+summary: A one-sentence dek for search results and OG cards.
+image: /img/og/pricing.png
+ogTitle: Snappier headline for socials
+ogDescription: Tightened for socials
+noindex: true   # excluded from sitemap, JSON-LD suppressed, <meta robots> emitted
+---
+```
+
+### Structured data emitted
+
+| Page | Schema |
+|------|--------|
+| Root section | `WebSite` (+ `Organization` when `[organization]` is set in `site.toml`) |
+| Any page with ancestors | `BreadcrumbList` |
+
+Landing-page sites usually don't have a "post" surface, so juicerlanding doesn't emit `Article` JSON-LD by default. Add your own via a `<src>/partials/seo-jsonld.html` override if you need it.
+
+`noindex: true` suppresses ALL JSON-LD on that page.
+
+### Overriding the SEO partial
+
+Drop a file at `<src>/partials/seo.html` (or `seo-jsonld.html` for just the structured-data part). Site overrides win over the theme's copy.

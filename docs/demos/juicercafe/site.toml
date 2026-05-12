@@ -6,10 +6,11 @@
 # Local preview:
 #   sbt 'juicerJVM/run serve -s examples/cafe-site -L'
 
-title    = "Stratus Coffee"
-tagline  = "Coffee, quiet hours, and outlets enough for everyone."
-author   = "Stratus Coffee"
-baseURL  = "http://localhost:8080"
+title       = "Stratus Coffee"
+tagline     = "Coffee, quiet hours, and outlets enough for everyone."
+author      = "Stratus Coffee"
+baseURL     = "http://localhost:8080"
+description = "Specialty espresso, slow pours, and pastries on Bank Street — open daily 7–6."
 
 themeDir = "../../themes"
 theme    = "juicercafe"
@@ -27,6 +28,13 @@ authorsPath = "/team/"
 #   favicon          = "/favicon.ico"   # <link rel=icon> path
 #   hideJuicerCredit = true             # remove "Built with juicer" line
 # Stratus is a demo, so we leave both at their defaults.
+
+# Optional: LocalBusiness JSON-LD on the homepage. See the SEO section
+# of the juicercafe configuration docs for the full list of subtypes.
+[business]
+type    = "CafeOrCoffeeShop"
+phone   = "+1-613-555-0117"
+address = "412 Bank Street, Ottawa, ON K2P 1Y4"
 
 # ============================================================
 # Hours — surfaced on the homepage, the footer, and /visit/.

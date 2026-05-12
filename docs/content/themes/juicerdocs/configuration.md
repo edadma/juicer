@@ -126,3 +126,47 @@ Drop a file with the same path under your own site to override anything in the t
 | Custom CSS          | `<src>/static/site.css` (and link it from your overridden `head.html`) |
 
 Site files **always** win over theme files, so overrides are a one-file-at-a-time operation — no forking the theme.
+
+## SEO
+
+Every juicer theme ships a shared SEO partial (`partials/seo.html`) that emits the standard meta block: description (with site-level fallback), canonical link, author meta, robots `noindex`, OpenGraph + Twitter cards (via the `ogTags` builtin), Atom feed discovery, and theme-specific JSON-LD. The engine separately writes `sitemap.xml` and `robots.txt`.
+
+### Site-wide keys
+
+```toml
+description = "Reference and how-to docs for the juicer static site generator."
+ogImage     = "/og/default.png"
+
+robots   = true
+noindex  = false                  # set true for staging/preview domains
+disallow = ["/internal/"]
+```
+
+### Per-page frontmatter
+
+```yaml
+---
+title: Configuration reference
+summary: A one-sentence dek for search results and OG cards.
+image: /img/og/configuration.png
+ogTitle: A snappier social headline
+ogDescription: Tightened for socials
+noindex: true   # excluded from sitemap, JSON-LD suppressed, <meta robots> emitted
+---
+```
+
+### Structured data emitted
+
+juicerdocs emits `TechArticle` on every page (more specific than `Article`; surfaces in Google's developer-doc carousel and on Stack Overflow's right-rail panel for tagged terms):
+
+| Page | Schema |
+|------|--------|
+| Root section | `WebSite` |
+| Every other page | `TechArticle` |
+| Any page with ancestors | `BreadcrumbList` (especially valuable for docs — Google often uses it for the per-result hierarchy) |
+
+`noindex: true` suppresses ALL JSON-LD on that page.
+
+### Overriding the SEO partial
+
+Drop a file at `<src>/partials/seo.html` (or `seo-jsonld.html` for just the structured-data part). Site overrides win over the theme's copy.

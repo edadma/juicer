@@ -1,0 +1,68 @@
+<!-- JSON-LD structured data for juicerportfolio.
+     Personal portfolios benefit from Person markup on the homepage
+     (drives the Knowledge Panel for the individual) plus CreativeWork
+     on project pages (helps Google understand each as a distinct
+     work).
+
+     What we emit:
+       1. Homepage   → WebSite (+ Person if `.site.person` is set in
+                       site.toml — see configuration.md).
+       2. Project pages with an `image` → CreativeWork.
+       3. Any page with ancestors → BreadcrumbList.
+
+     Frontmatter `noindex: true` suppresses ALL JSON-LD. -->
+
+{{ if not .page.noindex }}
+
+{{ if .page.isSection and not .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "{{ jsonStr .site.title }}",
+  "url": "{{ relURL '/' }}"{{ if .site.description }},
+  "description": "{{ jsonStr .site.description }}"{{ end }}
+}
+</script>
+{{ if .site.person }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "{{ if .site.person.name }}{{ jsonStr .site.person.name }}{{ else }}{{ jsonStr .site.title }}{{ end }}",
+  "url": "{{ relURL '/' }}"{{ if .site.person.jobTitle }},
+  "jobTitle": "{{ jsonStr .site.person.jobTitle }}"{{ end }}{{ if .site.person.image }},
+  "image": "{{ jsonStr .site.person.image }}"{{ end }}{{ if .site.person.email }},
+  "email": "{{ jsonStr .site.person.email }}"{{ end }}{{ if .site.person.sameAs }},
+  "sameAs": [{{ for url, i <- .site.person.sameAs }}{{ if i }},{{ end }}"{{ jsonStr url }}"{{ end }}]{{ end }}
+}
+</script>
+{{ end }}
+{{ else }}{{ if .page.image }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CreativeWork",
+  "name": "{{ jsonStr .page.title }}",
+  "url": "{{ jsonStr .page.permalink }}",
+  "image": "{{ jsonStr .page.image }}"{{ if .page.summary }},
+  "description": "{{ jsonStr .page.summary }}"{{ end }}{{ if .page.dateISO }},
+  "dateCreated": "{{ jsonStr .page.dateISO }}"{{ end }}
+}
+</script>
+{{ end }}{{ end }}
+
+{{ if .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{ for a, i <- .page.ancestors }}{ "@type": "ListItem", "position": {{ i + 1 }}, "name": "{{ jsonStr a.title }}", "item": "{{ jsonStr a.permalink }}" },
+    {{ end }}{ "@type": "ListItem", "position": {{ (.page.ancestors | length) + 1 }}, "name": "{{ jsonStr .page.title }}", "item": "{{ jsonStr .page.permalink }}" }
+  ]
+}
+</script>
+{{ end }}
+
+{{ end }}

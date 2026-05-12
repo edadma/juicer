@@ -3,9 +3,10 @@
 # Local preview:   sbt 'juicerJVM/run serve -s docs'
 # Production:      pushed to `stable`, built and deployed to juicer.run.
 
-title   = "Juicer"
-author  = "Ed Maxedon"
-baseURL = "https://juicer.run/"
+title       = "Juicer"
+author      = "Ed Maxedon"
+baseURL     = "https://juicer.run/"
+description = "A cross-platform static site generator written in Scala 3. Markdown content, Hugo-style templates, sensible defaults, ships as a single sbt-launchable JAR."
 
 # Drives the topbar GitHub icon + the homepage "Star on GitHub" hero
 # button. Themes that aren't doc-themes (juicercafe, juicerchurch) also

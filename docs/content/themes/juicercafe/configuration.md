@@ -196,3 +196,54 @@ Drop a file with the same path under your own site to override anything in the t
 | Custom CSS            | `<src>/static/site.css` (and list it under `customCSS` in `site.toml`) |
 
 Site files **always** win over theme files, so overrides are a one-file-at-a-time operation — no forking the theme.
+
+## SEO
+
+Every juicer theme ships a shared SEO partial (`partials/seo.html`) that emits the standard meta block: description (with site-level fallback), canonical link, author meta, robots `noindex`, OpenGraph + Twitter cards (via the `ogTags` builtin), Atom feed discovery, and theme-specific JSON-LD. The engine separately writes `sitemap.xml` and `robots.txt`.
+
+### Site-wide keys
+
+```toml
+description = "Hand-pulled espresso and tiny-batch pastries on Elgin Street."
+ogImage     = "/og/default.jpg"
+
+robots   = true
+noindex  = false
+disallow = ["/private/"]
+
+# Optional: LocalBusiness JSON-LD on the homepage. Any subtype works
+# (CafeOrCoffeeShop, Restaurant, Bakery — see schema.org/LocalBusiness).
+[business]
+type    = "CafeOrCoffeeShop"
+phone   = "+1-555-0100"
+address = "123 Elgin Street, Ottawa, ON K2P 1L4"
+image   = "/img/storefront.jpg"
+```
+
+### Per-page frontmatter
+
+```yaml
+---
+title: Espresso 101
+summary: A one-sentence dek for search results and OG cards.
+image: /img/menu/espresso.jpg
+ogImage: /img/menu/espresso-social.jpg
+ogTitle: Espresso, explained
+ogDescription: Tightened for socials
+noindex: true   # excluded from sitemap, JSON-LD suppressed, <meta robots> emitted
+---
+```
+
+### Structured data emitted
+
+| Page | Schema |
+|------|--------|
+| Root section | `WebSite` (+ `LocalBusiness` when `[business]` is set in `site.toml`) |
+| Non-section page with `date:` | `Article` |
+| Any page with ancestors | `BreadcrumbList` |
+
+`noindex: true` suppresses ALL JSON-LD on that page.
+
+### Overriding the SEO partial
+
+Drop a file at `<src>/partials/seo.html` (or `seo-jsonld.html` for just the structured-data part). Site overrides win over the theme's copy.

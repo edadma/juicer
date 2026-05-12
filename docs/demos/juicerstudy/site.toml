@@ -10,10 +10,11 @@
 # Build:
 #   sbt 'juicerJVM/run build -s examples/study-site -d /tmp/study-site'
 
-title    = "Marginalia"
-tagline  = "notes from the margins of books"
-author   = "a slow reader"
-baseURL  = "http://localhost:8080"
+title       = "Marginalia"
+tagline     = "notes from the margins of books"
+author      = "a slow reader"
+baseURL     = "http://localhost:8080"
+description = "Notes from the margins of books, written slowly. Built with juicer + juicerstudy as a dogfood site."
 
 # Resolve the theme via the docs/themes/ directory. Walking up two
 # levels from `docs/demos/juicerstudy/` gets us to `docs/`, then into

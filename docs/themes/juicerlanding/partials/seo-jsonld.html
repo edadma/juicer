@@ -1,0 +1,53 @@
+<!-- JSON-LD structured data for juicerlanding.
+     Marketing landing pages benefit most from Organization markup on
+     the homepage (drives the Knowledge Panel for the brand) plus
+     BreadcrumbList for any sub-pages.
+
+     What we emit:
+       1. Homepage   → WebSite (+ Organization if `.site.organization`
+                       is set in site.toml — see configuration.md).
+       2. Any page with ancestors → BreadcrumbList.
+
+     Frontmatter `noindex: true` suppresses ALL JSON-LD. -->
+
+{{ if not .page.noindex }}
+
+{{ if .page.isSection and not .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "{{ jsonStr .site.title }}",
+  "url": "{{ relURL '/' }}"{{ if .site.description }},
+  "description": "{{ jsonStr .site.description }}"{{ end }}
+}
+</script>
+{{ if .site.organization }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "{{ if .site.organization.name }}{{ jsonStr .site.organization.name }}{{ else }}{{ jsonStr .site.title }}{{ end }}",
+  "url": "{{ relURL '/' }}"{{ if .site.organization.logo }},
+  "logo": "{{ jsonStr .site.organization.logo }}"{{ end }}{{ if .site.organization.email }},
+  "email": "{{ jsonStr .site.organization.email }}"{{ end }}{{ if .site.organization.sameAs }},
+  "sameAs": [{{ for url, i <- .site.organization.sameAs }}{{ if i }},{{ end }}"{{ jsonStr url }}"{{ end }}]{{ end }}
+}
+</script>
+{{ end }}
+{{ end }}
+
+{{ if .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{ for a, i <- .page.ancestors }}{ "@type": "ListItem", "position": {{ i + 1 }}, "name": "{{ jsonStr a.title }}", "item": "{{ jsonStr a.permalink }}" },
+    {{ end }}{ "@type": "ListItem", "position": {{ (.page.ancestors | length) + 1 }}, "name": "{{ jsonStr .page.title }}", "item": "{{ jsonStr .page.permalink }}" }
+  ]
+}
+</script>
+{{ end }}
+
+{{ end }}

@@ -6,10 +6,11 @@
 # Local preview:
 #   sbt 'juicerJVM/run serve -s examples/church-site -L'
 
-title    = "Grace Community Church"
-tagline  = "A community gathered around the gospel."
-author   = "Grace Community Church"
-baseURL  = "http://localhost:8080"
+title       = "Grace Community Church"
+tagline     = "A community gathered around the gospel."
+author      = "Grace Community Church"
+baseURL     = "http://localhost:8080"
+description = "Grace Community Church — Sunday services at 9 and 11, Wednesday Bible study at 7. A community gathered around the gospel."
 
 themeDir = "../../themes"
 theme    = "juicerchurch"
@@ -93,6 +94,12 @@ name   = "Miriam Olesinski"
 role   = "Music Director"
 bio    = "Miriam leads the choir and the worship team. Classically trained organist; teaches piano on the side."
 avatar = "/img/miriam.png"
+
+# Optional: Church JSON-LD on the homepage. Helps Google Maps surface
+# the building's Knowledge Panel.
+[church]
+phone   = "+1-555-0100"
+address = "412 Maple Street, Springfield IL 62701"
 
 # Per-site palette overrides. Defaults are sage/terracotta/parchment.
 # Uncomment to retune.

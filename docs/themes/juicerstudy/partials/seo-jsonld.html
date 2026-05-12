@@ -1,0 +1,54 @@
+<!-- JSON-LD structured data for juicerstudy.
+     Study / learning material maps cleanly to schema.org's Article
+     plus a LearningResource hint on dated pages (Google surfaces
+     LearningResource in "Resources" rich results for educators).
+
+     What we emit:
+       1. Homepage     → WebSite.
+       2. Content page → Article (LearningResource on dated content).
+       3. Any page with ancestors → BreadcrumbList.
+
+     Frontmatter `noindex: true` suppresses ALL JSON-LD. -->
+
+{{ if not .page.noindex }}
+
+{{ if .page.isSection and not .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "{{ jsonStr .site.title }}",
+  "url": "{{ relURL '/' }}"{{ if .site.description }},
+  "description": "{{ jsonStr .site.description }}"{{ end }}
+}
+</script>
+{{ else }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ jsonStr .page.title }}",
+  "url": "{{ jsonStr .page.permalink }}"{{ if .page.dateISO }},
+  "datePublished": "{{ jsonStr .page.dateISO }}"{{ end }}{{ if .page.summary }},
+  "description": "{{ jsonStr .page.summary }}"{{ end }}{{ if .page.author }}{{ if .page.author.name }},
+  "author": { "@type": "Person", "name": "{{ jsonStr .page.author.name }}" }{{ end }}{{ end }}{{ if .page.image }},
+  "image": "{{ jsonStr .page.image }}"{{ end }},
+  "mainEntityOfPage": "{{ jsonStr .page.permalink }}"
+}
+</script>
+{{ end }}
+
+{{ if .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{ for a, i <- .page.ancestors }}{ "@type": "ListItem", "position": {{ i + 1 }}, "name": "{{ jsonStr a.title }}", "item": "{{ jsonStr a.permalink }}" },
+    {{ end }}{ "@type": "ListItem", "position": {{ (.page.ancestors | length) + 1 }}, "name": "{{ jsonStr .page.title }}", "item": "{{ jsonStr .page.permalink }}" }
+  ]
+}
+</script>
+{{ end }}
+
+{{ end }}

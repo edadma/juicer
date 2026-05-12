@@ -146,3 +146,54 @@ indexes (`/work/_index.md`, `/press/_index.md`).
 Project pages get `← Previous` / `Next →` nav at the bottom, sourced from the engine's `.page.prev` / `.page.next` fields. The reading order is a depth-first traversal anchored at the root section, so the project series only links across siblings if `/work/` itself has an `_index.md` to anchor it. Without that anchor, every project's `.page.prev` and `.page.next` are null and the nav block silently omits.
 
 The demo's `content/work/_index.md` is intentionally minimal — it doubles as a text-list archive of all projects via `folder.html`. If you don't want a `/work/` archive page rendered, set `static: true` in the `_index.md` frontmatter (excluded from `.site.posts`) — it still anchors the section for the prev/next math.
+
+## SEO
+
+Every juicer theme ships a shared SEO partial (`partials/seo.html`) that emits the standard meta block: description (with site-level fallback), canonical link, author meta, robots `noindex`, OpenGraph + Twitter cards (via the `ogTags` builtin), Atom feed discovery, and theme-specific JSON-LD. The engine separately writes `sitemap.xml` and `robots.txt`.
+
+### Site-wide keys
+
+```toml
+description = "Independent designer in Halifax, working in print + the screen."
+ogImage     = "/og/portrait.jpg"
+
+robots   = true
+noindex  = false
+disallow = ["/scratch/"]
+
+# Optional: Person JSON-LD on the homepage. Drives Google's Knowledge
+# Panel for an individual.
+[person]
+name     = "Ada Hopper"           # defaults to .site.title when omitted
+jobTitle = "Graphic designer & illustrator"
+image    = "/img/portrait.jpg"
+email    = "hello@adahopper.com"
+sameAs   = ["https://github.com/adahopper", "https://dribbble.com/adahopper"]
+```
+
+### Per-page frontmatter
+
+```yaml
+---
+title: Field guide cover series
+summary: A one-sentence dek for search results and OG cards.
+image: /img/projects/field-guide.jpg   # used by ogTags AND CreativeWork JSON-LD
+ogTitle: A snappier social headline
+ogDescription: Tightened for socials
+noindex: true   # excluded from sitemap, JSON-LD suppressed, <meta robots> emitted
+---
+```
+
+### Structured data emitted
+
+| Page | Schema |
+|------|--------|
+| Root section | `WebSite` (+ `Person` when `[person]` is set in `site.toml`) |
+| Project page with `image` | `CreativeWork` (name, url, image, description, dateCreated) |
+| Any page with ancestors | `BreadcrumbList` |
+
+`noindex: true` suppresses ALL JSON-LD on that page.
+
+### Overriding the SEO partial
+
+Drop a file at `<src>/partials/seo.html` (or `seo-jsonld.html` for just the structured-data part). Site overrides win over the theme's copy.

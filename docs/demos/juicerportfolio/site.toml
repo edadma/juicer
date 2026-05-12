@@ -26,6 +26,15 @@ sortBy  = "date"
 # favicon          = "/favicon.svg"
 # hideJuicerCredit = true
 
+# Optional: Person JSON-LD on the homepage. Drives Google's Knowledge
+# Panel for an individual. See the SEO section of the juicerportfolio
+# configuration docs.
+[person]
+name     = "Mira Hahn"
+jobTitle = "Industrial designer"
+email    = "mira@atelierhahn.example"
+sameAs   = ["https://instagram.com/atelierhahn", "https://github.com/atelierhahn"]
+
 # Topbar nav links. Order is left-to-right.
 [[topnav]]
 label = "Work"
