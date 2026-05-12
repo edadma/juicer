@@ -611,19 +611,24 @@ hr {
   margin-bottom: 1.75rem;
 }
 
-/* Section heading — small-caps, tracked, with piece count. The
-   label and count are siblings so the count can carry its own
-   muted colour without dragging the title down with it. */
+/* Section heading — true small-caps (font-variant, NOT
+   text-transform: uppercase). Small-caps sit at lowercase
+   x-height, so they read as a quiet editorial label rather
+   than as a loud all-caps shout — the right register for a
+   library catalogue. Tracked slightly because all-cap glyphs,
+   even small ones, want letter-air. The label and count are
+   siblings so the count can carry its own muted colour without
+   dragging the title down with it. */
 .juicerstudy-nav-heading {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
   padding: 0.125rem 0 0.5rem 0;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--font-serif);
+  font-variant-caps: all-small-caps;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  letter-spacing: 0.08em;
   color: var(--fg);
   text-decoration: none;
   border-bottom: 1px solid var(--border-soft);
