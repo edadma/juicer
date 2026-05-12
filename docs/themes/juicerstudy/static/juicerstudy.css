@@ -329,7 +329,13 @@ hr {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  flex: 0 1 18rem;
+  /* Centering pattern mirrors juicerdocs's search field: grow to fill
+     the slot between brand and right-side icon buttons, cap at a
+     readable width, then let auto-margins absorb the leftover space
+     symmetrically so the trigger sits centered in the topbar. */
+  flex: 1;
+  max-width: 18rem;
+  margin: 0 auto;
   height: 2rem;
   padding: 0 0.5rem 0 0.75rem;
   background: var(--surface);
@@ -378,6 +384,7 @@ hr {
   }
   .juicerstudy-search-trigger {
     flex: 0 0 auto;
+    margin: 0;
     padding: 0 0.5rem;
   }
 }
