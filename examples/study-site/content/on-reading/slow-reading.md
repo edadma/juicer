@@ -3,6 +3,7 @@ title: Slow Reading
 summary: On reading one paragraph in an hour, and why that is sometimes the right speed.
 weight: 2
 author: a slow reader
+minutes: 3
 ---
 
 There is a way of reading that I think of as *consumption* — finishing

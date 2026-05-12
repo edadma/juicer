@@ -187,10 +187,28 @@
     if (initial) setActive(initial.id);
   })();
 
-  // ===== Search =====
-  const searchInput = document.getElementById("juicerstudy-search");
-  const searchResults = document.getElementById("juicerstudy-search-results");
-  if (searchInput && searchResults) {
+  // ===== Search — Cmd-K modal =====
+  //
+  // A library-room search dialog rather than an inline live-results
+  // widget. The trigger button in the topbar plus the Cmd-K (Ctrl-K on
+  // non-Mac) global shortcut both open a native <dialog> via
+  // showModal(), which gives us the backdrop, focus trap, and Escape
+  // handling for free. Arrow keys move selection, Enter opens.
+  const trigger = document.getElementById("juicerstudy-search-trigger");
+  const modal = document.getElementById("juicerstudy-search-modal");
+  const input = document.getElementById("juicerstudy-search-input");
+  const results = document.getElementById("juicerstudy-search-modal-results");
+
+  // Platform key — Mac shows ⌘, everything else Ctrl. The kbd in the
+  // trigger button is labelled at render time; we patch it once on load.
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
+  const triggerKey = trigger && trigger.querySelector(".juicerstudy-search-trigger-key");
+  if (triggerKey && !isMac) {
+    triggerKey.textContent = "Ctrl K";
+    triggerKey.setAttribute("data-modkey", "Ctrl");
+  }
+
+  if (trigger && modal && input && results) {
     let index = null;
     let activeIndex = -1;
 
@@ -208,52 +226,52 @@
     function snippet(content, q) {
       const lc = content.toLowerCase();
       const idx = lc.indexOf(q.toLowerCase());
-      if (idx < 0) return content.slice(0, 80) + (content.length > 80 ? "…" : "");
-      const start = Math.max(0, idx - 30);
-      const end = Math.min(content.length, idx + q.length + 50);
+      if (idx < 0) return content.slice(0, 120) + (content.length > 120 ? "…" : "");
+      const start = Math.max(0, idx - 40);
+      const end = Math.min(content.length, idx + q.length + 80);
       return (start > 0 ? "…" : "") + content.slice(start, end) + (end < content.length ? "…" : "");
     }
 
-    function setHidden(hidden) {
-      if (hidden) searchResults.setAttribute("hidden", "");
-      else        searchResults.removeAttribute("hidden");
-    }
-
     function renderResults(matches, q) {
-      searchResults.innerHTML = "";
+      results.innerHTML = "";
+      if (!q) {
+        results.classList.remove("is-populated");
+        return;
+      }
+      results.classList.add("is-populated");
       if (matches.length === 0) {
         const empty = document.createElement("div");
-        empty.className = "juicerstudy-result-empty";
+        empty.className = "juicerstudy-search-modal-empty";
         empty.textContent = "No matches.";
-        searchResults.appendChild(empty);
+        results.appendChild(empty);
       } else {
         for (let i = 0; i < matches.length; i++) {
           const r = matches[i];
           const a = document.createElement("a");
-          a.className = "juicerstudy-result";
+          a.className = "juicerstudy-search-modal-result";
           a.href = r.url;
           a.dataset.idx = i;
+          a.setAttribute("role", "option");
           const title = document.createElement("span");
-          title.className = "juicerstudy-result-title";
+          title.className = "juicerstudy-search-modal-result-title";
           title.textContent = r.title || r.url;
           const snip = document.createElement("span");
-          snip.className = "juicerstudy-result-snippet";
+          snip.className = "juicerstudy-search-modal-result-snippet";
           snip.textContent = snippet(r.content || r.summary || "", q);
           a.appendChild(title);
           a.appendChild(snip);
-          searchResults.appendChild(a);
+          results.appendChild(a);
         }
       }
-      setHidden(false);
       activeIndex = -1;
     }
 
     async function doSearch(q) {
+      const data = await ensureIndex();
       if (!q) {
-        setHidden(true);
+        renderResults([], "");
         return;
       }
-      const data = await ensureIndex();
       const lc = q.toLowerCase();
       const matches = data
         .filter((r) =>
@@ -261,16 +279,48 @@
           (r.summary && r.summary.toLowerCase().includes(lc)) ||
           (r.content && r.content.toLowerCase().includes(lc))
         )
-        .slice(0, 10);
+        .slice(0, 20);
       renderResults(matches, q);
     }
 
-    searchInput.addEventListener("input", (e) => doSearch(e.target.value.trim()));
-    searchInput.addEventListener("focus", (e) => {
-      if (e.target.value.trim()) doSearch(e.target.value.trim());
+    function open() {
+      if (typeof modal.showModal === "function") modal.showModal();
+      else modal.setAttribute("open", "");
+      // Defer focus until the dialog has actually painted; otherwise
+      // some browsers swallow the cursor when the input is freshly
+      // attached to a popped-up element.
+      requestAnimationFrame(() => input.focus());
+    }
+    function close() {
+      if (typeof modal.close === "function") modal.close();
+      else modal.removeAttribute("open");
+      input.value = "";
+      renderResults([], "");
+    }
+
+    trigger.addEventListener("click", open);
+
+    // Global Cmd-K / Ctrl-K. Use lower-case "k" to avoid grabbing
+    // Shift-K, etc. We don't intercept it while the user is typing
+    // in another text field — that would be obnoxious.
+    document.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        if (modal.open) close();
+        else open();
+      }
     });
-    searchInput.addEventListener("keydown", (e) => {
-      const items = searchResults.querySelectorAll(".juicerstudy-result");
+
+    // Backdrop click closes (clicks on the modal inner do not bubble
+    // to the dialog element itself, so this is a clean check).
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) close();
+    });
+
+    input.addEventListener("input", (e) => doSearch(e.target.value.trim()));
+
+    input.addEventListener("keydown", (e) => {
+      const items = results.querySelectorAll(".juicerstudy-search-modal-result");
       if (e.key === "ArrowDown") {
         e.preventDefault();
         activeIndex = Math.min(items.length - 1, activeIndex + 1);
@@ -280,19 +330,17 @@
       } else if (e.key === "Enter" && activeIndex >= 0) {
         e.preventDefault();
         items[activeIndex].click();
-      } else if (e.key === "Escape") {
-        setHidden(true);
-        searchInput.blur();
       }
       items.forEach((it, i) => {
-        if (i === activeIndex) it.classList.add("is-active");
-        else                   it.classList.remove("is-active");
+        if (i === activeIndex) {
+          it.classList.add("is-active");
+          // Keep selection in view when arrow-walking past the
+          // visible window inside the scrolling results panel.
+          it.scrollIntoView({ block: "nearest" });
+        } else {
+          it.classList.remove("is-active");
+        }
       });
-    });
-    document.addEventListener("click", (e) => {
-      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-        setHidden(true);
-      }
     });
   }
 })();

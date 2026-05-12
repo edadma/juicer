@@ -3,6 +3,7 @@ title: What Two Weeks Is
 summary: A small unit of time, examined honestly.
 weight: 2
 author: a slow reader
+minutes: 2
 ---
 
 Two weeks is a long time and a short time. Both are true, depending on

@@ -3,7 +3,10 @@
     <ul class="juicerstudy-nav-list">
       {{ for sec <- .site.root.subsections }}
         <li class="juicerstudy-nav-section">
-          <a href="{{ sec.url }}" data-juicerstudy-nav-link class="juicerstudy-nav-heading">{{ sec.title }}</a>
+          <a href="{{ sec.url }}" data-juicerstudy-nav-link class="juicerstudy-nav-heading">
+            <span class="juicerstudy-nav-heading-label">{{ sec.title }}</span>
+            {{ if sec.pages }}<span class="juicerstudy-nav-heading-count" aria-label="{{ sec.pages.length }} pieces">{{ sec.pages.length }}</span>{{ end }}
+          </a>
           {{ partial 'nav-children' sec }}
         </li>
       {{ end }}
