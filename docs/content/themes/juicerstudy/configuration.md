@@ -197,3 +197,47 @@ anything in the theme — the ordinary
 
 Site files always win over theme files, so overrides are a
 one-file-at-a-time operation — no forking the theme.
+
+## SEO
+
+Every juicer theme ships a shared SEO partial (`partials/seo.html`) that emits the standard meta block: description (with site-level fallback), canonical link, author meta, robots `noindex`, OpenGraph + Twitter cards (via the `ogTags` builtin), Atom feed discovery, and theme-specific JSON-LD. The engine separately writes `sitemap.xml` and `robots.txt`.
+
+### Site-wide keys
+
+```toml
+description = "Notes and short courses on linear algebra, written for the curious."
+ogImage     = "/og/default.png"
+
+robots   = true
+noindex  = false                  # set true for staging/preview domains
+disallow = ["/scratch/"]
+```
+
+### Per-page frontmatter
+
+```yaml
+---
+title: Eigenvalues, intuitively
+summary: A one-sentence dek for search results and OG cards.
+date: 2026-04-12                  # surfaces in Article JSON-LD
+author: ed
+image: /img/eigenvalues-card.png
+ogTitle: A snappier social headline
+ogDescription: Tightened for socials
+noindex: true   # excluded from sitemap, JSON-LD suppressed, <meta robots> emitted
+---
+```
+
+### Structured data emitted
+
+| Page | Schema |
+|------|--------|
+| Root section | `WebSite` |
+| Every other page | `Article` (with author / image / dateISO when present) |
+| Any page with ancestors | `BreadcrumbList` |
+
+`noindex: true` suppresses ALL JSON-LD on that page.
+
+### Overriding the SEO partial
+
+Drop a file at `<src>/partials/seo.html` (or `seo-jsonld.html` for just the structured-data part). Site overrides win over the theme's copy.

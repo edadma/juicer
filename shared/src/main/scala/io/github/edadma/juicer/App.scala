@@ -1885,18 +1885,64 @@ object App {
     // ----- sitemap.xml -----
     //
     // Standard sitemaps protocol — one <url><loc>…</loc></url> per page.
+    // Skips pages with frontmatter `noindex: true` — those pages are still
+    // built and reachable by direct URL, but absent from the sitemap so
+    // crawlers don't propose them. (`<meta name="robots" content="noindex">`
+    // is the matching theme-side signal — see partials/head.html.)
     // No <lastmod> until i18n / dated frontmatter lands; <priority> /
     // <changefreq> are out-of-spec for most modern crawlers anyway.
     {
       val sb = new StringBuilder
       sb.append("""<?xml version="1.0" encoding="UTF-8"?>""").append('\n')
       sb.append("""<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">""").append('\n')
-      for (p <- pages) {
+      for (p <- pages if p.get("noindex") != Some(true)) {
         val abs = p("permalink").asInstanceOf[String]
         sb.append("  <url><loc>").append(escapeXml(abs)).append("</loc></url>\n")
       }
       sb.append("</urlset>\n")
       val path = dst1 / "sitemap.xml"
+      show(s"write $path")
+      path.writeText(sb.toString)
+    }
+
+    // ----- robots.txt -----
+    //
+    // Default-on. Emits a tiny robots.txt that:
+    //   - allows everything (`User-agent: *` / `Disallow:`),
+    //   - lists each entry of site.toml `disallow` (string or array of
+    //     strings) as a `Disallow:` line, and
+    //   - advertises the sitemap at <baseURL>/sitemap.xml.
+    //
+    // Site-wide noindex: set `noindex = true` in site.toml to emit
+    // `Disallow: /` for the whole site. Useful for staging / preview
+    // domains where you want a real build but no crawler indexing.
+    //
+    // Opt out entirely with `robots = false` in site.toml — for sites that
+    // ship a hand-rolled robots.txt in `static/robots.txt`. The static-asset
+    // pass copies that file as-is.
+    val robotsEnabled: Boolean =
+      confdoc.getBool("robots").getOrElse(true)
+
+    if (robotsEnabled) {
+      val siteNoindex = confdoc.getBool("noindex").getOrElse(false)
+      val disallows: List[String] = confdoc.get("disallow") match {
+        case Some(TomlValue.Str(s))     => List(s)
+        case Some(TomlValue.Arr(elems)) => elems.toList.collect { case TomlValue.Str(s) => s }
+        case _                          => Nil
+      }
+      val sitemapUrl: String = {
+        val s = baseURL.base + baseURL.path
+        (if (s.endsWith("/")) s else s + "/") + "sitemap.xml"
+      }
+      val sb = new StringBuilder
+      sb.append("User-agent: *\n")
+      if (siteNoindex) sb.append("Disallow: /\n")
+      else {
+        if (disallows.isEmpty) sb.append("Disallow:\n")
+        else for (d <- disallows) sb.append("Disallow: ").append(d).append('\n')
+      }
+      sb.append("\nSitemap: ").append(sitemapUrl).append('\n')
+      val path = dst1 / "robots.txt"
       show(s"write $path")
       path.writeText(sb.toString)
     }
@@ -2051,13 +2097,34 @@ object App {
     // ----- 404.html (optional) -----
     //
     // If a layout named `404` exists under the default layout folder, render
-    // it with site context only (no `page`) and write it to the site root.
-    // This is what nginx / GitHub Pages / Netlify pick up as the not-found
-    // page. Skipping silently when no such layout exists keeps it opt-in.
+    // it with site context plus a synthetic page record and write it to the
+    // site root. This is what nginx / GitHub Pages / Netlify pick up as the
+    // not-found page. Skipping silently when no such layout exists keeps it
+    // opt-in.
+    //
+    // The synthetic `.page` carries `noindex = true` (a 404 should never be
+    // indexed) plus minimal title/url scaffolding so a theme can delegate to
+    // its normal head/SEO partials (which expect `.page` to exist) without
+    // special-casing the not-found path. Permalink + summary are empty so
+    // theme guards like `{{ if .page.permalink }}` short-circuit cleanly.
     findLayout(Nil, "404") match {
       case Some(TemplateFile(templatePath, _, template)) =>
         show(s"render 404.html using ${templatePath.relativeTo(src1)}")
-        val rendered = renderToString(templateRenderer, Map("site" -> sitedata), template)
+        val notFoundPage: Map[String, Any] = Map(
+          "title"     -> "Page not found",
+          "url"       -> "/404.html",
+          "permalink" -> "",
+          "summary"   -> "",
+          "author"    -> null,
+          "authors"   -> List.empty[Any],
+          "ancestors" -> List.empty[Any],
+          "noindex"   -> true,
+        )
+        val rendered = renderToString(
+          templateRenderer,
+          Map("site" -> sitedata, "page" -> notFoundPage),
+          template,
+        )
         (dst1 / "404.html").writeText(rendered)
       case None =>
         show("no 404 layout found; skipping 404.html")
@@ -2424,6 +2491,43 @@ object App {
         1,
         { case (con, Seq(s: String)) =>
           io.github.edadma.markdown.renderToHTML(parseMarkdown(s, mdConfig), mdConfig).trim
+        },
+      ),
+      // JSON-string escape — for emitting page data inside JSON-LD
+      // (<script type="application/ld+json">). Escapes the characters
+      // RFC 8259 §7 requires for a JSON string body: `"`, `\`, the
+      // control characters, plus the Unicode line/paragraph separators
+      // U+2028 / U+2029 (which are valid JSON but break JavaScript
+      // parsers when JSON-LD lands inside an HTML <script>).
+      "jsonStr" -> TemplateFunction(
+        "jsonStr",
+        1,
+        { case (con, Seq(v: Any)) =>
+          val s = v match {
+            case null | () => ""
+            case x         => x.toString
+          }
+          val sb = new StringBuilder(s.length + 8)
+          var i  = 0
+          while (i < s.length) {
+            val c = s.charAt(i)
+            c match {
+              case '"'      => sb.append("\\\"")
+              case '\\'     => sb.append("\\\\")
+              case '\n'     => sb.append("\\n")
+              case '\r'     => sb.append("\\r")
+              case '\t'     => sb.append("\\t")
+              case '\b'     => sb.append("\\b")
+              case '\f'     => sb.append("\\f")
+              case c if c.toInt == 0x2028 => sb.append("\\u2028")
+              case c if c.toInt == 0x2029 => sb.append("\\u2029")
+              case c if c < 0x20 =>
+                sb.append("\\u%04x".format(c.toInt))
+              case c => sb.append(c)
+            }
+            i += 1
+          }
+          sb.toString
         },
       ),
       // Substitute :shortcode: tokens with the corresponding Unicode emoji.

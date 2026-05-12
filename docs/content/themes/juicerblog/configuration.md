@@ -222,3 +222,49 @@ Drop a file with the same path under your own site to override anything in the t
 | Custom CSS          | `<src>/static/site.css` (and link it from your overridden `head.html`) |
 
 Site files **always** win over theme files, so overrides are a one-file-at-a-time operation — no forking the theme.
+
+## SEO
+
+Every juicer theme ships a shared SEO partial (`partials/seo.html`) that emits the standard meta block: description (with site-level fallback), canonical link, author meta, robots `noindex`, OpenGraph + Twitter cards (via the `ogTags` builtin), Atom feed discovery, and theme-specific JSON-LD structured data. The engine separately writes `sitemap.xml` and `robots.txt`. This section documents the knobs.
+
+### Site-wide keys
+
+```toml
+description = "A monthly journal of small tools and small wins."   # used as default meta description and JSON-LD site description
+ogImage     = "/og/default.png"                                    # fallback OpenGraph image (absolute URL or site-relative path)
+
+# robots.txt
+robots   = true                                                    # default; set false to suppress robots.txt entirely (ship your own in static/)
+noindex  = false                                                   # default; set true for staging/preview domains — emits Disallow: / for the whole site
+disallow = ["/drafts/", "/staging/"]                               # additional Disallow lines (string or array of strings)
+```
+
+### Per-page frontmatter
+
+```yaml
+---
+title: A short post about something
+summary: A one-sentence dek for search results and OG cards.
+image: /img/post-hero.jpg          # used by ogTags + JSON-LD BlogPosting
+ogImage: /img/post-social.jpg      # explicit OG image, wins over `image`
+ogTitle: A snappier social headline # explicit OG title, wins over `title`
+ogDescription: Tightened for socials # explicit OG description, wins over `summary`
+noindex: true                       # excluded from sitemap.xml, JSON-LD suppressed, <meta robots> emitted
+---
+```
+
+### Structured data emitted
+
+juicerblog emits these JSON-LD `@type`s:
+
+| Page | Schema |
+|------|--------|
+| Root section (`content/_index.md`) | `WebSite` |
+| Non-section page with `date:` | `BlogPosting` (with author / image / dateISO) |
+| Any page with ancestors | `BreadcrumbList` (built from `.page.ancestors`) |
+
+`noindex: true` suppresses ALL JSON-LD on that page — a deliberately-hidden page should not advertise itself to crawlers in any form.
+
+### Overriding the SEO partial
+
+To customize, drop a file at `<src>/partials/seo.html` (or `seo-jsonld.html` for just the structured-data part). The site override wins over the theme's copy with no forking.

@@ -183,3 +183,54 @@ Drop a file with the same path under your own site to override anything in the t
 | Custom CSS            | `<src>/static/site.css` (and list it under `customCSS` in `site.toml`) |
 
 Site files **always** win over theme files, so overrides are a one-file-at-a-time operation — no forking the theme.
+
+## SEO
+
+Every juicer theme ships a shared SEO partial (`partials/seo.html`) that emits the standard meta block: description (with site-level fallback), canonical link, author meta, robots `noindex`, OpenGraph + Twitter cards (via the `ogTags` builtin), Atom feed discovery, and theme-specific JSON-LD. The engine separately writes `sitemap.xml` and `robots.txt`.
+
+### Site-wide keys
+
+```toml
+description = "Trinity Community Church — Sunday services at 9 and 11, Wednesday Bible study at 7."
+ogImage     = "/og/sanctuary.jpg"
+
+robots   = true
+noindex  = false
+disallow = ["/admin/"]
+
+# Optional: Church JSON-LD on the homepage. Subtype of PlaceOfWorship —
+# helpful for Google Maps Knowledge Panel.
+[church]
+phone   = "+1-555-0100"
+address = "412 Maple Street, Springfield IL 62701"
+image   = "/img/sanctuary.jpg"
+```
+
+### Per-page frontmatter
+
+```yaml
+---
+title: The Sermon on the Mount
+summary: A one-sentence dek for search results and OG cards.
+date: 2026-04-12
+author: pastor-rob
+image: /img/sermons/sermon-on-mount.jpg
+ogTitle: A snappier social headline
+ogDescription: Tightened for socials
+noindex: true   # excluded from sitemap, JSON-LD suppressed, <meta robots> emitted
+---
+```
+
+### Structured data emitted
+
+| Page | Schema |
+|------|--------|
+| Root section | `WebSite` (+ `Church` when `[church]` is set in `site.toml`) |
+| Dated non-section page | `Article` (with author / image / dateISO) |
+| Any page with ancestors | `BreadcrumbList` |
+
+`noindex: true` suppresses ALL JSON-LD on that page.
+
+### Overriding the SEO partial
+
+Drop a file at `<src>/partials/seo.html` (or `seo-jsonld.html` for just the structured-data part). Site overrides win over the theme's copy.

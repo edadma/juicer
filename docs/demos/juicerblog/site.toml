@@ -10,10 +10,11 @@
 # Build:
 #   sbt 'juicerJVM/run build -s examples/blog-site -d /tmp/blog-out'
 
-title    = "juicerblog demo"
-tagline  = "a place for prose, code, and longer thoughts"
-author   = "Ed Maxedon"
-baseURL  = "http://localhost:8080"
+title       = "juicerblog demo"
+tagline     = "a place for prose, code, and longer thoughts"
+author      = "Ed Maxedon"
+baseURL     = "http://localhost:8080"
+description = "A demo blog rendered with the juicerblog theme. Frontmatter-driven, hand-coded CSS, no Tailwind."
 
 # Resolve the theme via the repo's docs/themes/ directory. With
 # `themeDir = "../../themes"` and `theme = "juicerblog"`, juicer walks

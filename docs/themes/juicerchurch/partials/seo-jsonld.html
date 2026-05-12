@@ -1,0 +1,67 @@
+<!-- JSON-LD structured data for juicerchurch.
+     Churches benefit from a Church schema (subtype of PlaceOfWorship)
+     for Google Maps. We emit:
+       1. Homepage   → WebSite (+ Church if `.site.church` is set in
+                       site.toml — see configuration.md).
+       2. Dated page → Article (sermons, announcements).
+       3. Any page with ancestors → BreadcrumbList.
+
+     Frontmatter `noindex: true` suppresses ALL JSON-LD. -->
+
+{{ if not .page.noindex }}
+
+{{ if .page.isSection and not .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "{{ jsonStr .site.title }}",
+  "url": "{{ relURL '/' }}"{{ if .site.description }},
+  "description": "{{ jsonStr .site.description }}"{{ end }}
+}
+</script>
+{{ if .site.church }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Church",
+  "name": "{{ jsonStr .site.title }}",
+  "url": "{{ relURL '/' }}"{{ if .site.church.phone }},
+  "telephone": "{{ jsonStr .site.church.phone }}"{{ end }}{{ if .site.church.address }},
+  "address": "{{ jsonStr .site.church.address }}"{{ end }}{{ if .site.church.image }},
+  "image": "{{ jsonStr .site.church.image }}"{{ end }}
+}
+</script>
+{{ end }}
+{{ end }}
+
+{{ if .page.dateISO and not .page.isSection }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ jsonStr .page.title }}",
+  "url": "{{ jsonStr .page.permalink }}",
+  "datePublished": "{{ jsonStr .page.dateISO }}"{{ if .page.summary }},
+  "description": "{{ jsonStr .page.summary }}"{{ end }}{{ if .page.author }}{{ if .page.author.name }},
+  "author": { "@type": "Person", "name": "{{ jsonStr .page.author.name }}" }{{ end }}{{ end }}{{ if .page.image }},
+  "image": "{{ jsonStr .page.image }}"{{ end }},
+  "mainEntityOfPage": "{{ jsonStr .page.permalink }}"
+}
+</script>
+{{ end }}
+
+{{ if .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{ for a, i <- .page.ancestors }}{ "@type": "ListItem", "position": {{ i + 1 }}, "name": "{{ jsonStr a.title }}", "item": "{{ jsonStr a.permalink }}" },
+    {{ end }}{ "@type": "ListItem", "position": {{ (.page.ancestors | length) + 1 }}, "name": "{{ jsonStr .page.title }}", "item": "{{ jsonStr .page.permalink }}" }
+  ]
+}
+</script>
+{{ end }}
+
+{{ end }}

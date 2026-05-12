@@ -27,6 +27,14 @@ sortBy  = "date"
 # hideJuicerCredit = true
 repoURL = "https://github.com/example/tally"
 
+# Optional: Organization JSON-LD on the homepage. Drives Google's
+# Knowledge Panel for the brand. See the SEO section of the
+# juicerlanding configuration docs.
+[organization]
+name   = "Tally Analytics"
+email  = "hello@tally.example"
+sameAs = ["https://github.com/example/tally", "https://twitter.com/tallyanalytics"]
+
 # Topbar CTA — surfaced on every page so the "start free" path is
 # always one click away. Falls back to nothing if unset.
 [topbarCta]

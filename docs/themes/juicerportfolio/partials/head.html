@@ -1,17 +1,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 {{ if .page.title }}{{ if .page.title = .site.title }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ else }}<title>{{ .page.title }} — {{ .site.title }}</title>{{ end }}{{ else }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ end }}
-{{ if .page.summary }}<meta name="description" content="{{ .page.summary }}">{{ else }}{{ if .site.description }}<meta name="description" content="{{ .site.description }}">{{ end }}{{ end }}
-{{ if .page.permalink }}<link rel="canonical" href="{{ .page.permalink }}">{{ end }}
 {{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
 
-<!-- OpenGraph + Twitter cards. Resolves image / description from
-     frontmatter (ogImage/image then ogDescription/description/summary),
-     falling back to site-wide ogImage / image. -->
-{{ ogTags .page }}
-
-<!-- Atom feed discovery — juicer always emits a site-wide feed. -->
-<link rel="alternate" type="application/atom+xml" title="{{ .site.title }}" href="{{ relURL '/feed.xml' }}">
+{{ partial 'seo' . }}
 
 <!-- Apply the theme BEFORE first paint to avoid the white flash.
      Reads localStorage ('juicerportfolio-theme'), falls back to system
