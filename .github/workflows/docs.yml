@@ -54,6 +54,21 @@ jobs:
       - name: Build docs site
         run: sbt 'juicerJVM/run build -s docs -d _site -b https://juicer.run/'
 
+      # Each theme's "Demo site" sidebar leaf is served from
+      # `/themes/<theme>/demo/` and rendered using THAT theme (not
+      # juicerdocs), so each demo is built as a separate juicer site and
+      # its output is dropped on top of the docs render at the same path.
+      # juicerdocs has no demo-site source — the docs site itself IS the
+      # demo, so its "Demo site" leaf links back to `/`.
+      #
+      # `continue-on-error: true` because juicerblog and juicerchurch
+      # currently fail to build with `.site.authorsPath`-resolution bug
+      # (see DEPLOY.md "Known issue: demo build"). When that's fixed,
+      # drop the continue-on-error so a real demo regression breaks CI.
+      - name: Build per-theme demo sites
+        continue-on-error: true
+        run: bash bin/build-demos.sh _site https://juicer.run/
+
       - name: Write CNAME
         if: github.ref == 'refs/heads/stable'
         run: echo 'juicer.run' > _site/CNAME

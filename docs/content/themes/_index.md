@@ -36,7 +36,9 @@ Every theme section in this group documents the same three layers:
   pick something else.
 - **Configuration** — every `site.toml` key the theme reads, every
   `[<theme>]` palette token, every per-page frontmatter knob.
-- **Examples** — a live example site lives under `examples/<theme>-site/`
-  in the juicer repo, exercising every feature on the section page.
-  Each theme overview tells you which example directory is its
-  reference and how to preview it.
+- **Demo site** — a live demo rendered with the theme itself. The
+  deploy pipeline builds each demo (sources live under
+  `docs/demos/<theme>/`) into `/themes/<theme>/demo/`, so the leaf
+  serves the rendered demo at that URL. The exception is juicerdocs
+  — this docs site is built with juicerdocs, so the juicerdocs Demo
+  site leaf points back at `/`.

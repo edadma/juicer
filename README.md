@@ -21,20 +21,24 @@ on a stack of small libraries:
 
 ## Quickstart
 
-Two ready-to-build examples ship with the source:
+Several ready-to-build examples ship with the source, under
+`docs/demos/`:
 
 ```bash
-sbt 'juicerJVM/run build --source examples/minimal'
-sbt 'juicerJVM/run build --source examples/docs-site'
+sbt 'juicerJVM/run build --source docs/demos/minimal'
+sbt 'juicerJVM/run build --source docs/demos/handrolled-docs'
 ```
 
 Each builds into `<source>/public/`. For live preview during authoring:
 
 ```bash
-sbt 'juicerJVM/run serve --source examples/docs-site --port 8080'
+sbt 'juicerJVM/run serve --source docs/demos/handrolled-docs --port 8080'
 ```
 
-then open `http://localhost:8080/`.
+then open `http://localhost:8080/`. Each bundled theme also has a
+ready-to-preview demo site at `docs/demos/<theme>/` — see the
+`themes/<theme>/` section in the docs for the live URL and a
+description of what it exercises.
 
 ## Install (use juicer as a library)
 

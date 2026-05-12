@@ -28,6 +28,15 @@ htmlDir = ""
 # logo) lets us swap the favicon independently of the topbar wordmark logo.
 favicon = "/juicer-logo.png"
 
+# `docs/demos/` holds the SOURCE for each theme's live demo (and the
+# minimal smoke-test example). They're full juicer sites in their own
+# right, NOT docs content — exclude them from the site walk so juicer
+# doesn't try to render their layouts/partials as part of this site.
+# `bin/build-demos.sh` builds each one into _site/themes/<theme>/demo/
+# AFTER the main docs build (so the demo's rendered output lands at
+# the URL the docs sidebar's "Demo site" leaf points at).
+excludeDirs = ["demos"]
+
 [juicerdocs]
 version = "v0.2.0"
 # `logo` was previously hard-coded as a fallback in the juicerdocs theme

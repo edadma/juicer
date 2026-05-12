@@ -13,10 +13,9 @@ own site, copy the directory or run:
 juicer theme add https://github.com/edadma/juicer.git -n juicercafe --subdir docs/themes/juicercafe
 ```
 
-…and set `theme = "juicercafe"` in your `site.toml`. A live demo
-lives at `examples/cafe-site/` in the juicer repo — run it with
-`sbt 'juicerJVM/run serve -s examples/cafe-site -L'` to see every
-section on this page rendered against a fictional café.
+…and set `theme = "juicercafe"` in your `site.toml`. See the
+[Demo site](./demo/) page for a live demo — a fictional café
+("Stratus Coffee") — exercising every section on this page.
 
 ## What's in the box
 

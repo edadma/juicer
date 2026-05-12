@@ -809,10 +809,10 @@ Juicer ships a default blog theme under `themes/juicerblog/` that exercises ever
 The fastest way to see every blog feature working together is the bundled demo:
 
 ```bash
-sbt 'juicerJVM/run serve -s examples/blog-site -L'
+sbt 'juicerJVM/run serve -s docs/demos/juicerblog -L'
 ```
 
-That spins up a live preview of `examples/blog-site/` — 9 dated posts spanning Jul–Dec 2024, three authors with a multi-author co-byline, a 3-post series, dateArchives + permalinks + aliases, syntax highlighting, the works. Touch any markdown file in the source and the page reloads in under a second.
+That spins up a live preview of `docs/demos/juicerblog/` — 9 dated posts spanning Jul–Dec 2024, three authors with a multi-author co-byline, a 3-post series, dateArchives + permalinks + aliases, syntax highlighting, the works. Touch any markdown file in the source and the page reloads in under a second.
 
 ## Where each feature lives
 

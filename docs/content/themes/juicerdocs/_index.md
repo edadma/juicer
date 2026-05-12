@@ -49,3 +49,5 @@ Pick something else if you want:
 
 The pages below document the configuration knobs juicerdocs reads from
 your `site.toml`, plus how to customize anything beyond what's exposed.
+The [Demo site](./demo/) leaf is a quick reminder that **this site
+is the demo** — juicer.run itself uses juicerdocs.

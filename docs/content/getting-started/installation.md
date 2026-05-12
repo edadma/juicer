@@ -34,11 +34,11 @@ The `%%%` form picks the right artifact for whichever Scala platform you're on (
 
 ## Verifying the install
 
-The smoke test is `juicer build` against the `examples/minimal` directory in the repo:
+The smoke test is `juicer build` against the `docs/demos/minimal` directory in the repo:
 
 ```bash
-sbt 'juicerJVM/run build -s examples/minimal'
-ls examples/minimal/public
+sbt 'juicerJVM/run build -s docs/demos/minimal'
+ls docs/demos/minimal/public
 ```
 
 You should see an `index.html` and a `static/` mirror.

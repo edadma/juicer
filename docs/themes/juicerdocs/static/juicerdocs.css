@@ -616,6 +616,14 @@ hr {
   border-left: 1px solid var(--border-soft);
 }
 
+/* Nested levels indent further than their parent — one step per depth.
+   The descendant combinator compounds: depth 2 indents 0.75rem, depth 3
+   indents 1.5rem, depth 4 indents 2.25rem, etc. so the visual hierarchy
+   scales with the content tree no matter how deep it goes. */
+.juicerdocs-nav-children .juicerdocs-nav-children {
+  margin-left: 0.75rem;
+}
+
 .juicerdocs-nav-link {
   display: block;
   padding: 0.375rem 0.75rem;
@@ -635,6 +643,15 @@ hr {
   color: var(--brand);
   background: var(--brand-soft);
   border-left-color: var(--brand);
+  font-weight: 500;
+}
+
+/* Intermediate-section links (those that wrap a subsection in the
+   content tree) get a slightly heavier weight + the full fg color, so
+   the eye reads them as group headings rather than leaves. The base
+   .juicerdocs-nav-link styles still apply for layout + hover + active. */
+.juicerdocs-nav-link-section {
+  color: var(--fg);
   font-weight: 500;
 }
 

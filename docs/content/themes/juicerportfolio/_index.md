@@ -13,9 +13,9 @@ site, copy the directory or run:
 juicer theme add https://github.com/edadma/juicer.git -n juicerportfolio
 ```
 
-…and set `theme = "juicerportfolio"` in your `site.toml`. A live demo
-lives at `examples/portfolio-site/` — run it with `sbt 'juicerJVM/run serve -s examples/portfolio-site -L'` to see every layout against fictional studio
-copy (Atelier Hahn, an industrial-design studio in Lisbon).
+…and set `theme = "juicerportfolio"` in your `site.toml`. See the
+[Demo site](./demo/) page for a live demo — a fictional industrial-design studio in Lisbon ("Atelier Hahn") — exercising every layout
+on this page.
 
 ## What's in the box
 

@@ -16,7 +16,7 @@ author      = "Mira Hahn"
 baseURL     = "http://localhost:8080"
 description = "Mira Hahn is an independent industrial designer based in Lisbon. Selected work in furniture, lighting, and small objects."
 
-themeDir = "../../docs/themes"
+themeDir = "../../themes"
 theme    = "juicerportfolio"
 
 htmlDir = ""

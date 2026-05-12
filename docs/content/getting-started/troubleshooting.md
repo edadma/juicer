@@ -24,7 +24,7 @@ If `compile` succeeds but `run` doesn't, the issue is dependency resolution — 
 
 **Cause.** The `-s <src>` path doesn't exist, isn't a directory, or you don't have read permission. Often a typo or running from the wrong cwd.
 
-**Fix.** Use an absolute path or `pwd && ls <src>` to confirm the directory exists from where you're running sbt. Most juicer commands run relative to the cwd, so `sbt 'juicerJVM/run build -s examples/blog-site'` only works from the repo root.
+**Fix.** Use an absolute path or `pwd && ls <src>` to confirm the directory exists from where you're running sbt. Most juicer commands run relative to the cwd, so `sbt 'juicerJVM/run build -s docs/demos/juicerblog'` only works from the repo root.
 
 ### `unknown base configuration: <name>`
 

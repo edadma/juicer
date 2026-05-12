@@ -16,7 +16,7 @@ author      = "Tally"
 baseURL     = "http://localhost:8080"
 description = "Privacy-first web analytics for indie developers. One line of code, zero cookies, GDPR-clean by default."
 
-themeDir = "../../docs/themes"
+themeDir = "../../themes"
 theme    = "juicerlanding"
 
 htmlDir = ""

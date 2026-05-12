@@ -49,7 +49,7 @@ body  = "Two minutes to install."
 primaryCta = { label = "Start free", url = "/signup/" }
 ```
 
-Adding `[[pricing]]`, `[[testimonials]]`, `[[faqs]]`, `[showcase]`, `[code]`, and `[[trust]]` blocks fills in the rest of the page. The full demo at `examples/landing-site/` exercises every section.
+Adding `[[pricing]]`, `[[testimonials]]`, `[[faqs]]`, `[showcase]`, `[code]`, and `[[trust]]` blocks fills in the rest of the page. The full demo at `docs/demos/juicerlanding/` exercises every section — see [Demo site](../demo/).
 
 ## Top-level keys
 
