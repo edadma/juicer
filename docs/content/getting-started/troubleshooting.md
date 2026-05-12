@@ -90,7 +90,7 @@ If `compile` succeeds but `run` doesn't, the issue is dependency resolution — 
 
 **Cause.** No `<src>/grammars/` directory exists, or the `*.tmLanguage.json` file inside it doesn't match the language tag on your fence. A block opened with ` ```scala ` looks for `grammars/scala.tmLanguage.json` exactly — case-sensitive.
 
-**Fix.** Create `<src>/grammars/`, drop in the grammar JSON for each language you use. See [juicerblog → Configuration](/juicerblog/configuration/#syntax-highlighting) for the full setup. Run with `-v` and look for the `highlighter: N grammar(s) loaded` line — if you don't see it, the directory is missing or empty.
+**Fix.** Create `<src>/grammars/`, drop in the grammar JSON for each language you use. See [juicerblog → Configuration](/themes/juicerblog/configuration/#syntax-highlighting) for the full setup. Run with `-v` and look for the `highlighter: N grammar(s) loaded` line — if you don't see it, the directory is missing or empty.
 
 ### Highlighted code has no colors
 
@@ -112,7 +112,7 @@ If `compile` succeeds but `run` doesn't, the issue is dependency resolution — 
 
 **Cause.** Either the post has `static: true` frontmatter (filtered out of all post listings), or the tag's slug doesn't match what you typed in the URL. Tags are slugified (lowercased, ASCII-folded, runs of non-alphanumeric collapsed to `-`).
 
-**Fix.** Visit `/tags/` to see the canonical slug juicer derived. If your post has `static: true`, that's why — see [juicerblog → Configuration](/juicerblog/configuration/#per-page-frontmatter).
+**Fix.** Visit `/tags/` to see the canonical slug juicer derived. If your post has `static: true`, that's why — see [juicerblog → Configuration](/themes/juicerblog/configuration/#per-page-frontmatter).
 
 ### Author archive page is empty even though the author has posts
 

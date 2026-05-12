@@ -237,10 +237,11 @@ the engine surface. Those are documented per theme:
 
 | Theme                | What it reads on top |
 |----------------------|----------------------|
-| [juicerblog](/juicerblog/configuration/#per-page-frontmatter) | `static`, `layout: home`/`archive`, `series` |
-| [juicerlanding](/juicerlanding/configuration/#per-page-frontmatter) | `layout: home`, `summary` (as subtitle), `lang` |
-| [juicerportfolio](/juicerportfolio/configuration/#per-project-frontmatter) | `layout: project`, `year`, `tagline`, `role`, `client`, `tools`, `category`, `hero`, `heroAlt`, `caption`, `gallery`, `link` |
-| [juicerdocs](/juicerdocs/configuration/) | Engine-level keys only — no theme-specific frontmatter. |
+| [juicerblog](/themes/juicerblog/configuration/#per-page-frontmatter) | `static`, `layout: home`/`archive`, `series` |
+| [juicerstudy](/themes/juicerstudy/configuration/#per-page-frontmatter) | `toc`, `summary` (as lead), `minutes` |
+| [juicerlanding](/themes/juicerlanding/configuration/#per-page-frontmatter) | `layout: home`, `summary` (as subtitle), `lang` |
+| [juicerportfolio](/themes/juicerportfolio/configuration/#per-project-frontmatter) | `layout: project`, `year`, `tagline`, `role`, `client`, `tools`, `category`, `hero`, `heroAlt`, `caption`, `gallery`, `link` |
+| [juicerdocs](/themes/juicerdocs/configuration/) | Engine-level keys only — no theme-specific frontmatter. |
 
 ## Any other key
 

@@ -58,17 +58,17 @@ calendar this week?", and "where do I park?"
 
 Pick something else if you want:
 
-- **Multi-page docs** — that's [juicerdocs](/juicerdocs/).
+- **Multi-page docs** — that's [juicerdocs](/themes/juicerdocs/).
 - **A blog** with author archives and dated posts — that's
-  [juicerblog](/juicerblog/). (Sermons share much of the blog
+  [juicerblog](/themes/juicerblog/). (Sermons share much of the blog
   shape, but `juicerchurch` is tuned around a sermon as the unit,
   not a post.)
-- **A product landing** — that's [juicerlanding](/juicerlanding/).
+- **A product landing** — that's [juicerlanding](/themes/juicerlanding/).
 - **A small-business / café site** with hours and menus — that's
-  [juicercafe](/juicercafe/), which shares the events / photos /
+  [juicercafe](/themes/juicercafe/), which shares the events / photos /
   visit conventions but swaps the sermon archive for menu
   sections and the hours widget.
-- **A portfolio** — that's [juicerportfolio](/juicerportfolio/).
+- **A portfolio** — that's [juicerportfolio](/themes/juicerportfolio/).
 
 ## What this section covers
 

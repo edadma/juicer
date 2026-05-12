@@ -33,7 +33,7 @@ Use juicerblog if you want a Hugo-style blog theme that boots quickly, exercises
 
 Pick something else if you want:
 
-- A docs theme — juicerblog has no left-rail navigation, no "On this page" right rail, no shortcode set tuned for technical docs. That's [juicerdocs](/juicerdocs/).
+- A docs theme — juicerblog has no left-rail navigation, no "On this page" right rail, no shortcode set tuned for technical docs. That's [juicerdocs](/themes/juicerdocs/).
 - A landing-page theme — the hero treatment is fine for a blog home, not for a marketing page.
 - A magazine layout with multi-column post grids — the prose column is fixed at ~38rem for readability.
 

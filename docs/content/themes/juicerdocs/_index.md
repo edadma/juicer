@@ -43,7 +43,7 @@ Pick something else if you want:
 - A landing-page theme — the hero treatment is fine for a docs home,
   but it isn't a marketing page.
 - Different colors — actually, it's configurable; see
-  [Configuration](/juicerdocs/configuration/).
+  [Configuration](/themes/juicerdocs/configuration/).
 
 ## What this section covers
 

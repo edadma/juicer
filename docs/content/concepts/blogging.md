@@ -804,7 +804,7 @@ partial.
 
 ## The `juicerblog` theme
 
-Juicer ships a default blog theme under `themes/juicerblog/` that exercises every feature on this page — plus server-side syntax highlighting, author bylines, series progress badges, a reading-progress hairline, code-block copy buttons, and a homepage / archive layout pair. The full theme reference lives in its own section: see [juicerblog](/juicerblog/) for the overview and [juicerblog · Configuration](/juicerblog/configuration/) for the full config knobs, frontmatter conventions, syntax-highlighting setup, and override patterns.
+Juicer ships a default blog theme under `themes/juicerblog/` that exercises every feature on this page — plus server-side syntax highlighting, author bylines, series progress badges, a reading-progress hairline, code-block copy buttons, and a homepage / archive layout pair. The full theme reference lives in its own section: see [juicerblog](/themes/juicerblog/) for the overview and [juicerblog · Configuration](/themes/juicerblog/configuration/) for the full config knobs, frontmatter conventions, syntax-highlighting setup, and override patterns.
 
 The fastest way to see every blog feature working together is the bundled demo:
 

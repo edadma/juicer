@@ -61,13 +61,13 @@ recognise the work before reading the words.
 
 Pick something else if you want:
 
-- **Multi-page reference docs.** That's [juicerdocs](/juicerdocs/).
+- **Multi-page reference docs.** That's [juicerdocs](/themes/juicerdocs/).
 - **A blog or essay site** with author bylines and dated posts. That's
-  [juicerblog](/juicerblog/).
+  [juicerblog](/themes/juicerblog/).
 - **A product / SaaS landing** with hero + features + pricing + CTA.
-  That's [juicerlanding](/juicerlanding/).
+  That's [juicerlanding](/themes/juicerlanding/).
 - **A community / location site** (church, cafe, group). That's
-  [juicerchurch](/juicerchurch/) or [juicercafe](/juicercafe/).
+  [juicerchurch](/themes/juicerchurch/) or [juicercafe](/themes/juicercafe/).
 
 ## What this section covers
 
