@@ -87,7 +87,7 @@ Use layouts for: the actual `<html>` skeleton and the per-page-kind structural r
 
 ## Bundled themes
 
-Six themes ship in the juicer repo, each tuned for a different shape of
+Seven themes ship in the juicer repo, each tuned for a different shape of
 site. Pick the closest match and override individual files from your own
 `layouts/` or `static/`:
 
@@ -95,14 +95,15 @@ site. Pick the closest match and override individual files from your own
 |--------------------|---------------------------------|----------------|
 | `juicerdocs`       | `docs/themes/juicerdocs/`       | Documentation sites — sidebar nav, "On this page" rail, 16 callout shortcodes. Powers this site. |
 | `juicerblog`       | `docs/themes/juicerblog/`       | Blogs — post lists with pagination, tag/category/year archives, series nav, author bylines, server-side syntax highlighting. |
+| `juicerstudy`      | `docs/themes/juicerstudy/`      | Long-form prose — essays, study notes, reading journals, lecture notes. Serif reading column, optional KaTeX math, undated by default. |
 | `juicerlanding`    | `docs/themes/juicerlanding/`    | Product / SaaS landing pages — single-page section stack (hero, features, pricing, testimonials, FAQ) driven entirely from `site.toml`. |
 | `juicerportfolio`  | `docs/themes/juicerportfolio/`  | Designer / studio portfolios — image-first project grid, per-project hero + meta sidebar + gallery. |
 | `juicercafe`       | `docs/themes/juicercafe/`       | Cafés, small businesses, restaurants — hours widget, menu sections, photo albums, events list. |
 | `juicerchurch`     | `docs/themes/juicerchurch/`     | Churches, ministries — sermon archive, recurring-event calendar grid, ministries section, photo albums. |
 
-Each theme has its own section in these docs (linked from the sidebar)
-with a "what's in the box" overview and a configuration page that
-catalogues every `[juicerXxx]` token, top-level chrome key, and
+Each theme has its own section under [Themes](/themes/) (linked from the
+sidebar) with a "what's in the box" overview and a configuration page
+that catalogues every `[juicerXxx]` token, top-level chrome key, and
 per-page frontmatter convention.
 
 A working example site lives under `examples/` for every bundled theme

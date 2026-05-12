@@ -62,16 +62,16 @@ menu?", "where do I park?", and "what's the next event?"
 
 Pick something else if you want:
 
-- **Multi-page docs** — that's [juicerdocs](/juicerdocs/).
+- **Multi-page docs** — that's [juicerdocs](/themes/juicerdocs/).
 - **A blog** with author archives and dated posts — that's
-  [juicerblog](/juicerblog/).
+  [juicerblog](/themes/juicerblog/).
 - **A product landing** with hero + features + pricing CTA — that's
-  [juicerlanding](/juicerlanding/).
+  [juicerlanding](/themes/juicerlanding/).
 - **A church or community site** with sermons, ministries, and a
-  calendar grid — that's [juicerchurch](/juicerchurch/), which
+  calendar grid — that's [juicerchurch](/themes/juicerchurch/), which
   shares the events / photos / hours conventions but adds
   sermon-archive specific layouts.
-- **A portfolio** — that's [juicerportfolio](/juicerportfolio/).
+- **A portfolio** — that's [juicerportfolio](/themes/juicerportfolio/).
 
 ## What this section covers
 

@@ -4,7 +4,7 @@ summary: The bundled single-page product / SaaS landing theme — frontmatter-dr
 weight: 70
 ---
 
-`juicerlanding` is the landing-page sibling to [juicerdocs](/juicerdocs/) and [juicerblog](/juicerblog/). It's bundled with the juicer repo at `docs/themes/juicerlanding/`, so a clone of juicer comes with it out of the box. To use it on your own site, copy the directory or run:
+`juicerlanding` is the landing-page sibling to [juicerdocs](/themes/juicerdocs/) and [juicerblog](/themes/juicerblog/). It's bundled with the juicer repo at `docs/themes/juicerlanding/`, so a clone of juicer comes with it out of the box. To use it on your own site, copy the directory or run:
 
 ```bash
 juicer theme add https://github.com/edadma/juicer.git -n juicerlanding
@@ -34,9 +34,9 @@ Use juicerlanding if you're shipping an indie SaaS, an open-source library with 
 
 Pick something else if you want:
 
-- **Multi-page reference.** That's [juicerdocs](/juicerdocs/) — left rail, right TOC rail, prev/next nav, the whole docs apparatus.
-- **A blog or essay site.** That's [juicerblog](/juicerblog/) — long-form prose treatment, author bylines, dated post archives.
-- **A community / location site** (church, cafe, group). That's [juicerchurch](/juicerchurch/) or [juicercafe](/juicercafe/) — recurring events, hours widgets, places-to-find-us cards.
+- **Multi-page reference.** That's [juicerdocs](/themes/juicerdocs/) — left rail, right TOC rail, prev/next nav, the whole docs apparatus.
+- **A blog or essay site.** That's [juicerblog](/themes/juicerblog/) — long-form prose treatment, author bylines, dated post archives.
+- **A community / location site** (church, cafe, group). That's [juicerchurch](/themes/juicerchurch/) or [juicercafe](/themes/juicercafe/) — recurring events, hours widgets, places-to-find-us cards.
 
 ## What this section covers
 
