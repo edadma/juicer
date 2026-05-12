@@ -1,0 +1,16 @@
+{{ define main }}
+  {{ // Section landings are author-driven, not auto-cataloged. The page's
+     // frontmatter `title` + `summary` set the visual header; everything
+     // else is what the author wrote in `_index.md`. Browsing the section
+     // tree is the sidebar's job; the landing page is for editorial
+     // intent — "if you're new, start here," "the strongest pieces are…",
+     // a curated walk-through of what the section contains, etc. Authors
+     // who want an auto-list of children can use a future
+     // [= section-list =] shortcode rather than getting it imposed by
+     // the layout. }}
+  <article class="juicerstudy-landing">
+    <h1>{{ .page.title }}</h1>
+    {{ if .page.summary }}<p class="juicerstudy-lead">{{ .page.summary }}</p>{{ end }}
+    {{ .content }}
+  </article>
+{{ end }}

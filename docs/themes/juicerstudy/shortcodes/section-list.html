@@ -1,0 +1,42 @@
+{{ // section-list — opt-in catalog of the current section's direct
+   // children, for section _index.md pages that want one. The sidebar
+   // is the canonical browse surface; this exists for authors who want
+   // a "here's what's in this section" panel on the landing itself,
+   // useful for: a curated walk-through, an archive index, the first
+   // visit to a long section. Renders titles + summaries + an optional
+   // minute count. Subsections are listed if the page has them.
+   //
+   // BLOCKED on juicer feature gap (2026-05-12): the Preprocessor that
+   // runs shortcodes builds its data map from positional args, named
+   // args, and inline content only — see
+   // shared/src/main/scala/io/github/edadma/juicer/Preprocessor.scala
+   // around line 25. It does not pass through `.page` or `.site`, so
+   // `{{ if .page.pages }}` here is always false at runtime and the
+   // shortcode silently renders to nothing. When juicer is updated to
+   // thread page context into shortcode rendering, this template and
+   // its CSS will start working with no changes. }}
+{{ if .page.pages }}
+  <ul class="juicerstudy-section-list">
+    {{ for p <- .page.pages }}
+      <li class="juicerstudy-section-list-item">
+        <a href="{{ p.url }}" class="juicerstudy-section-list-link">
+          <span class="juicerstudy-section-list-title">{{ p.title }}</span>
+          {{ if p.summary }}<span class="juicerstudy-section-list-summary">{{ p.summary }}</span>{{ end }}
+          {{ if p.minutes }}<span class="juicerstudy-section-list-meta">{{ p.minutes }} min read</span>{{ end }}
+        </a>
+      </li>
+    {{ end }}
+  </ul>
+{{ end }}
+{{ if .page.subsections }}
+  <ul class="juicerstudy-section-list juicerstudy-section-list-subsections">
+    {{ for sub <- .page.subsections }}
+      <li class="juicerstudy-section-list-item juicerstudy-section-list-item-subsection">
+        <a href="{{ sub.url }}" class="juicerstudy-section-list-link">
+          <span class="juicerstudy-section-list-title">{{ sub.title }}{{ if sub.pages }} <span class="juicerstudy-section-list-count">· {{ sub.pages.length }}</span>{{ end }}</span>
+          {{ if sub.summary }}<span class="juicerstudy-section-list-summary">{{ sub.summary }}</span>{{ end }}
+        </a>
+      </li>
+    {{ end }}
+  </ul>
+{{ end }}

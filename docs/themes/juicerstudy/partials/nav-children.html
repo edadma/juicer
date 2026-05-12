@@ -1,0 +1,25 @@
+{{ if .pages }}
+  <ul class="juicerstudy-nav-children">
+    {{ for p <- .pages }}
+      <li>
+        <a href="{{ p.url }}" data-juicerstudy-nav-link class="juicerstudy-nav-link">
+          <span class="juicerstudy-nav-link-label">{{ p.title }}</span>
+          {{ if p.minutes }}<span class="juicerstudy-nav-link-meta">· {{ p.minutes }} min</span>{{ end }}
+        </a>
+      </li>
+    {{ end }}
+  </ul>
+{{ end }}
+{{ if .subsections }}
+  <ul class="juicerstudy-nav-subsections">
+    {{ for sub <- .subsections }}
+      <li class="juicerstudy-nav-subsection">
+        <a href="{{ sub.url }}" data-juicerstudy-nav-link class="juicerstudy-nav-subheading">
+          <span class="juicerstudy-nav-subheading-label">{{ sub.title }}</span>
+          {{ if sub.pages }}<span class="juicerstudy-nav-subheading-count" aria-label="{{ sub.pages.length }} pieces">{{ sub.pages.length }}</span>{{ end }}
+        </a>
+        {{ partial 'nav-children' sub }}
+      </li>
+    {{ end }}
+  </ul>
+{{ end }}

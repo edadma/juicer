@@ -6,14 +6,14 @@
 <body>
   {{ partial 'topbar' . }}
 
-  <div class="juicerdocs-page">
-    <aside class="juicerdocs-sidebar-aside">
+  <div class="juicerstudy-page">
+    <aside class="juicerstudy-sidebar-aside">
       {{ partial 'sidebar' . }}
     </aside>
-    <div class="juicerdocs-sidebar-backdrop" aria-hidden="true"></div>
+    <div class="juicerstudy-sidebar-backdrop" aria-hidden="true"></div>
 
-    <main class="juicerdocs-main">
-      <div class="juicerdocs-content">
+    <main class="juicerstudy-main">
+      <div class="juicerstudy-content">
         {{ partial 'breadcrumbs' . }}
         {{ block main . }}
           <article>
@@ -25,15 +25,17 @@
       </div>
     </main>
 
-    <aside class="juicerdocs-rail-aside">
+    {{ if .page.toc }}
+    <aside class="juicerstudy-rail-aside">
       {{ partial 'page-toc' . }}
     </aside>
+    {{ end }}
   </div>
 
   {{ partial 'footer' . }}
 
   {{ partial 'search-modal' . }}
 
-  <script src="{{ relURL '/juicerdocs.js' }}"></script>
+  <script src="{{ relURL '/juicerstudy.js' }}"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /*
- * juicerdocs — hand-rolled stylesheet for the juicer documentation theme.
+ * juicerstudy — hand-rolled stylesheet for the juicer documentation theme.
  *
  *   1.  Reset + base
  *   2.  Tokens (light + dark palette, sizing)
@@ -81,39 +81,42 @@ hr {
      Tuned to the logo: magenta-pink primary + purple accent + leaf-green
      supporting note. Surfaces stay neutral so the brand colors carry the
      personality without the page reading "purple". */
-  --bg:           #ffffff;
-  --bg-soft:      #fafafa;
-  --surface:      #f5f4f7;
-  --surface-2:    #fbfafc;
-  --border:       #e7e3ec;
-  --border-soft:  #f1eef5;
-  --fg:           #18181b;
-  --fg-soft:      #27272a;
-  --muted:        #71717a;
+  --bg:           #fdfcfa;
+  --bg-soft:      #f7f5f0;
+  --surface:      #f3f0ea;
+  --surface-2:    #faf8f3;
+  --border:       #e6e1d6;
+  --border-soft:  #efeae0;
+  --fg:           #1c1a17;
+  --fg-soft:      #2e2c28;
+  --muted:        #6f6a60;
 
-  --brand:        #d61472;
-  --brand-strong: #a30d57;
-  --brand-soft:   #fce7f3;
-  --accent:       #6f1f9e;
-  --leaf:         #65a30d;
+  /* Default accent is fountain-pen ink. Consumers should override
+     [juicerstudy].brand in site.toml to suit their site identity. */
+  --brand:        #1e3a8a;
+  --brand-strong: #1e40af;
+  --brand-soft:   rgba(30, 58, 138, 0.10);
+  --accent:       #92400e;
+  --leaf:         #166534;
 
-  --code-bg:      #faf7fa;
-  --code-fg:      #1f1b24;
-  --code-border:  #ead5e6;
+  --code-bg:      #f5f1e8;
+  --code-fg:      #1f1b15;
+  --code-border:  #e0d8c5;
 
   --shadow-sm: 0 1px 2px rgba(0,0,0,.04), 0 1px 1px rgba(0,0,0,.03);
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.05);
 
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  --font-serif: 'Source Serif Pro', 'Iowan Old Style', 'Charter', 'Georgia', 'Cambria', serif;
+  --font-mono:  'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Sizing */
   --topbar-h:     3.5rem;
   --sidebar-w:    16rem;
   --rail-w:       18rem;
-  --content-max:  48rem;
+  --content-max:  38rem;
   --site-max:     90rem;
   --radius-sm:    0.25rem;
   --radius-md:    0.375rem;
@@ -121,25 +124,25 @@ hr {
 }
 
 [data-theme="dark"] {
-  --bg:           #0b0a10;
-  --bg-soft:      #0f0e15;
-  --surface:      #16141d;
-  --surface-2:    #1c1925;
-  --border:       #2a2533;
-  --border-soft:  #1e1a26;
-  --fg:           #f4f4f5;
-  --fg-soft:      #d4d4d4;
-  --muted:        #a1a1aa;
+  --bg:           #15140f;
+  --bg-soft:      #1b1a14;
+  --surface:      #221f17;
+  --surface-2:    #2a261c;
+  --border:       #3a3527;
+  --border-soft:  #25221a;
+  --fg:           #ede7d5;
+  --fg-soft:      #d1cab5;
+  --muted:        #9a9275;
 
-  --brand:        #ec4899;
-  --brand-strong: #f472b6;
-  --brand-soft:   rgba(236,72,153,0.18);
-  --accent:       #c084fc;
-  --leaf:         #a3e635;
+  --brand:        #93c5fd;
+  --brand-strong: #bfdbfe;
+  --brand-soft:   rgba(147, 197, 253, 0.14);
+  --accent:       #fdba74;
+  --leaf:         #86efac;
 
-  --code-bg:      #15131c;
-  --code-fg:      #ececf1;
-  --code-border:  #2a2533;
+  --code-bg:      #1d1b15;
+  --code-fg:      #ede7d5;
+  --code-border:  #3a3527;
 
   --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,.5), 0 2px 4px -2px rgba(0,0,0,.4);
@@ -151,7 +154,7 @@ hr {
  * 3. Generic helpers
  * ============================================================ */
 
-.juicerdocs-sr-only {
+.juicerstudy-sr-only {
   position: absolute;
   width: 1px; height: 1px;
   padding: 0; margin: -1px;
@@ -168,25 +171,32 @@ hr {
  * 4. Layout
  * ============================================================ */
 
-.juicerdocs-page {
+.juicerstudy-page {
   display: flex;
   max-width: var(--site-max);
   margin: 0 auto;
 }
 
-.juicerdocs-main {
+.juicerstudy-main {
   flex: 1;
   min-width: 0;
   padding: 2rem 1rem;
 }
 
-.juicerdocs-content {
+.juicerstudy-content {
   max-width: var(--content-max);
   margin: 0 auto;
+  /* The reading column is set in the serif body face. Interface chrome
+     (topbar, sidebar, footer) stays sans by virtue of being outside
+     .juicerstudy-content. Slightly bumped font-size + open line-height
+     are tuned for ~65ch of comfortable measure. */
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  line-height: 1.7;
 }
 
-.juicerdocs-sidebar-aside,
-.juicerdocs-rail-aside {
+.juicerstudy-sidebar-aside,
+.juicerstudy-rail-aside {
   flex-shrink: 0;
   position: sticky;
   top: var(--topbar-h);
@@ -196,12 +206,12 @@ hr {
   padding: 2rem 1rem;
 }
 
-.juicerdocs-sidebar-aside {
+.juicerstudy-sidebar-aside {
   width: var(--sidebar-w);
   border-right: 1px solid var(--border);
 }
 
-.juicerdocs-rail-aside {
+.juicerstudy-rail-aside {
   width: var(--rail-w);
 }
 
@@ -215,50 +225,50 @@ hr {
    Vertical: sidebar + rail (8px wide). Horizontal: every overflowing
    content scroller — code blocks (<pre>), tables, the filetree shortcode,
    anything else inside the prose column with `overflow-x: auto`. */
-.juicerdocs-sidebar-aside,
-.juicerdocs-rail-aside,
-.juicerdocs-content pre,
-.juicerdocs-content table,
-.juicerdocs-content .juicerdocs-filetree {
+.juicerstudy-sidebar-aside,
+.juicerstudy-rail-aside,
+.juicerstudy-content pre,
+.juicerstudy-content table,
+.juicerstudy-content .juicerstudy-filetree {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
-.juicerdocs-sidebar-aside::-webkit-scrollbar,
-.juicerdocs-rail-aside::-webkit-scrollbar,
-.juicerdocs-content pre::-webkit-scrollbar,
-.juicerdocs-content table::-webkit-scrollbar,
-.juicerdocs-content .juicerdocs-filetree::-webkit-scrollbar {
+.juicerstudy-sidebar-aside::-webkit-scrollbar,
+.juicerstudy-rail-aside::-webkit-scrollbar,
+.juicerstudy-content pre::-webkit-scrollbar,
+.juicerstudy-content table::-webkit-scrollbar,
+.juicerstudy-content .juicerstudy-filetree::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-.juicerdocs-sidebar-aside::-webkit-scrollbar-track,
-.juicerdocs-rail-aside::-webkit-scrollbar-track,
-.juicerdocs-content pre::-webkit-scrollbar-track,
-.juicerdocs-content table::-webkit-scrollbar-track,
-.juicerdocs-content .juicerdocs-filetree::-webkit-scrollbar-track {
+.juicerstudy-sidebar-aside::-webkit-scrollbar-track,
+.juicerstudy-rail-aside::-webkit-scrollbar-track,
+.juicerstudy-content pre::-webkit-scrollbar-track,
+.juicerstudy-content table::-webkit-scrollbar-track,
+.juicerstudy-content .juicerstudy-filetree::-webkit-scrollbar-track {
   background: transparent;
 }
-.juicerdocs-sidebar-aside::-webkit-scrollbar-thumb,
-.juicerdocs-rail-aside::-webkit-scrollbar-thumb,
-.juicerdocs-content pre::-webkit-scrollbar-thumb,
-.juicerdocs-content table::-webkit-scrollbar-thumb,
-.juicerdocs-content .juicerdocs-filetree::-webkit-scrollbar-thumb {
+.juicerstudy-sidebar-aside::-webkit-scrollbar-thumb,
+.juicerstudy-rail-aside::-webkit-scrollbar-thumb,
+.juicerstudy-content pre::-webkit-scrollbar-thumb,
+.juicerstudy-content table::-webkit-scrollbar-thumb,
+.juicerstudy-content .juicerstudy-filetree::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 4px;
 }
-.juicerdocs-sidebar-aside::-webkit-scrollbar-thumb:hover,
-.juicerdocs-rail-aside::-webkit-scrollbar-thumb:hover,
-.juicerdocs-content pre::-webkit-scrollbar-thumb:hover,
-.juicerdocs-content table::-webkit-scrollbar-thumb:hover,
-.juicerdocs-content .juicerdocs-filetree::-webkit-scrollbar-thumb:hover {
+.juicerstudy-sidebar-aside::-webkit-scrollbar-thumb:hover,
+.juicerstudy-rail-aside::-webkit-scrollbar-thumb:hover,
+.juicerstudy-content pre::-webkit-scrollbar-thumb:hover,
+.juicerstudy-content table::-webkit-scrollbar-thumb:hover,
+.juicerstudy-content .juicerstudy-filetree::-webkit-scrollbar-thumb:hover {
   background: var(--fg-soft);
 }
 
 @media (max-width: 1023px) {
-  .juicerdocs-sidebar-aside { display: none; }
+  .juicerstudy-sidebar-aside { display: none; }
 }
 @media (max-width: 1279px) {
-  .juicerdocs-rail-aside { display: none; }
+  .juicerstudy-rail-aside { display: none; }
 }
 
 
@@ -266,7 +276,7 @@ hr {
  * 5. Topbar
  * ============================================================ */
 
-.juicerdocs-topbar {
+.juicerstudy-topbar {
   position: sticky;
   top: 0;
   z-index: 30;
@@ -277,7 +287,7 @@ hr {
   -webkit-backdrop-filter: blur(8px);
 }
 
-.juicerdocs-topbar-inner {
+.juicerstudy-topbar-inner {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -287,42 +297,44 @@ hr {
   padding: 0 1rem;
 }
 
-.juicerdocs-brand {
+.juicerstudy-brand {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
   color: var(--fg);
 }
-.juicerdocs-brand:hover { text-decoration: none; }
+.juicerstudy-brand:hover { text-decoration: none; }
 
-.juicerdocs-brand-logo {
+.juicerstudy-brand-logo {
   width: 2rem;
   height: 2rem;
 }
 
-.juicerdocs-brand-name {
+.juicerstudy-brand-name {
   font-weight: 700;
   font-size: 1.5rem;
   letter-spacing: -0.025em;
   line-height: 1;
 }
 @media (max-width: 639px) {
-  .juicerdocs-brand-name { display: none; }
+  .juicerstudy-brand-name { display: none; }
 }
 
 /* Search trigger — a compact button in the topbar that opens the
    Cmd-K modal. Looks like a search field but doesn't accept input
    directly; the real input lives in the dialog. The right-aligned
-   kbd hints at the shortcut. Centering pattern (flex: 1 +
-   max-width + margin: 0 auto) mirrors the old inline search field
-   so the topbar visual rhythm stays the same. */
-.juicerdocs-search-trigger {
+   kbd hints at the shortcut. */
+.juicerstudy-search-trigger {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  /* Centering pattern mirrors juicerdocs's search field: grow to fill
+     the slot between brand and right-side icon buttons, cap at a
+     readable width, then let auto-margins absorb the leftover space
+     symmetrically so the trigger sits centered in the topbar. */
   flex: 1;
-  max-width: 28rem;
+  max-width: 18rem;
   margin: 0 auto;
   height: 2rem;
   padding: 0 0.5rem 0 0.75rem;
@@ -335,28 +347,28 @@ hr {
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
-.juicerdocs-search-trigger:hover {
+.juicerstudy-search-trigger:hover {
   border-color: var(--brand);
   color: var(--fg);
 }
 
-.juicerdocs-search-trigger-icon {
+.juicerstudy-search-trigger-icon {
   width: 1rem;
   height: 1rem;
   flex: 0 0 auto;
 }
 
-.juicerdocs-search-trigger-label {
+.juicerstudy-search-trigger-label {
   flex: 1 1 auto;
   text-align: left;
 }
 
-.juicerdocs-search-trigger-key {
+.juicerstudy-search-trigger-key {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   padding: 0.0625rem 0.375rem;
-  font-family: inherit;
+  font-family: var(--font-sans);
   font-size: 0.6875rem;
   line-height: 1;
   color: var(--muted);
@@ -366,19 +378,21 @@ hr {
 }
 
 @media (max-width: 639px) {
-  .juicerdocs-search-trigger-label,
-  .juicerdocs-search-trigger-key {
+  .juicerstudy-search-trigger-label,
+  .juicerstudy-search-trigger-key {
     display: none;
   }
-  .juicerdocs-search-trigger {
+  .juicerstudy-search-trigger {
     flex: 0 0 auto;
     margin: 0;
     padding: 0 0.5rem;
   }
 }
 
-/* Search modal — native <dialog>. ::backdrop carries the scrim. */
-.juicerdocs-search-modal {
+/* Search modal — native <dialog>. The ::backdrop is styled directly
+   so it gets a soft scrim. Body content is centered top with a small
+   gutter from the topbar so it doesn't feel pinned to the viewport. */
+.juicerstudy-search-modal {
   width: min(40rem, calc(100vw - 2rem));
   max-height: 70vh;
   margin-top: 6rem;
@@ -391,22 +405,22 @@ hr {
   box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
-.juicerdocs-search-modal::backdrop {
+.juicerstudy-search-modal::backdrop {
   background: rgba(15, 15, 20, 0.55);
   backdrop-filter: blur(2px);
 }
-.juicerdocs-search-modal[open] {
+.juicerstudy-search-modal[open] {
   display: flex;
   flex-direction: column;
 }
 
-.juicerdocs-search-modal-inner {
+.juicerstudy-search-modal-inner {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
-.juicerdocs-search-modal-bar {
+.juicerstudy-search-modal-bar {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -415,14 +429,14 @@ hr {
   flex: 0 0 auto;
 }
 
-.juicerdocs-search-modal-icon {
+.juicerstudy-search-modal-icon {
   width: 1.125rem;
   height: 1.125rem;
   color: var(--muted);
   flex: 0 0 auto;
 }
 
-.juicerdocs-search-modal-input {
+.juicerstudy-search-modal-input {
   flex: 1 1 auto;
   min-width: 0;
   border: none;
@@ -432,14 +446,14 @@ hr {
   font-family: inherit;
   outline: none;
 }
-.juicerdocs-search-modal-input::placeholder {
+.juicerstudy-search-modal-input::placeholder {
   color: var(--muted);
 }
 
-.juicerdocs-search-modal-key {
+.juicerstudy-search-modal-key {
   flex: 0 0 auto;
   padding: 0.125rem 0.375rem;
-  font-family: inherit;
+  font-family: var(--font-sans);
   font-size: 0.6875rem;
   color: var(--muted);
   background: var(--surface);
@@ -447,16 +461,18 @@ hr {
   border-radius: var(--radius-sm);
 }
 
-.juicerdocs-search-modal-results {
+.juicerstudy-search-modal-results {
   flex: 1 1 auto;
   overflow-y: auto;
   max-height: 24rem;
 }
-.juicerdocs-search-modal-results:not(.is-populated) {
+/* The results pane has no padding when empty so we don't show a
+   pointless gap of nothing before the user has typed. */
+.juicerstudy-search-modal-results:not(.is-populated) {
   display: none;
 }
 
-.juicerdocs-search-modal-result {
+.juicerstudy-search-modal-result {
   display: block;
   padding: 0.625rem 1rem;
   border-bottom: 1px solid var(--border-soft);
@@ -464,23 +480,24 @@ hr {
   text-decoration: none;
   transition: background 0.1s, color 0.1s;
 }
-.juicerdocs-search-modal-result:last-child { border-bottom: none; }
-.juicerdocs-search-modal-result:hover,
-.juicerdocs-search-modal-result.is-active {
+.juicerstudy-search-modal-result:last-child { border-bottom: none; }
+.juicerstudy-search-modal-result:hover,
+.juicerstudy-search-modal-result.is-active {
   background: var(--brand-soft);
   color: var(--fg);
   text-decoration: none;
 }
-.juicerdocs-search-modal-result.is-active {
+.juicerstudy-search-modal-result.is-active {
   outline: 2px solid var(--brand);
   outline-offset: -2px;
 }
 
-.juicerdocs-search-modal-result-title {
+.juicerstudy-search-modal-result-title {
   display: block;
-  font-weight: 500;
+  font-family: var(--font-serif);
+  font-size: 1rem;
 }
-.juicerdocs-search-modal-result-snippet {
+.juicerstudy-search-modal-result-snippet {
   display: block;
   margin-top: 0.125rem;
   font-size: 0.8125rem;
@@ -491,14 +508,17 @@ hr {
   -webkit-box-orient: vertical;
 }
 
-.juicerdocs-search-modal-empty {
+.juicerstudy-search-modal-empty {
   padding: 1.25rem 1rem;
   text-align: center;
   font-size: 0.875rem;
   color: var(--muted);
 }
 
-.juicerdocs-search-modal-hint {
+/* Footer hint strip with kbd guides — only relevant when there are
+   results, so it lives below the results scroll and gets a faint
+   divider above it. */
+.juicerstudy-search-modal-hint {
   flex: 0 0 auto;
   display: flex;
   gap: 1rem;
@@ -508,12 +528,12 @@ hr {
   font-size: 0.75rem;
   color: var(--muted);
 }
-.juicerdocs-search-modal-hint kbd {
+.juicerstudy-search-modal-hint kbd {
   display: inline-flex;
   align-items: center;
   padding: 0.0625rem 0.3125rem;
   margin-right: 0.25rem;
-  font-family: inherit;
+  font-family: var(--font-sans);
   font-size: 0.6875rem;
   color: var(--fg-soft);
   background: var(--surface);
@@ -522,7 +542,7 @@ hr {
 }
 
 /* Visually-hidden helper — kept off-screen for screen readers only. */
-.juicerdocs-vh {
+.juicerstudy-vh {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -534,7 +554,7 @@ hr {
   border: 0;
 }
 
-.juicerdocs-icon-btn {
+.juicerstudy-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -546,96 +566,216 @@ hr {
   background: transparent;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
-.juicerdocs-icon-btn:hover {
+.juicerstudy-icon-btn:hover {
   color: var(--brand);
   background: var(--brand-soft);
   text-decoration: none;
 }
-.juicerdocs-icon-btn svg {
+.juicerstudy-icon-btn svg {
   width: 1.25rem;
   height: 1.25rem;
 }
 
-.juicerdocs-icon-light { display: none; }
-.juicerdocs-icon-dark  { display: block; }
-[data-theme="dark"] .juicerdocs-icon-light { display: block; }
-[data-theme="dark"] .juicerdocs-icon-dark  { display: none; }
+.juicerstudy-icon-light { display: none; }
+.juicerstudy-icon-dark  { display: block; }
+[data-theme="dark"] .juicerstudy-icon-light { display: block; }
+[data-theme="dark"] .juicerstudy-icon-dark  { display: none; }
 
-.juicerdocs-sidebar-toggle { display: none; }
+.juicerstudy-sidebar-toggle { display: none; }
 @media (max-width: 1023px) {
-  .juicerdocs-sidebar-toggle { display: inline-flex; }
+  .juicerstudy-sidebar-toggle { display: inline-flex; }
 }
 
 
 /* ============================================================
- * 6. Sidebar
+ * 6. Sidebar — library index (not a docs tree)
+ *
+ * Visual intent: a reader's catalogue, not a developer's file
+ * explorer. Three tiers of typography do the hierarchy work:
+ *
+ *   section heading      — small-caps tracked sans, top-level area
+ *   subsection heading   — italic serif, intermediate grouping
+ *   leaf                 — reading serif, the actual piece
+ *
+ * Each header carries an optional piece-count chip. The current
+ * piece is marked by italic + a thin marginal rule on the left,
+ * NOT by a filled box. Nesting is unlimited, but two real tiers
+ * is the visual comfort zone.
  * ============================================================ */
 
-.juicerdocs-nav {
-  font-size: 0.875rem;
+.juicerstudy-nav {
+  font-size: 0.9375rem;
+  line-height: 1.5;
 }
 
-.juicerdocs-nav-list {
+.juicerstudy-nav-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.juicerdocs-nav-section {
-  margin-bottom: 1.25rem;
+.juicerstudy-nav-section {
+  margin-bottom: 1.75rem;
 }
 
-.juicerdocs-nav-heading {
-  display: block;
-  padding: 0.375rem 0.75rem;
-  font-weight: 600;
-  font-size: 0.8125rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+/* Section heading — true small-caps (font-variant, NOT
+   text-transform: uppercase). Small-caps sit at lowercase
+   x-height, so they read as a quiet editorial label rather
+   than as a loud all-caps shout — the right register for a
+   library catalogue. Tracked slightly because all-cap glyphs,
+   even small ones, want letter-air. The label and count are
+   siblings so the count can carry its own muted colour without
+   dragging the title down with it. */
+.juicerstudy-nav-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.125rem 0 0.5rem 0;
+  font-family: var(--font-serif);
+  font-variant-caps: all-small-caps;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  letter-spacing: 0.08em;
   color: var(--fg);
   text-decoration: none;
-  border-radius: var(--radius-md);
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 0.375rem;
+  transition: color 0.1s;
 }
-.juicerdocs-nav-heading:hover {
+.juicerstudy-nav-heading:hover {
   color: var(--brand);
   text-decoration: none;
 }
-/* Section heading is the active link when the user is on the
-   section's `_index` page. Mirrors the .juicerdocs-nav-link.is-active
-   colour treatment (without the border-left accent, since the heading
-   sits outside the bordered child list). */
-.juicerdocs-nav-heading.is-active {
+.juicerstudy-nav-heading.is-active {
   color: var(--brand);
-  background: var(--brand-soft);
+}
+.juicerstudy-nav-heading-label {
+  flex: 1 1 auto;
+}
+.juicerstudy-nav-heading-count {
+  flex: 0 0 auto;
+  font-weight: 400;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.juicerstudy-nav-heading-count::before {
+  content: "· ";
+  margin-right: 0.0625rem;
 }
 
-.juicerdocs-nav-children {
+/* Children — the actual pieces. Reading serif, more vertical
+   breathing room. No bounding rule on the list; each leaf carries
+   its own left-edge in the active state only. */
+.juicerstudy-nav-children {
   list-style: none;
-  margin: 0.25rem 0 0 0;
+  margin: 0;
   padding: 0;
-  border-left: 1px solid var(--border-soft);
+}
+.juicerstudy-nav-children li + li {
+  margin-top: 0.0625rem;
 }
 
-.juicerdocs-nav-link {
-  display: block;
-  padding: 0.375rem 0.75rem;
-  margin-left: -1px;
+.juicerstudy-nav-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.25rem 0 0.25rem 0.625rem;
+  margin-left: -0.625rem;
   border-left: 2px solid transparent;
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-family: var(--font-serif);
+  font-size: 1rem;
   color: var(--fg-soft);
   text-decoration: none;
-  transition: color 0.1s, background 0.1s, border-color 0.1s;
+  transition: color 0.1s, border-color 0.1s;
 }
-.juicerdocs-nav-link:hover {
+.juicerstudy-nav-link:hover {
   color: var(--brand);
-  background: var(--brand-soft);
   text-decoration: none;
 }
-.juicerdocs-nav-link.is-active {
-  color: var(--brand);
-  background: var(--brand-soft);
+/* Active piece — italic for emphasis, a thin marginal rule on the
+   left to mark "you are reading this." No fill background; the
+   tradition for marking a current entry in a printed index is
+   typographic, not chromatic. */
+.juicerstudy-nav-link.is-active {
+  color: var(--fg);
   border-left-color: var(--brand);
-  font-weight: 500;
+  font-style: italic;
+}
+.juicerstudy-nav-link-label {
+  flex: 1 1 auto;
+}
+.juicerstudy-nav-link-meta {
+  flex: 0 0 auto;
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Subsection — an intermediate grouping (apologetic area → topic).
+   Italic serif so it reads as a *named cluster* rather than as a
+   small section heading. Slightly indented from the section margin
+   so the hierarchy is visible at a glance without a heavy left rule. */
+.juicerstudy-nav-subsections {
+  list-style: none;
+  margin: 0.5rem 0 0 0;
+  padding: 0;
+}
+.juicerstudy-nav-subsection {
+  margin-top: 0.75rem;
+}
+.juicerstudy-nav-subsection:first-child {
+  margin-top: 0.25rem;
+}
+
+.juicerstudy-nav-subheading {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.125rem 0 0.25rem 0.625rem;
+  margin-left: -0.625rem;
+  border-left: 2px solid transparent;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.9375rem;
+  color: var(--fg);
+  text-decoration: none;
+  transition: color 0.1s, border-color 0.1s;
+}
+.juicerstudy-nav-subheading:hover {
+  color: var(--brand);
+  text-decoration: none;
+}
+.juicerstudy-nav-subheading.is-active {
+  color: var(--fg);
+  border-left-color: var(--brand);
+}
+.juicerstudy-nav-subheading-label {
+  flex: 1 1 auto;
+}
+.juicerstudy-nav-subheading-count {
+  flex: 0 0 auto;
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.juicerstudy-nav-subheading-count::before {
+  content: "· ";
+  margin-right: 0.0625rem;
+}
+
+/* Pieces nested under a subsection indent slightly so the
+   "this belongs to that cluster" relationship is visible. */
+.juicerstudy-nav-subsection .juicerstudy-nav-children {
+  margin-left: 0.625rem;
 }
 
 
@@ -643,11 +783,11 @@ hr {
  * 7. Right-rail TOC
  * ============================================================ */
 
-.juicerdocs-toc-wrap {
+.juicerstudy-toc-wrap {
   font-size: 0.875rem;
 }
 
-.juicerdocs-toc-title {
+.juicerstudy-toc-title {
   margin: 0 0 0.75rem 0;
   font-size: 0.75rem;
   font-weight: 600;
@@ -656,19 +796,19 @@ hr {
   color: var(--fg);
 }
 
-.juicerdocs-toc {
+.juicerstudy-toc {
   list-style: none;
   margin: 0;
   padding: 0;
   border-left: 1px solid var(--border);
 }
-.juicerdocs-toc ul {
+.juicerstudy-toc ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.juicerdocs-toc-link {
+.juicerstudy-toc-link {
   display: block;
   padding: 0.25rem 0;
   margin-left: -1px;
@@ -680,32 +820,32 @@ hr {
   overflow-wrap: anywhere;
   transition: color 0.1s, border-color 0.1s;
 }
-.juicerdocs-toc-link:hover {
+.juicerstudy-toc-link:hover {
   color: var(--fg);
   text-decoration: none;
 }
-.juicerdocs-toc-link.is-active {
+.juicerstudy-toc-link.is-active {
   color: var(--brand);
   border-left-color: var(--brand);
   font-weight: 500;
 }
-.juicerdocs-toc-link[data-toc-level="2"] { padding-left: 0.75rem; }
-.juicerdocs-toc-link[data-toc-level="3"] { padding-left: 1.5rem; }
-.juicerdocs-toc-link[data-toc-level="4"] { padding-left: 2.25rem; font-size: 0.8125rem; }
-.juicerdocs-toc-link[data-toc-level="5"] { padding-left: 3rem;    font-size: 0.8125rem; }
+.juicerstudy-toc-link[data-toc-level="2"] { padding-left: 0.75rem; }
+.juicerstudy-toc-link[data-toc-level="3"] { padding-left: 1.5rem; }
+.juicerstudy-toc-link[data-toc-level="4"] { padding-left: 2.25rem; font-size: 0.8125rem; }
+.juicerstudy-toc-link[data-toc-level="5"] { padding-left: 3rem;    font-size: 0.8125rem; }
 
 
 /* ============================================================
  * 8. Breadcrumbs + prev/next
  * ============================================================ */
 
-.juicerdocs-breadcrumbs {
+.juicerstudy-breadcrumbs {
   font-size: 0.875rem;
   color: var(--muted);
   margin-bottom: 1.5rem;
 }
 
-.juicerdocs-breadcrumbs ol {
+.juicerstudy-breadcrumbs ol {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -714,35 +854,35 @@ hr {
   align-items: center;
   gap: 0.375rem;
 }
-.juicerdocs-breadcrumbs li {
+.juicerstudy-breadcrumbs li {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
 }
-.juicerdocs-breadcrumbs-link { color: inherit; }
-.juicerdocs-breadcrumbs-link:hover {
+.juicerstudy-breadcrumbs-link { color: inherit; }
+.juicerstudy-breadcrumbs-link:hover {
   color: var(--brand);
   text-decoration: none;
 }
-.juicerdocs-breadcrumbs-current {
+.juicerstudy-breadcrumbs-current {
   color: var(--fg-soft);
   font-weight: 500;
 }
-.juicerdocs-breadcrumbs-sep {
+.juicerstudy-breadcrumbs-sep {
   width: 0.75rem;
   height: 0.75rem;
   color: var(--muted);
   opacity: 0.6;
 }
 
-.juicerdocs-prevnext {
+.juicerstudy-prevnext {
   margin-top: 3rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
-.juicerdocs-prevnext-card {
+.juicerstudy-prevnext-card {
   display: flex;
   flex-direction: column;
   padding: 1rem;
@@ -753,19 +893,19 @@ hr {
   text-decoration: none;
   transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 }
-.juicerdocs-prevnext-card:hover {
+.juicerstudy-prevnext-card:hover {
   border-color: var(--brand);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
   text-decoration: none;
 }
-.juicerdocs-prevnext-card-next { text-align: right; }
+.juicerstudy-prevnext-card-next { text-align: right; }
 
-.juicerdocs-prevnext-label {
+.juicerstudy-prevnext-label {
   font-size: 0.75rem;
   color: var(--muted);
 }
-.juicerdocs-prevnext-title {
+.juicerstudy-prevnext-title {
   font-weight: 600;
   color: var(--fg);
   margin-top: 0.25rem;
@@ -776,13 +916,13 @@ hr {
  * 9. Hero / cards / buttons
  * ============================================================ */
 
-.juicerdocs-hero {
+.juicerstudy-hero {
   position: relative;
   padding: 3.5rem 1rem 2rem;
   margin: 0 -1rem;
   overflow: hidden;
 }
-.juicerdocs-hero::before {
+.juicerstudy-hero::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -793,23 +933,23 @@ hr {
   z-index: -1;
 }
 
-.juicerdocs-hero-meta {
+.juicerstudy-hero-meta {
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
 }
-.juicerdocs-hero-logo {
+.juicerstudy-hero-logo {
   width: 3.5rem;
   height: 3.5rem;
 }
-.juicerdocs-hero-version {
+.juicerstudy-hero-version {
   font-size: 0.875rem;
   font-family: var(--font-mono);
   color: var(--muted);
 }
 
-.juicerdocs-hero-title {
+.juicerstudy-hero-title {
   margin: 0;
   font-weight: 800;
   line-height: 1.05;
@@ -818,14 +958,14 @@ hr {
   color: var(--fg);
 }
 
-.juicerdocs-grad {
+.juicerstudy-grad {
   background: linear-gradient(135deg, var(--brand), var(--accent));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-.juicerdocs-hero-summary {
+.juicerstudy-hero-summary {
   max-width: 42rem;
   margin: 1rem 0 0 0;
   font-size: 1.125rem;
@@ -833,27 +973,27 @@ hr {
   line-height: 1.6;
 }
 
-.juicerdocs-hero-actions {
+.juicerstudy-hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 2rem;
 }
 
-.juicerdocs-cards {
+.juicerstudy-cards {
   display: grid;
   gap: 1rem;
   grid-template-columns: 1fr;
   margin-top: 3rem;
 }
 @media (min-width: 768px) {
-  .juicerdocs-cards { grid-template-columns: 1fr 1fr; }
+  .juicerstudy-cards { grid-template-columns: 1fr 1fr; }
 }
 @media (min-width: 1024px) {
-  .juicerdocs-cards { grid-template-columns: 1fr 1fr 1fr; }
+  .juicerstudy-cards { grid-template-columns: 1fr 1fr 1fr; }
 }
 
-.juicerdocs-card {
+.juicerstudy-card {
   display: block;
   padding: 1.25rem;
   border: 1px solid var(--border);
@@ -863,13 +1003,13 @@ hr {
   text-decoration: none;
   transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 }
-.juicerdocs-card:hover {
+.juicerstudy-card:hover {
   border-color: var(--brand);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
   text-decoration: none;
 }
-.juicerdocs-card-icon {
+.juicerstudy-card-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -880,47 +1020,47 @@ hr {
   color: var(--brand);
   margin-bottom: 0.75rem;
 }
-.juicerdocs-card-icon svg { width: 1.25rem; height: 1.25rem; }
-.juicerdocs-card-title {
+.juicerstudy-card-icon svg { width: 1.25rem; height: 1.25rem; }
+.juicerstudy-card-title {
   font-weight: 600;
   font-size: 1rem;
   color: var(--fg);
 }
-.juicerdocs-card-summary {
+.juicerstudy-card-summary {
   margin-top: 0.25rem;
   font-size: 0.875rem;
   color: var(--muted);
   line-height: 1.5;
 }
 
-.juicerdocs-section-heading {
+.juicerstudy-section-heading {
   font-size: 1.25rem;
   font-weight: 600;
   margin: 3rem 0 1rem;
   color: var(--fg);
 }
 
-.juicerdocs-page-list {
+.juicerstudy-page-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.juicerdocs-page-list li {
+.juicerstudy-page-list li {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
   padding: 0.375rem 0;
 }
-.juicerdocs-page-list a {
+.juicerstudy-page-list a {
   color: var(--brand);
   font-weight: 500;
 }
-.juicerdocs-page-list-summary {
+.juicerstudy-page-list-summary {
   font-size: 0.875rem;
   color: var(--muted);
 }
 
-.juicerdocs-btn {
+.juicerstudy-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -933,159 +1073,229 @@ hr {
   transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.05s;
   cursor: pointer;
 }
-.juicerdocs-btn:hover { text-decoration: none; }
-.juicerdocs-btn:active { transform: translateY(1px); }
-.juicerdocs-btn svg { width: 1rem; height: 1rem; }
+.juicerstudy-btn:hover { text-decoration: none; }
+.juicerstudy-btn:active { transform: translateY(1px); }
+.juicerstudy-btn svg { width: 1rem; height: 1rem; }
 
-.juicerdocs-btn-primary {
+.juicerstudy-btn-primary {
   background: var(--brand);
   color: #ffffff;
 }
-.juicerdocs-btn-primary:hover {
+.juicerstudy-btn-primary:hover {
   background: var(--brand-strong);
   color: #ffffff;
 }
-[data-theme="dark"] .juicerdocs-btn-primary { color: #0a0a0a; }
-[data-theme="dark"] .juicerdocs-btn-primary:hover { color: #0a0a0a; }
+[data-theme="dark"] .juicerstudy-btn-primary { color: #0a0a0a; }
+[data-theme="dark"] .juicerstudy-btn-primary:hover { color: #0a0a0a; }
 
-.juicerdocs-btn-secondary {
+.juicerstudy-btn-secondary {
   background: var(--surface);
   color: var(--fg);
   border-color: var(--border);
 }
-.juicerdocs-btn-secondary:hover {
+.juicerstudy-btn-secondary:hover {
   border-color: var(--brand);
   color: var(--brand);
 }
 
-.juicerdocs-lead {
+.juicerstudy-lead {
   font-size: 1.125rem;
   color: var(--fg-soft);
   margin: 0 0 2rem 0;
   line-height: 1.6;
 }
 
+/* Section-list shortcode — a catalog of the current section's
+   children. Library-card aesthetic: a stack of entries, each with a
+   title, a one-line summary, and (optionally) a read-time meta. No
+   borders, no boxes — just typographic stacking with a hairline
+   between each entry. */
+.juicerstudy-section-list {
+  list-style: none;
+  margin: 2rem 0;
+  padding: 0;
+  border-top: 1px solid var(--border-soft);
+}
+.juicerstudy-section-list-item {
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.juicerstudy-section-list-link {
+  display: block;
+  padding: 0.875rem 0;
+  color: var(--fg);
+  text-decoration: none;
+  transition: color 0.1s;
+}
+.juicerstudy-section-list-link:hover {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.juicerstudy-section-list-title {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  font-weight: 500;
+}
+.juicerstudy-section-list-summary {
+  display: block;
+  margin-top: 0.125rem;
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  font-style: italic;
+  color: var(--fg-soft);
+}
+.juicerstudy-section-list-meta {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.juicerstudy-section-list-count {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* Subsection group within a section-list — visually identical, but
+   sits below the page list with a small label gap so the two clusters
+   read as different kinds of thing. */
+.juicerstudy-section-list-subsections {
+  margin-top: 1.5rem;
+}
+.juicerstudy-section-list-item-subsection .juicerstudy-section-list-title {
+  font-style: italic;
+}
+
 
 /* ============================================================
  * 10. Markdown content typography
  *
- * Anything inside .juicerdocs-content is server-rendered Markdown.
+ * Anything inside .juicerstudy-content is server-rendered Markdown.
  * Default styles target unprefixed tags so authors can write plain
  * Markdown and still get the polished look.
  * ============================================================ */
 
-.juicerdocs-content {
+.juicerstudy-content {
   color: var(--fg);
   line-height: 1.7;
   font-size: 1rem;
 }
 
-.juicerdocs-content > * + * { margin-top: 1.25em; }
+.juicerstudy-content > * + * { margin-top: 1.25em; }
 
-.juicerdocs-content h1,
-.juicerdocs-content h2,
-.juicerdocs-content h3,
-.juicerdocs-content h4,
-.juicerdocs-content h5,
-.juicerdocs-content h6 {
+/* Headings — serif, modest weight. The display-bold (800) +
+   negative tracking pattern is for product/interface typography;
+   reading typography wants weight to come from the typeface, not
+   from boldness pushed to its limit. */
+.juicerstudy-content h1,
+.juicerstudy-content h2,
+.juicerstudy-content h3,
+.juicerstudy-content h4,
+.juicerstudy-content h5,
+.juicerstudy-content h6 {
   color: var(--fg);
-  font-weight: 700;
-  letter-spacing: -0.015em;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: 0;
   scroll-margin-top: calc(var(--topbar-h) + 1.5rem);
   line-height: 1.25;
 }
-.juicerdocs-content h1 {
-  font-size: 2.25rem;
-  margin: 0 0 1.25rem 0;
-  font-weight: 800;
-  letter-spacing: -0.025em;
+.juicerstudy-content h1 {
+  font-size: 2.125rem;
+  margin: 0 0 1.5rem 0;
+  font-weight: 600;
 }
-.juicerdocs-content h2 {
-  font-size: 1.75rem;
-  margin-top: 2.75rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.375rem;
-  border-bottom: 1px solid var(--border);
-}
-.juicerdocs-content h3 {
-  font-size: 1.375rem;
-  margin-top: 2.25rem;
+.juicerstudy-content h2 {
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
   margin-bottom: 0.75rem;
 }
-.juicerdocs-content h4 {
-  font-size: 1.125rem;
-  margin-top: 1.75rem;
-  margin-bottom: 0.5rem;
+.juicerstudy-content h3 {
+  font-size: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 0.625rem;
+  font-style: italic;
+  font-weight: 500;
 }
-.juicerdocs-content h5,
-.juicerdocs-content h6 {
-  font-size: 1rem;
+.juicerstudy-content h4 {
+  font-size: 1.0625rem;
   margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
+}
+.juicerstudy-content h5,
+.juicerstudy-content h6 {
+  font-size: 1rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.375rem;
 }
 
-.juicerdocs-content p {
+.juicerstudy-content p {
   margin: 0;
-  color: var(--fg-soft);
+  color: var(--fg);
 }
 
 /* Markdown-body links — scoped via :not() so the rule doesn't bleed into
    buttons / cards / prev-next anchors, which own their own colors. */
-.juicerdocs-content a:not([class*="juicerdocs-"]) {
+.juicerstudy-content a:not([class*="juicerstudy-"]) {
   color: var(--brand);
   text-decoration: underline;
   text-decoration-color: rgb(from var(--brand) r g b / 0.4);
   text-underline-offset: 2px;
   transition: text-decoration-color 0.15s;
 }
-.juicerdocs-content a:not([class*="juicerdocs-"]):hover {
+.juicerstudy-content a:not([class*="juicerstudy-"]):hover {
   text-decoration-color: var(--brand);
 }
 
-.juicerdocs-content strong { color: var(--fg); font-weight: 700; }
-.juicerdocs-content em { color: inherit; }
+.juicerstudy-content strong { color: var(--fg); font-weight: 700; }
+.juicerstudy-content em { color: inherit; }
 
-.juicerdocs-content ul,
-.juicerdocs-content ol {
+.juicerstudy-content ul,
+.juicerstudy-content ol {
   padding-left: 1.5rem;
-  color: var(--fg-soft);
+  color: var(--fg);
 }
-.juicerdocs-content ul { list-style: disc; }
-.juicerdocs-content ol { list-style: decimal; }
-.juicerdocs-content li { margin: 0.375rem 0; }
-.juicerdocs-content li > p { margin: 0; }
-.juicerdocs-content li::marker { color: var(--muted); }
+.juicerstudy-content ul { list-style: disc; }
+.juicerstudy-content ol { list-style: decimal; }
+.juicerstudy-content li { margin: 0.375rem 0; }
+.juicerstudy-content li > p { margin: 0; }
+.juicerstudy-content li::marker { color: var(--muted); }
 
-.juicerdocs-content ul ul,
-.juicerdocs-content ul ol,
-.juicerdocs-content ol ol,
-.juicerdocs-content ol ul {
+.juicerstudy-content ul ul,
+.juicerstudy-content ul ol,
+.juicerstudy-content ol ol,
+.juicerstudy-content ol ul {
   margin-top: 0.375rem;
   margin-bottom: 0.375rem;
 }
 
-.juicerdocs-content blockquote {
-  margin: 1.5rem 0;
-  padding: 0.5rem 0 0.5rem 1rem;
-  border-left: 3px solid var(--brand);
+.juicerstudy-content blockquote {
+  margin: 1.5rem 0 1.5rem 0.5rem;
+  padding: 0.125rem 0 0.125rem 1.25rem;
+  border-left: 2px solid var(--border);
   color: var(--fg-soft);
   font-style: italic;
-  background: var(--bg-soft);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
-.juicerdocs-content hr {
+.juicerstudy-content hr {
   margin: 2.5rem 0;
   border-top: 1px solid var(--border);
 }
 
-.juicerdocs-content img {
+.juicerstudy-content img {
   max-width: 100%;
   border-radius: var(--radius-md);
 }
 
-.juicerdocs-content figure { margin: 1.5rem 0; }
-.juicerdocs-content figcaption {
+.juicerstudy-content figure { margin: 1.5rem 0; }
+.juicerstudy-content figcaption {
   margin-top: 0.5rem;
   font-size: 0.875rem;
   color: var(--muted);
@@ -1093,7 +1303,7 @@ hr {
 }
 
 /* Inline code */
-.juicerdocs-content :not(pre) > code {
+.juicerstudy-content :not(pre) > code {
   font-family: var(--font-mono);
   font-size: 0.875em;
   padding: 0.15em 0.375em;
@@ -1105,7 +1315,7 @@ hr {
 }
 
 /* Block code */
-.juicerdocs-content pre {
+.juicerstudy-content pre {
   position: relative;
   margin: 1.5rem 0;
   padding: 1rem 1.25rem;
@@ -1119,7 +1329,7 @@ hr {
   overflow-x: auto;
   box-shadow: var(--shadow-sm);
 }
-.juicerdocs-content pre code {
+.juicerstudy-content pre code {
   font-family: inherit;
   font-size: inherit;
   background: none;
@@ -1128,7 +1338,7 @@ hr {
   border: 0;
   white-space: pre;
 }
-.juicerdocs-content pre[data-language]::before {
+.juicerstudy-content pre[data-language]::before {
   content: attr(data-language);
   position: absolute;
   top: 0.375rem;
@@ -1139,7 +1349,7 @@ hr {
   color: var(--muted);
   pointer-events: none;
 }
-.juicerdocs-content pre[data-language] {
+.juicerstudy-content pre[data-language] {
   padding-top: 1.75rem;
 }
 
@@ -1154,32 +1364,32 @@ hr {
    without a grammars/ dir get plain `<pre><code>` and these styles
    are inert.
 
-   Palette lives in juicerdocs's magenta/purple/leaf color space —
+   Palette lives in juicerstudy's magenta/purple/leaf color space —
    keywords carry the brand magenta, strings stay leaf-green, types
    pick up the accent violet so the page reads as one piece. Dark-mode
    swaps to lighter, slightly cooler tones so the accents don't burn
    against the deep code background. */
-.juicerdocs-content .hl-keyword     { color: #a30d57; font-weight: 600; }
-.juicerdocs-content .hl-string      { color: #4d7c0f; }
-.juicerdocs-content .hl-comment     { color: #71717a; font-style: italic; }
-.juicerdocs-content .hl-number      { color: #b91c1c; }
-.juicerdocs-content .hl-type        { color: #6f1f9e; }
-.juicerdocs-content .hl-function    { color: #1d4ed8; }
-.juicerdocs-content .hl-variable    { color: inherit; }
-.juicerdocs-content .hl-operator    { color: #52525b; }
-.juicerdocs-content .hl-punctuation { color: #71717a; }
+.juicerstudy-content .hl-keyword     { color: #a30d57; font-weight: 600; }
+.juicerstudy-content .hl-string      { color: #4d7c0f; }
+.juicerstudy-content .hl-comment     { color: #71717a; font-style: italic; }
+.juicerstudy-content .hl-number      { color: #b91c1c; }
+.juicerstudy-content .hl-type        { color: #6f1f9e; }
+.juicerstudy-content .hl-function    { color: #1d4ed8; }
+.juicerstudy-content .hl-variable    { color: inherit; }
+.juicerstudy-content .hl-operator    { color: #52525b; }
+.juicerstudy-content .hl-punctuation { color: #71717a; }
 
-[data-theme="dark"] .juicerdocs-content .hl-keyword     { color: #f472b6; }
-[data-theme="dark"] .juicerdocs-content .hl-string      { color: #a3e635; }
-[data-theme="dark"] .juicerdocs-content .hl-comment     { color: #a1a1aa; }
-[data-theme="dark"] .juicerdocs-content .hl-number      { color: #fb7185; }
-[data-theme="dark"] .juicerdocs-content .hl-type        { color: #c084fc; }
-[data-theme="dark"] .juicerdocs-content .hl-function    { color: #93c5fd; }
-[data-theme="dark"] .juicerdocs-content .hl-operator    { color: #d4d4d8; }
-[data-theme="dark"] .juicerdocs-content .hl-punctuation { color: #a1a1aa; }
+[data-theme="dark"] .juicerstudy-content .hl-keyword     { color: #f472b6; }
+[data-theme="dark"] .juicerstudy-content .hl-string      { color: #a3e635; }
+[data-theme="dark"] .juicerstudy-content .hl-comment     { color: #a1a1aa; }
+[data-theme="dark"] .juicerstudy-content .hl-number      { color: #fb7185; }
+[data-theme="dark"] .juicerstudy-content .hl-type        { color: #c084fc; }
+[data-theme="dark"] .juicerstudy-content .hl-function    { color: #93c5fd; }
+[data-theme="dark"] .juicerstudy-content .hl-operator    { color: #d4d4d8; }
+[data-theme="dark"] .juicerstudy-content .hl-punctuation { color: #a1a1aa; }
 
 /* Tables */
-.juicerdocs-content table {
+.juicerstudy-content table {
   width: 100%;
   margin: 1.5rem 0;
   border-collapse: collapse;
@@ -1188,30 +1398,30 @@ hr {
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
 }
-.juicerdocs-content thead {
+.juicerstudy-content thead {
   background: var(--surface);
   border-top: 2px solid var(--brand);
 }
-.juicerdocs-content th {
+.juicerstudy-content th {
   text-align: left;
   padding: 0.625rem 0.875rem;
   font-weight: 600;
   color: var(--fg);
   border-bottom: 1px solid var(--border);
 }
-.juicerdocs-content td {
+.juicerstudy-content td {
   padding: 0.625rem 0.875rem;
   border-bottom: 1px solid var(--border-soft);
   color: var(--fg-soft);
 }
-.juicerdocs-content tbody tr:nth-child(even) { background: var(--bg-soft); }
-.juicerdocs-content tbody tr:hover { background: var(--brand-soft); }
-.juicerdocs-content tr:last-child td { border-bottom: 0; }
+.juicerstudy-content tbody tr:nth-child(even) { background: var(--bg-soft); }
+.juicerstudy-content tbody tr:hover { background: var(--brand-soft); }
+.juicerstudy-content tr:last-child td { border-bottom: 0; }
 
 /* Definition lists */
-.juicerdocs-content dl { margin: 1rem 0; }
-.juicerdocs-content dt { font-weight: 600; color: var(--fg); margin-top: 0.75rem; }
-.juicerdocs-content dd { margin-left: 1.5rem; color: var(--fg-soft); }
+.juicerstudy-content dl { margin: 1rem 0; }
+.juicerstudy-content dt { font-weight: 600; color: var(--fg); margin-top: 0.75rem; }
+.juicerstudy-content dd { margin-left: 1.5rem; color: var(--fg-soft); }
 
 
 /* ============================================================
@@ -1220,7 +1430,7 @@ hr {
 
 /* ----- Callouts (note / tip / warning / danger) ----- */
 
-.juicerdocs-callout {
+.juicerstudy-callout {
   position: relative;
   margin: 1.5rem 0;
   padding: 1rem 1rem 1rem 2.75rem;
@@ -1229,7 +1439,7 @@ hr {
   background: var(--callout-bg, var(--surface-2));
   color: var(--fg);
 }
-.juicerdocs-callout::before {
+.juicerstudy-callout::before {
   content: "";
   position: absolute;
   left: 0.875rem;
@@ -1246,23 +1456,23 @@ hr {
   -webkit-mask-position: center;
           mask-position: center;
 }
-.juicerdocs-callout > strong {
+.juicerstudy-callout > strong {
   display: block;
   font-weight: 600;
   margin-bottom: 0.25rem;
   color: var(--callout-accent, var(--fg));
 }
-.juicerdocs-callout-body {
+.juicerstudy-callout-body {
   font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--fg-soft);
 }
-.juicerdocs-callout-body > *:first-child { margin-top: 0; }
-.juicerdocs-callout-body > *:last-child  { margin-bottom: 0; }
-.juicerdocs-callout-body p { margin: 0.5rem 0; }
-.juicerdocs-callout-body p:first-child { margin-top: 0; }
-.juicerdocs-callout-body p:last-child  { margin-bottom: 0; }
-.juicerdocs-callout-body code:not(pre code) {
+.juicerstudy-callout-body > *:first-child { margin-top: 0; }
+.juicerstudy-callout-body > *:last-child  { margin-bottom: 0; }
+.juicerstudy-callout-body p { margin: 0.5rem 0; }
+.juicerstudy-callout-body p:first-child { margin-top: 0; }
+.juicerstudy-callout-body p:last-child  { margin-bottom: 0; }
+.juicerstudy-callout-body code:not(pre code) {
   font-family: var(--font-mono);
   font-size: 0.875em;
   padding: 0.1em 0.3em;
@@ -1271,49 +1481,49 @@ hr {
   color: var(--callout-accent, var(--brand));
 }
 
-.juicerdocs-callout-note {
+.juicerstudy-callout-note {
   --callout-accent:  #2563eb;
   --callout-bg:      #eff6ff;
   --callout-border:  #bfdbfe;
   --callout-icon:    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'/></svg>");
 }
-[data-theme="dark"] .juicerdocs-callout-note {
+[data-theme="dark"] .juicerstudy-callout-note {
   --callout-accent: #60a5fa;
   --callout-bg:     rgba(37,99,235,0.10);
   --callout-border: rgba(37,99,235,0.35);
 }
 
-.juicerdocs-callout-tip {
+.juicerstudy-callout-tip {
   --callout-accent: #16a34a;
   --callout-bg:     #f0fdf4;
   --callout-border: #bbf7d0;
   --callout-icon:   url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547Z'/></svg>");
 }
-[data-theme="dark"] .juicerdocs-callout-tip {
+[data-theme="dark"] .juicerstudy-callout-tip {
   --callout-accent: #4ade80;
   --callout-bg:     rgba(22,163,74,0.10);
   --callout-border: rgba(22,163,74,0.35);
 }
 
-.juicerdocs-callout-warning {
+.juicerstudy-callout-warning {
   --callout-accent: #ca8a04;
   --callout-bg:     #fefce8;
   --callout-border: #fde68a;
   --callout-icon:   url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z'/></svg>");
 }
-[data-theme="dark"] .juicerdocs-callout-warning {
+[data-theme="dark"] .juicerstudy-callout-warning {
   --callout-accent: #facc15;
   --callout-bg:     rgba(202,138,4,0.10);
   --callout-border: rgba(202,138,4,0.35);
 }
 
-.juicerdocs-callout-danger {
+.juicerstudy-callout-danger {
   --callout-accent: #dc2626;
   --callout-bg:     #fef2f2;
   --callout-border: #fecaca;
   --callout-icon:   url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'/></svg>");
 }
-[data-theme="dark"] .juicerdocs-callout-danger {
+[data-theme="dark"] .juicerstudy-callout-danger {
   --callout-accent: #f87171;
   --callout-bg:     rgba(220,38,38,0.10);
   --callout-border: rgba(220,38,38,0.35);
@@ -1322,16 +1532,16 @@ hr {
 
 /* ----- Steps ----- */
 
-.juicerdocs-steps {
+.juicerstudy-steps {
   margin: 2rem 0;
   counter-reset: jd-step;
 }
-.juicerdocs-steps > ol {
+.juicerstudy-steps > ol {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.juicerdocs-steps > ol > li {
+.juicerstudy-steps > ol > li {
   position: relative;
   padding-left: 3rem;
   padding-bottom: 1.5rem;
@@ -1339,11 +1549,11 @@ hr {
   margin-left: 1rem;
   counter-increment: jd-step;
 }
-.juicerdocs-steps > ol > li:last-child {
+.juicerstudy-steps > ol > li:last-child {
   border-left-color: transparent;
   padding-bottom: 0;
 }
-.juicerdocs-steps > ol > li::before {
+.juicerstudy-steps > ol > li::before {
   content: counter(jd-step);
   position: absolute;
   left: -1rem;
@@ -1359,26 +1569,26 @@ hr {
   font-weight: 600;
   font-size: 0.875rem;
 }
-[data-theme="dark"] .juicerdocs-steps > ol > li::before { color: #0a0a0a; }
+[data-theme="dark"] .juicerstudy-steps > ol > li::before { color: #0a0a0a; }
 
 
 /* ----- Tabs ----- */
 
-.juicerdocs-tabs {
+.juicerstudy-tabs {
   margin: 1.5rem 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--surface-2);
 }
-.juicerdocs-tabs-bar {
+.juicerstudy-tabs-bar {
   display: flex;
   gap: 0.25rem;
   padding: 0.5rem 0.5rem 0;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
-.juicerdocs-tabs-button {
+.juicerstudy-tabs-button {
   padding: 0.5rem 0.875rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -1390,21 +1600,21 @@ hr {
   cursor: pointer;
   transition: color 0.1s, border-color 0.1s;
 }
-.juicerdocs-tabs-button:hover { color: var(--fg); }
-.juicerdocs-tabs-button.is-active {
+.juicerstudy-tabs-button:hover { color: var(--fg); }
+.juicerstudy-tabs-button.is-active {
   color: var(--brand);
   border-bottom-color: var(--brand);
 }
-.juicerdocs-tab-panel {
+.juicerstudy-tab-panel {
   padding: 1rem 1.25rem;
   display: none;
 }
-.juicerdocs-tab-panel.is-active { display: block; }
+.juicerstudy-tab-panel.is-active { display: block; }
 
 
 /* ----- Filetree ----- */
 
-.juicerdocs-filetree {
+.juicerstudy-filetree {
   margin: 1.5rem 0;
   padding: 1rem 1.25rem;
   background: var(--surface);
@@ -1421,7 +1631,7 @@ hr {
 
 /* ----- kbd ----- */
 
-.juicerdocs-kbd {
+.juicerstudy-kbd {
   display: inline-block;
   padding: 0.125rem 0.375rem;
   font-family: var(--font-mono);
@@ -1436,13 +1646,13 @@ hr {
 
 /* ----- Collapse ----- */
 
-.juicerdocs-collapse {
+.juicerstudy-collapse {
   margin: 1rem 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface-2);
 }
-.juicerdocs-collapse > summary {
+.juicerstudy-collapse > summary {
   cursor: pointer;
   padding: 0.625rem 1rem;
   font-weight: 500;
@@ -1453,8 +1663,8 @@ hr {
   align-items: center;
   gap: 0.5rem;
 }
-.juicerdocs-collapse > summary::-webkit-details-marker { display: none; }
-.juicerdocs-collapse > summary::before {
+.juicerstudy-collapse > summary::-webkit-details-marker { display: none; }
+.juicerstudy-collapse > summary::before {
   content: "";
   width: 0.75rem;
   height: 0.75rem;
@@ -1469,22 +1679,22 @@ hr {
           mask-position: center;
   transition: transform 0.2s;
 }
-.juicerdocs-collapse[open] > summary::before { transform: rotate(90deg); }
-.juicerdocs-collapse > summary:hover { background: var(--surface); }
-.juicerdocs-collapse[open] > summary { border-bottom: 1px solid var(--border); }
-.juicerdocs-collapse-body {
+.juicerstudy-collapse[open] > summary::before { transform: rotate(90deg); }
+.juicerstudy-collapse > summary:hover { background: var(--surface); }
+.juicerstudy-collapse[open] > summary { border-bottom: 1px solid var(--border); }
+.juicerstudy-collapse-body {
   padding: 0.75rem 1rem;
   font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--fg-soft);
 }
-.juicerdocs-collapse-body > *:first-child { margin-top: 0; }
-.juicerdocs-collapse-body > *:last-child  { margin-bottom: 0; }
+.juicerstudy-collapse-body > *:first-child { margin-top: 0; }
+.juicerstudy-collapse-body > *:last-child  { margin-bottom: 0; }
 
 
 /* ----- Badge ----- */
 
-.juicerdocs-badge {
+.juicerstudy-badge {
   display: inline-flex;
   align-items: center;
   padding: 0.125rem 0.5rem;
@@ -1498,15 +1708,15 @@ hr {
 
 /* ----- Figure ----- */
 
-.juicerdocs-figure {
+.juicerstudy-figure {
   margin: 1.5rem 0;
 }
-.juicerdocs-figure img {
+.juicerstudy-figure img {
   width: 100%;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
 }
-.juicerdocs-figure figcaption {
+.juicerstudy-figure figcaption {
   margin-top: 0.5rem;
   font-size: 0.875rem;
   color: var(--muted);
@@ -1516,14 +1726,14 @@ hr {
 
 /* ----- YouTube ----- */
 
-.juicerdocs-youtube {
+.juicerstudy-youtube {
   margin: 1.5rem 0;
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border);
 }
-.juicerdocs-youtube iframe {
+.juicerstudy-youtube iframe {
   width: 100%;
   height: 100%;
   border: 0;
@@ -1533,7 +1743,7 @@ hr {
 
 /* ----- GitHub repo card ----- */
 
-.juicerdocs-github {
+.juicerstudy-github {
   display: flex;
   align-items: center;
   gap: 0.875rem;
@@ -1546,25 +1756,25 @@ hr {
   text-decoration: none;
   transition: border-color 0.15s, transform 0.15s;
 }
-.juicerdocs-github:hover {
+.juicerstudy-github:hover {
   border-color: var(--brand);
   transform: translateY(-2px);
   text-decoration: none;
 }
-.juicerdocs-github svg { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
-.juicerdocs-github-body {
+.juicerstudy-github svg { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
+.juicerstudy-github-body {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-.juicerdocs-github-name {
+.juicerstudy-github-name {
   font-weight: 600;
   color: var(--fg);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.juicerdocs-github-sub {
+.juicerstudy-github-sub {
   font-size: 0.75rem;
   color: var(--muted);
 }
@@ -1572,7 +1782,7 @@ hr {
 
 /* ----- Buttons row ----- */
 
-.juicerdocs-buttons {
+.juicerstudy-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -1586,7 +1796,7 @@ hr {
 
 /* ----- Code block "copy" buttons ----- */
 
-.juicerdocs-copy {
+.juicerstudy-copy {
   position: absolute;
   top: 0.375rem;
   right: 0.5rem;
@@ -1601,13 +1811,13 @@ hr {
   opacity: 0;
   transition: opacity 0.15s, color 0.15s, background 0.15s;
 }
-.juicerdocs-content pre:hover .juicerdocs-copy,
-.juicerdocs-copy:focus-visible { opacity: 1; }
-.juicerdocs-copy:hover {
+.juicerstudy-content pre:hover .juicerstudy-copy,
+.juicerstudy-copy:focus-visible { opacity: 1; }
+.juicerstudy-copy:hover {
   color: var(--fg);
   background: rgb(from var(--fg) r g b / 0.16);
 }
-.juicerdocs-copy.is-copied {
+.juicerstudy-copy.is-copied {
   color: var(--leaf);
   opacity: 1;
 }
@@ -1615,7 +1825,7 @@ hr {
 
 /* ----- Mobile sidebar overlay ----- */
 
-.juicerdocs-sidebar-backdrop {
+.juicerstudy-sidebar-backdrop {
   display: none;
   position: fixed;
   inset: 0;
@@ -1624,7 +1834,7 @@ hr {
 }
 
 @media (max-width: 1023px) {
-  body[data-sidebar-open="true"] .juicerdocs-sidebar-aside {
+  body[data-sidebar-open="true"] .juicerstudy-sidebar-aside {
     display: block;
     position: fixed;
     top: var(--topbar-h);
@@ -1637,7 +1847,7 @@ hr {
     background: var(--bg);
     box-shadow: var(--shadow-lg);
   }
-  body[data-sidebar-open="true"] .juicerdocs-sidebar-backdrop {
+  body[data-sidebar-open="true"] .juicerstudy-sidebar-backdrop {
     display: block;
   }
 }
@@ -1647,7 +1857,7 @@ hr {
  * 13. 404
  * ============================================================ */
 
-.juicerdocs-404 {
+.juicerstudy-404 {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -1655,20 +1865,20 @@ hr {
   padding: 2rem 1rem;
   text-align: center;
 }
-.juicerdocs-404-inner { max-width: 24rem; }
-.juicerdocs-404-logo {
+.juicerstudy-404-inner { max-width: 24rem; }
+.juicerstudy-404-logo {
   width: 5rem;
   height: 5rem;
   margin: 0 auto 1.5rem;
   opacity: 0.9;
 }
-.juicerdocs-404-title {
+.juicerstudy-404-title {
   margin: 0 0 0.5rem 0;
   font-size: 3rem;
   font-weight: 700;
   color: var(--fg);
 }
-.juicerdocs-404-msg {
+.juicerstudy-404-msg {
   margin: 0 0 2rem 0;
   font-size: 1.125rem;
   color: var(--muted);
@@ -1679,11 +1889,11 @@ hr {
  * 14. Footer
  * ============================================================ */
 
-.juicerdocs-footer {
+.juicerstudy-footer {
   margin-top: 4rem;
   border-top: 1px solid var(--border);
 }
-.juicerdocs-footer-inner {
+.juicerstudy-footer-inner {
   max-width: var(--site-max);
   margin: 0 auto;
   padding: 2rem 1rem;
@@ -1694,21 +1904,21 @@ hr {
   color: var(--muted);
 }
 @media (min-width: 640px) {
-  .juicerdocs-footer-inner {
+  .juicerstudy-footer-inner {
     flex-direction: row;
     justify-content: space-between;
   }
 }
-.juicerdocs-footer p { margin: 0; }
-.juicerdocs-footer a { color: var(--brand); }
-.juicerdocs-footer a:hover { text-decoration: underline; }
+.juicerstudy-footer p { margin: 0; }
+.juicerstudy-footer a { color: var(--brand); }
+.juicerstudy-footer a:hover { text-decoration: underline; }
 
 
 /* ============================================================
- * 15. Misc text utilities (used outside .juicerdocs-content)
+ * 15. Misc text utilities (used outside .juicerstudy-content)
  * ============================================================ */
 
-.juicerdocs-text-muted { color: var(--muted); }
-.juicerdocs-text-soft  { color: var(--fg-soft); }
-.juicerdocs-text-brand { color: var(--brand); }
-.juicerdocs-mono       { font-family: var(--font-mono); }
+.juicerstudy-text-muted { color: var(--muted); }
+.juicerstudy-text-soft  { color: var(--fg-soft); }
+.juicerstudy-text-brand { color: var(--brand); }
+.juicerstudy-mono       { font-family: var(--font-mono); }

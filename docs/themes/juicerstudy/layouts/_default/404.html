@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {{ partial 'head' . }}
+</head>
+<body class="juicerstudy-404">
+  <div class="juicerstudy-404-inner">
+    {{ if .site.juicerstudy.logo }}
+    <img src="{{ relURL .site.juicerstudy.logo }}" alt="" class="juicerstudy-404-logo" />
+    {{ end }}
+    <h1 class="juicerstudy-404-title">404</h1>
+    <p class="juicerstudy-404-msg">No such page on this site.</p>
+    <a href="{{ relURL '/' }}" class="juicerstudy-btn juicerstudy-btn-primary">
+      Back to home
+    </a>
+  </div>
+</body>
+</html>
