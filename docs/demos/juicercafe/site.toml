@@ -11,7 +11,7 @@ tagline  = "Coffee, quiet hours, and outlets enough for everyone."
 author   = "Stratus Coffee"
 baseURL  = "http://localhost:8080"
 
-themeDir = "../../docs/themes"
+themeDir = "../../themes"
 theme    = "juicercafe"
 
 htmlDir  = ""

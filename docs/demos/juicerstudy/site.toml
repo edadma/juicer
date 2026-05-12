@@ -15,11 +15,10 @@ tagline  = "notes from the margins of books"
 author   = "a slow reader"
 baseURL  = "http://localhost:8080"
 
-# Resolve the theme via the repo's docs/themes/ directory — the same
-# pattern blog-site uses. Walking back two levels from
-# `examples/study-site/` gets us to the juicer root, then into
-# `docs/themes/juicerstudy/`.
-themeDir = "../../docs/themes"
+# Resolve the theme via the docs/themes/ directory. Walking up two
+# levels from `docs/demos/juicerstudy/` gets us to `docs/`, then into
+# `themes/juicerstudy/`.
+themeDir = "../../themes"
 theme    = "juicerstudy"
 
 # Static-host deploy convention — URL space matches disk layout.

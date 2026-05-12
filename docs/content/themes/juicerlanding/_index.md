@@ -10,7 +10,7 @@ weight: 70
 juicer theme add https://github.com/edadma/juicer.git -n juicerlanding
 ```
 
-…and set `theme = "juicerlanding"` in your `site.toml`. A live demo lives at `examples/landing-site/` in the repo — run it with `sbt 'juicerJVM/run serve -s examples/landing-site -L'` to see every section on this page rendered against fictional product copy.
+…and set `theme = "juicerlanding"` in your `site.toml`. See the [Demo site](./demo/) page for a live demo — a fictional privacy-analytics product ("Tally") — exercising every section on this page.
 
 ## What's in the box
 

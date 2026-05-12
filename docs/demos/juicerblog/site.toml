@@ -16,9 +16,10 @@ author   = "Ed Maxedon"
 baseURL  = "http://localhost:8080"
 
 # Resolve the theme via the repo's docs/themes/ directory. With
-# `themeDir = "../../docs/themes"` and `theme = "juicerblog"`, juicer
-# walks back two levels from `examples/blog-site/` to reach the theme.
-themeDir = "../../docs/themes"
+# `themeDir = "../../themes"` and `theme = "juicerblog"`, juicer walks
+# up two levels from `docs/demos/juicerblog/` (→ `docs/`) and then into
+# `themes/juicerblog/`.
+themeDir = "../../themes"
 theme    = "juicerblog"
 
 # Blog defaults: smaller paginate size, sort by date.

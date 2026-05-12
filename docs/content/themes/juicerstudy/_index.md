@@ -14,11 +14,9 @@ or run:
 juicer theme add https://github.com/edadma/juicer.git -n juicerstudy
 ```
 
-…and set `theme = "juicerstudy"` in your `site.toml`. A live demo
-lives at `examples/study-site/` in the repo — run it with
-`sbt 'juicerJVM/run serve -s examples/study-site -L'` to see every
-treatment on this page rendered against a fictional reader's
-notebook ("Marginalia").
+…and set `theme = "juicerstudy"` in your `site.toml`. See the
+[Demo site](./demo/) page for a live demo — a fictional reader's
+notebook ("Marginalia") — exercising every treatment on this page.
 
 ## What's in the box
 

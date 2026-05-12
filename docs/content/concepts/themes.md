@@ -106,14 +106,16 @@ sidebar) with a "what's in the box" overview and a configuration page
 that catalogues every `[juicerXxx]` token, top-level chrome key, and
 per-page frontmatter convention.
 
-A working example site lives under `examples/` for every bundled theme
-— for instance, `examples/blog-site/` mirrors `juicerblog`'s feature
-matrix, and `examples/landing-site/` exercises every section block in
-`juicerlanding`. Start from the closest example and edit downward:
+A working demo site lives under `docs/demos/` for every bundled theme
+— for instance, `docs/demos/juicerblog/` mirrors `juicerblog`'s feature
+matrix, and `docs/demos/juicerlanding/` exercises every section block in
+`juicerlanding`. The deploy pipeline builds each demo into
+`/themes/<theme>/demo/` so the sidebar's "Demo site" leaf for each theme
+serves it live. Start from the closest demo and edit downward:
 
 ```bash
-sbt 'juicerJVM/run serve -s examples/blog-site -L'
-sbt 'juicerJVM/run serve -s examples/portfolio-site -L'
+sbt 'juicerJVM/run serve -s docs/demos/juicerblog -L'
+sbt 'juicerJVM/run serve -s docs/demos/juicerportfolio -L'
 ```
 
 ## Building your own

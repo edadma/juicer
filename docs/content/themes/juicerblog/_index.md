@@ -10,7 +10,7 @@ weight: 50
 juicer theme add https://github.com/edadma/juicer.git -n juicerblog
 ```
 
-…and set `theme = "juicerblog"` in your `site.toml`. A live demo lives at `examples/blog-site/` in the repo — run it with `sbt 'juicerJVM/run serve -s examples/blog-site -L'` to see every feature on this page.
+…and set `theme = "juicerblog"` in your `site.toml`. See the [Demo site](./demo/) page for a live demo exercising every feature on this page.
 
 ## What's in the box
 
