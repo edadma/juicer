@@ -997,7 +997,17 @@ hr {
   font-size: 1rem;
 }
 
-.juicerdocs-content > * + * { margin-top: 1.25em; }
+/* Stack rhythm — applies both at the .juicerdocs-content level
+   (breadcrumbs / article / prev-next) and inside the <article>
+   wrapper that holds the markdown body. baseof.html nests the
+   prose in <article>, so the plain '.juicerdocs-content > * + *'
+   form by itself silently misses every paragraph (since
+   '.juicerdocs-content p { margin: 0 }' sits below). Both selectors
+   are needed. The direct-child combinator is intentional in each
+   branch — it keeps the rule out of nested lists / blockquotes
+   that own their own internal rhythm. */
+.juicerdocs-content > * + *,
+.juicerdocs-content article > * + * { margin-top: 1.25em; }
 
 .juicerdocs-content h1,
 .juicerdocs-content h2,
