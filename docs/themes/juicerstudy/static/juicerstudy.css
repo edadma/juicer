@@ -1093,6 +1093,74 @@ hr {
   line-height: 1.6;
 }
 
+/* Section-list shortcode — a catalog of the current section's
+   children. Library-card aesthetic: a stack of entries, each with a
+   title, a one-line summary, and (optionally) a read-time meta. No
+   borders, no boxes — just typographic stacking with a hairline
+   between each entry. */
+.juicerstudy-section-list {
+  list-style: none;
+  margin: 2rem 0;
+  padding: 0;
+  border-top: 1px solid var(--border-soft);
+}
+.juicerstudy-section-list-item {
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.juicerstudy-section-list-link {
+  display: block;
+  padding: 0.875rem 0;
+  color: var(--fg);
+  text-decoration: none;
+  transition: color 0.1s;
+}
+.juicerstudy-section-list-link:hover {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.juicerstudy-section-list-title {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  font-weight: 500;
+}
+.juicerstudy-section-list-summary {
+  display: block;
+  margin-top: 0.125rem;
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  font-style: italic;
+  color: var(--fg-soft);
+}
+.juicerstudy-section-list-meta {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.juicerstudy-section-list-count {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* Subsection group within a section-list — visually identical, but
+   sits below the page list with a small label gap so the two clusters
+   read as different kinds of thing. */
+.juicerstudy-section-list-subsections {
+  margin-top: 1.5rem;
+}
+.juicerstudy-section-list-item-subsection .juicerstudy-section-list-title {
+  font-style: italic;
+}
+
 
 /* ============================================================
  * 10. Markdown content typography
