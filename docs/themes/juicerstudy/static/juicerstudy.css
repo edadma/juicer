@@ -1188,7 +1188,16 @@ hr {
   font-size: 1rem;
 }
 
-.juicerstudy-content > * + * { margin-top: 2em; }
+/* Stack rhythm — applies between adjacent siblings, both at the
+   .juicerstudy-content level (breadcrumbs / article / prev-next) and
+   inside the <article> wrapper that holds the prose. The direct-child
+   combinator is intentional: it avoids reaching into nested lists or
+   blockquotes whose internal rhythm is set by their own rules. Both
+   selectors are needed because baseof.html wraps the markdown in an
+   <article>, so plain `.juicerstudy-content > * + *` skips right over
+   every paragraph. */
+.juicerstudy-content > * + *,
+.juicerstudy-content article > * + * { margin-top: 2em; }
 
 /* Headings — serif, modest weight. The display-bold (800) +
    negative tracking pattern is for product/interface typography;
