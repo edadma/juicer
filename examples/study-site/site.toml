@@ -1,0 +1,49 @@
+# Marginalia — the example site for juicerstudy.
+#
+# Built as a dogfood site so changes to juicerstudy can be sanity-checked
+# without leaving the juicer repo. Exercises the theme's typography,
+# callouts, math, footnotes, multi-heading pages, and the authored-
+# section-landing model.
+#
+# Local preview:
+#   sbt 'juicerJVM/run serve -s examples/study-site -L'
+# Build:
+#   sbt 'juicerJVM/run build -s examples/study-site -d /tmp/study-site'
+
+title    = "Marginalia"
+tagline  = "notes from the margins of books"
+author   = "a slow reader"
+baseURL  = "http://localhost:8080"
+
+# Resolve the theme via the repo's docs/themes/ directory — the same
+# pattern blog-site uses. Walking back two levels from
+# `examples/study-site/` gets us to the juicer root, then into
+# `docs/themes/juicerstudy/`.
+themeDir = "../../docs/themes"
+theme    = "juicerstudy"
+
+# Static-host deploy convention — URL space matches disk layout.
+htmlDir  = ""
+
+# Page <h1> comes from frontmatter title; content headings start at h2.
+headingShift = 0
+
+[juicerstudy]
+# Math is the most common reason a prose theme needs JS-loaded chrome;
+# turn it on in the example so we can see KaTeX rendering in practice.
+math = true
+
+# A quiet, scholarly palette — slate chrome with amber accent. Distinct
+# from juicerdocs's cyan/magenta defaults so the two themes don't look
+# accidentally identical when sites copy from the example.
+brand           = "#475569"        # slate-600 — primary
+brandStrong     = "#334155"        # slate-700 — hover
+brandSoft       = "#f1f5f9"        # slate-100 — backgrounds
+accent          = "#b45309"        # amber-700 — secondary, link-like
+leaf            = "#65a30d"        # lime-600 — success / leaf
+
+brandDark       = "#94a3b8"        # slate-400
+brandStrongDark = "#cbd5e1"        # slate-300
+brandSoftDark   = "rgb(148 163 184 / .12)"
+accentDark      = "#fbbf24"        # amber-400
+leafDark        = "#a3e635"        # lime-400
