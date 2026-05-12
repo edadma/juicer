@@ -1188,6 +1188,18 @@ hr {
   font-size: 1rem;
 }
 
+/* `<p>` reset — zero browser defaults so spacing comes entirely from
+   the universal stack-rhythm rule below. Must sit BEFORE that rule:
+   both selectors have specificity (0,1,1), so on a tie the later one
+   wins, and we want the universal rule's margin-top to win against
+   this rule's margin: 0 shorthand. Heading rules (h1..h6) and the
+   blockquote rule live AFTER the universal rule, deliberately, so
+   their own margin-top values override 2em where we want them to. */
+.juicerstudy-content p {
+  margin: 0;
+  color: var(--fg);
+}
+
 /* Stack rhythm — applies between adjacent siblings, both at the
    .juicerstudy-content level (breadcrumbs / article / prev-next) and
    inside the <article> wrapper that holds the prose. The direct-child
@@ -1245,10 +1257,8 @@ hr {
   margin-bottom: 0.375rem;
 }
 
-.juicerstudy-content p {
-  margin: 0;
-  color: var(--fg);
-}
+/* (.juicerstudy-content p reset moved above, before the universal
+   stack-rhythm rule, to win on cascade tie — see comment there.) */
 
 /* Markdown-body links — scoped via :not() so the rule doesn't bleed into
    buttons / cards / prev-next anchors, which own their own colors. */
