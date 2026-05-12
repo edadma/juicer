@@ -1209,7 +1209,7 @@ hr {
    <article>, so plain `.juicerstudy-content > * + *` skips right over
    every paragraph. */
 .juicerstudy-content > * + *,
-.juicerstudy-content article > * + * { margin-top: 2em; }
+.juicerstudy-content article > * + * { margin-top: 1.25em; }
 
 /* Headings — serif, modest weight. The display-bold (800) +
    negative tracking pattern is for product/interface typography;
