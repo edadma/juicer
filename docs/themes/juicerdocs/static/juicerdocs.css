@@ -997,15 +997,28 @@ hr {
   font-size: 1rem;
 }
 
+/* `<p>` reset — zero browser defaults so spacing comes entirely from
+   the universal stack-rhythm rule below. Must sit BEFORE that rule:
+   both selectors have specificity (0,1,1), so on a tie the later one
+   wins, and we want the universal rule's margin-top to win against
+   this rule's margin: 0 shorthand. Heading rules (h1..h6) and the
+   blockquote rule live AFTER the universal rule, deliberately, so
+   their own margin-top values override 1.25em where we want them to. */
+.juicerdocs-content p {
+  margin: 0;
+  color: var(--fg-soft);
+}
+
 /* Stack rhythm — applies both at the .juicerdocs-content level
    (breadcrumbs / article / prev-next) and inside the <article>
    wrapper that holds the markdown body. baseof.html nests the
    prose in <article>, so the plain '.juicerdocs-content > * + *'
-   form by itself silently misses every paragraph (since
-   '.juicerdocs-content p { margin: 0 }' sits below). Both selectors
-   are needed. The direct-child combinator is intentional in each
-   branch — it keeps the rule out of nested lists / blockquotes
-   that own their own internal rhythm. */
+   form by itself silently misses every paragraph (selector
+   specificity 0,1,1 ties with .juicerdocs-content p, so order
+   in the file decides the winner). Both selectors are needed.
+   The direct-child combinator is intentional in each branch — it
+   keeps the rule out of nested lists / blockquotes that own their
+   own internal rhythm. */
 .juicerdocs-content > * + *,
 .juicerdocs-content article > * + * { margin-top: 1.25em; }
 
@@ -1051,10 +1064,8 @@ hr {
   margin-bottom: 0.5rem;
 }
 
-.juicerdocs-content p {
-  margin: 0;
-  color: var(--fg-soft);
-}
+/* (.juicerdocs-content p reset moved above, before the universal
+   stack-rhythm rule, to win on cascade tie — see comment there.) */
 
 /* Markdown-body links — scoped via :not() so the rule doesn't bleed into
    buttons / cards / prev-next anchors, which own their own colors. */
