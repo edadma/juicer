@@ -46,6 +46,7 @@ The `norme` baseline is here because Quebec's Charter of the French Language req
 | `layoutDir`     | `"layouts"`        | Templates root |
 | `partialDir`    | `"partials"`       | Partials root |
 | `shortcodeDir`  | `"shortcodes"`     | Shortcodes root |
+| `dataDir`       | `"data"`           | Structured data root — `*.toml` / `*.yaml` / `*.yml` files here are exposed to templates as `.site.data` (see [Template data → `.site.data`](../template-data/#sitedata)). Themes can also ship a `data/` directory; site keys win at the file-leaf granularity. |
 | `excludeDirs`   | unset              | Extra directories to skip during the site walk. String or array of strings; each entry is a path relative to the source root (`"node_modules"`, `"assets/raw"`). Match is exact-directory only — not a glob pattern. |
 
 The walk already skips the active `themeDir` subfolders, the `themeDir` parent (so inactive themes vendored alongside don't render), the configured `publicDir`, and the build's output `dst`. Use `excludeDirs` for anything else under the source root that isn't part of the site — vendored tooling, scratch folders, generated assets you produce out-of-band, drafts kept outside `content/`:

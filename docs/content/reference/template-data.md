@@ -29,6 +29,7 @@ The merged site config (`site.toml` overlaid on the baseline) plus a few compute
 | `.site.events`   | `List[Map]`         | Pages in the configured `eventsSection` with explicit `date:` frontmatter, sorted ascending. Includes future-dated events (see below) |
 | `.site.calendar` | `List[Map]`         | Pre-computed N months of calendar grid starting at the current month, with weekly recurring events expanded onto every matching weekday (see below) |
 | `.site.photos`   | `List[Map]`         | Aggregated `photos:` frontmatter entries from every page, sorted by parent-page date descending (see below) |
+| `.site.data`     | `Map[String, Any]`  | Nested namespace of structured data loaded from `data/` files (see below) |
 
 ### `Term` shape
 
@@ -200,6 +201,58 @@ photos:
 ```
 
 Pages without a `photos:` frontmatter contribute nothing.
+
+### `.site.data`
+
+Structured data the theme or site author wants templates to reach for
+without forcing it into every page's frontmatter. juicer scans the
+`dataDir` (default `data/`) under the site root and under each active
+theme:
+
+```
+data/team.toml              → .site.data.team
+data/menu/lunch.yaml        → .site.data.menu.lunch
+data/menu/dinner.toml       → .site.data.menu.dinner
+```
+
+The file's basename (sans extension) becomes the leaf key; each
+directory under `data/` becomes a nesting level. Both `.toml` and
+`.yaml` / `.yml` are accepted — pick whichever shape fits the data
+better. JSON is not parsed natively, but since it's a strict subset of
+YAML you can rename `.json` → `.yaml` and it works.
+
+A typical use:
+
+```toml
+# data/team.toml
+[[members]]
+name = "Alice"
+role = "Lead"
+
+[[members]]
+name = "Bob"
+role = "Eng"
+```
+
+```
+{{ for m <- .site.data.team.members }}
+  <li>{{ m.name }} — {{ m.role }}</li>
+{{ end }}
+```
+
+**Theme overlay.** Themes can ship their own `data/` directory; site
+entries win at the file-leaf granularity. If a theme provides
+`data/site.toml` and the site provides `data/site.toml`, the site's
+file replaces the theme's at the `.site.data.site` key path. The site
+does **not** deep-merge fields — to support partial overrides as a
+theme author, namespace into a subdirectory
+(`data/colors/default.toml` + `data/colors/dark.toml`).
+
+**Format notes.** TOML at a file root always parses to a map; YAML can
+parse to a list (`data/sponsors.yaml` starting with `- name: ...`) or a
+scalar, but a map is by far the most useful shape because nested-field
+access (`.site.data.sponsors[0].name`) is more readable than positional
+indexing in most templates.
 
 ## Alias pages
 

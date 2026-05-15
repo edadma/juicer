@@ -44,6 +44,7 @@ case.
 | Sections with auto list pages | none | Tier 2 |
 | Themes (`themes/<name>/` overlay) | none | Tier 2 |
 | i18n (per-language directory tree) | none | Tier 2 |
+| Data files (`data/*.toml`, `*.yaml` → `.site.data`) | ✓ | — |
 | Module registries, asset pipeline, page bundles, taxonomies | none | **deferred indefinitely** |
 
 ## Tier 1 — small wins, do these first
