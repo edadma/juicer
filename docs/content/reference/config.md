@@ -229,6 +229,48 @@ never to `<dst>/posts/foo/index.html`.
 See [Concepts → Blogging features → Permalinks](../../concepts/blogging/#permalinks)
 for the narrative version.
 
+## `[comments]` — comments-provider config slot
+
+juicer never ships a comments backend. Sites that want comments declare
+the provider and provider-specific keys under `[comments]` in
+`site.toml`; theme partials read the config back as `.site.comments.*`
+and emit the right embed HTML.
+
+```toml
+[comments]
+provider = "giscus"
+repo     = "edadma/juicer"
+repoId   = "R_kgDOXXXXXX"
+category = "Announcements"
+categoryId = "DIC_kwDOXXXXXX"
+mapping  = "pathname"
+reactions = true
+theme    = "preferred_color_scheme"
+```
+
+The only convention the engine cares about is the table name itself —
+everything inside is opaque to juicer. Conventional keys for the common
+providers:
+
+| Provider     | Conventional keys |
+|--------------|-------------------|
+| `giscus`     | `repo`, `repoId`, `category`, `categoryId`, `mapping`, `reactions`, `theme` |
+| `utterances` | `repo`, `issueTerm`, `label`, `theme` |
+| `disqus`     | `shortname` |
+
+Themes typically gate the embed on `{{ if .site.comments }}` and on a
+per-page `comments: false` frontmatter override (so individual posts can
+opt out of comments without unsetting the site-wide config). See
+[Template data → `.site.comments`](../template-data/#sitecomments) for
+the template-side contract.
+
+[= note =]
+juicer is static-output-only — it doesn't proxy comments, store
+moderation state, or call the provider's API. The block above is a
+config slot only. If a provider needs server-side state, that belongs in
+the provider's own infrastructure, not in juicer.
+[= /note =]
+
 ## `[[authors]]` — author registry
 
 An array of tables describing the people who write posts on the site.

@@ -46,8 +46,9 @@ Additional rules specific to blog work:
 | Permalink templates | implicit `path` only | Phase 2 |
 | Open Graph / Twitter cards | template-only | Phase 2 (helpers) |
 | Future-dated posts | rendered as normal | Phase 2 (`--future` flag) |
-| Server-side syntax highlighting | client-side only | Phase 3 |
+| Server-side syntax highlighting | done (0d714ec) | ✓ |
 | Image optimization (srcset, blurhash) | none | Phase 3 |
+| Comments slot (`[comments]` config + `.site.comments`) | done | ✓ |
 | Asset fingerprinting | none | **deferred indefinitely** |
 | Comments / analytics backends | none | **deferred indefinitely (theme slots only)** |
 
@@ -315,10 +316,14 @@ pick up if a real user is asking.
   `javax.imageio` dependency in core or a separate `juicer-images`
   module.
 
-- **Comments slot.** First-class Giscus / utterances /
-  Disqus config in `site.toml`; theme partials read the config and
-  emit the right embed. Mostly theme work; ~30 LOC of core to
-  surface the config in `.site.comments`.
+- **Comments slot.** ✓ Done. `[comments]` table in `site.toml` flows
+  through to `.site.comments` automatically via the existing
+  `tomlObject` plumbing — no core code change was needed (the
+  ~30-LOC estimate was conservative). Documented as a stable
+  contract in `reference/config.md` and `reference/template-data.md`;
+  `CommentsSlotSpec` pins the surface. Theme partials gate on
+  `{{ if .site.comments }}` and branch on `.site.comments.provider`
+  (giscus / utterances / disqus conventionally).
 
 - **Native-image binary with sub-second incremental builds.**
   GraalVM `native-image` of `juicer` for instant startup. The
