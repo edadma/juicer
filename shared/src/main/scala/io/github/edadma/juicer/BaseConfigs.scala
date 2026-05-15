@@ -24,6 +24,7 @@ object BaseConfigs {
         |shortcodeDir   = "."
         |partialDir     = "."
         |staticDir      = "."
+        |dataDir        = "data"
         |themeDir       = ""
         |publicDir      = "public"
         |headingShift   = 2
@@ -44,6 +45,7 @@ object BaseConfigs {
         |shortcodeDir   = "shortcodes"
         |partialDir     = "partials"
         |staticDir      = "static"
+        |dataDir        = "data"
         |themeDir       = "themes"
         |publicDir      = "public"
         |headingShift   = 2
@@ -64,6 +66,7 @@ object BaseConfigs {
         |shortcodeDir   = "codes-courts"
         |partialDir     = "partiels"
         |staticDir      = "statique"
+        |dataDir        = "données"
         |themeDir       = "thèmes"
         |publicDir      = "public"
         |headingShift   = 2

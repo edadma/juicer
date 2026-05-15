@@ -16,9 +16,9 @@ import scala.language.postfixOps
 object Process {
 
   /** Bundle of per-pass roots — site or theme. Themes share the same shape
-    * as a site (own `layouts/` / `partials/` / `shortcodes/` / `static/`)
-    * but contribute no content and no top-level "other templates" (those
-    * paths only make sense relative to the user's own source root).
+    * as a site (own `layouts/` / `partials/` / `shortcodes/` / `static/` /
+    * `data/`) but contribute no content and no top-level "other templates"
+    * (those paths only make sense relative to the user's own source root).
     */
   private case class Roots(
       src:            Path,
@@ -27,6 +27,7 @@ object Process {
       partials:       Path,
       shortcodes:     Path,
       static:         Path,
+      data:           Path,
       excludes:       Set[Path] = Set.empty, // dirs to skip during recursion
       otherTemplates: Boolean   = true,
   )
@@ -40,7 +41,12 @@ object Process {
 
     val contentItems       = new ListBuffer[ContentItem]
     val contentMap         = new mutable.HashMap[String, ContentFile]
-    val dataFiles          = new ListBuffer[DataFile]
+    // `siteData` is the nested namespace built from `<src>/data/**` and from
+    // every active theme's `<themeRoot>/data/**`. Keys at any level are
+    // populated theme-first then site, so a site's `data/team.toml` wins
+    // over a theme's `data/team.toml` (whole-file replacement at the leaf
+    // key — no deep merge in v1).
+    val siteData           = mutable.LinkedHashMap.empty[String, Any]
     val layoutTemplates    = new mutable.HashMap[(List[String], String), TemplateFile]
     val partialTemplates   = new mutable.HashMap[String, TemplateFile]
     val shortcodeTemplates = new mutable.HashMap[String, TemplateFile]
@@ -57,6 +63,7 @@ object Process {
       partials   = (src / conf.path.partialDir).normalize,
       shortcodes = (src / conf.path.shortcodeDir).normalize,
       static     = (src / conf.path.staticDir).normalize,
+      data       = (src / conf.path.dataDir).normalize,
       // Don't double-process theme directories during the site pass. Two
       // mechanisms layered together:
       //   - `themeRoots` excludes the *active* themes (already processed
@@ -97,6 +104,7 @@ object Process {
       val partials   = r.partials
       val shortcodes = r.shortcodes
       val static     = r.static
+      val data       = r.data
 
       if (content != null && dir.startsWith(content)) {
         val files = filesIncludingExtensions(listing, markdownExtensions*)
@@ -195,12 +203,27 @@ object Process {
         }
       }
 
-      val data = filesIncludingExtensions(listing, "YML", "YAML", "yml", "yaml")
+      // Data files: `<dataDir>/team.toml` → `.site.data.team`,
+      // `<dataDir>/menu/lunch.yaml` → `.site.data.menu.lunch`. Theme passes
+      // run first, then the site pass; site keys overwrite theme keys at the
+      // leaf-file granularity. Whole-file replacement at the key path — no
+      // deep merge (a theme that wants to be partially overridable should
+      // namespace into a subdirectory).
+      if (data != null && dir.startsWith(data)) {
+        val dataFiles = filesIncludingExtensions(listing, "toml", "yaml", "yml")
+        val keyPrefix = dir.relativeTo(data).segments.toList
 
-      show(s"data files: ${data.map(_.filename).mkString(", ")}", data.nonEmpty)
-      data foreach (p =>
-        dataFiles += DataFile(dir, withoutExtension(p.filename), parseYamlData(p.readText())),
-      )
+        show(s"data files: ${dataFiles.map(_.filename).mkString(", ")}", dataFiles.nonEmpty)
+
+        dataFiles foreach { p =>
+          val name = withoutExtension(p.filename)
+          val text = p.readText()
+          val parsed: Any =
+            if (p.toString.endsWith(".toml")) parseTomlData(text, p.toString)
+            else parseYamlData(text)
+          insertAtPath(siteData, keyPrefix :+ name, parsed)
+        }
+      }
 
       if (dir.startsWith(layouts)) {
         val folder = dir.relativeTo(layouts).segments.toList
@@ -296,6 +319,7 @@ object Process {
         partials   = (themeRoot / conf.path.partialDir).normalize,
         shortcodes = (themeRoot / conf.path.shortcodeDir).normalize,
         static     = (themeRoot / conf.path.staticDir).normalize,
+        data       = (themeRoot / conf.path.dataDir).normalize,
         excludes       = Set.empty,
         otherTemplates = false,
       )
@@ -306,13 +330,52 @@ object Process {
     Site(
       contentItems.toList,
       contentMap.toMap,
-      dataFiles.toList,
+      freezeData(siteData),
       layoutTemplates.toMap,
       partialTemplates.toMap,
       shortcodeTemplates.toMap,
       otherTemplates.toList,
     )
   }
+
+  /** Insert `value` into a nested mutable map at the given path. Intermediate
+    * levels are created as mutable `LinkedHashMap` when missing; if a level
+    * already exists as a *value* (not a sub-map) it is replaced — a leaf
+    * `data/x.toml` and a directory `data/x/` at the same key path is a user
+    * configuration mistake, and last-write-wins is the same precedence rule
+    * the rest of the walk uses. */
+  private def insertAtPath(
+      root:  mutable.LinkedHashMap[String, Any],
+      path:  List[String],
+      value: Any,
+  ): Unit = path match {
+    case Nil =>
+      // Path is always non-empty in practice: the caller appends the filename
+      // (sans extension) to the directory prefix, so even a top-level
+      // `data/x.toml` produces a one-element path. Defensive no-op.
+      ()
+    case leaf :: Nil => root(leaf) = value
+    case head :: rest =>
+      val child = root.get(head) match {
+        case Some(existing: mutable.LinkedHashMap[String, Any] @unchecked) => existing
+        case _ =>
+          val m = mutable.LinkedHashMap.empty[String, Any]
+          root(head) = m
+          m
+      }
+      insertAtPath(child, rest, value)
+  }
+
+  /** Deep-freeze the mutable nested map built during the walk into the
+    * immutable `Map[String, Any]` shape squiggly's renderer consumes. Only
+    * the intermediate "directory" maps are mutable; leaves (parser output)
+    * are already immutable, so this is a one-level recursion at every
+    * `LinkedHashMap` node. */
+  private def freezeData(m: mutable.LinkedHashMap[String, Any]): Map[String, Any] =
+    m.iterator.map {
+      case (k, v: mutable.LinkedHashMap[String, Any] @unchecked) => k -> freezeData(v)
+      case (k, v)                                                => k -> v
+    }.toMap
 
   def withoutExtension(filename: String): String =
     filename.lastIndexOf('.') match {
@@ -350,8 +413,6 @@ object Process {
   }
 }
 
-case class DataFile(parent: Path, name: String, data: Any)
-
 sealed trait ContentItem { val outdir: Path }
 case class ContentFile(
     outdir:      Path,
@@ -371,10 +432,14 @@ case class ContentLabel(label: String) extends ContentItem { val outdir: Path = 
 
 case class TemplateFile(path: Path, name: String, var template: TemplateAST)
 
+// `data` is the nested namespace built from `<src>/data/**` and every active
+// theme's `<themeRoot>/data/**`. `data/team.toml` becomes `data("team")`;
+// `data/menu/lunch.yaml` becomes `data("menu")("lunch")`. Exposed to templates
+// as `.site.data`.
 case class Site(
     content: List[ContentItem],
     map: Map[String, ContentFile],
-    data: List[DataFile],
+    data: Map[String, Any],
     layoutTemplates: Map[(List[String], String), TemplateFile],
     partialTemplates: Map[String, TemplateFile],
     shortcodeTemplates: Map[String, TemplateFile],

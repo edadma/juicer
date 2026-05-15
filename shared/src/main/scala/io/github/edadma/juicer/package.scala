@@ -352,6 +352,23 @@ package object juicer {
   /** Convenience: build a TOC directly from a [[Document]]. */
   def buildToc(doc: Document): TOC = buildToc(doc.headings)
 
+  // ===== Data file parsing (TOML / YAML → any-data) =====
+
+  /** Parse a TOML document string into squiggly's any-data shape. Used by
+    * `*.toml` data files under the site's `dataDir`.
+    *
+    * The TOML grammar always has a table at the root, so the result is a
+    * `Map[String, Any]`. Errors are reported via [[problem]] so the build
+    * stops with a readable message.
+    */
+  def parseTomlData(input: String, where: String): Map[String, Any] = {
+    import io.github.edadma.toml.TomlParser
+    TomlParser.parse(input) match {
+      case Right(doc) => tomlObject(doc).toMap
+      case Left(err)  => problem(s"TOML parse error in $where: $err")
+    }
+  }
+
   // ===== YAML frontmatter parsing (scala-yaml) =====
 
   /** Parse a YAML string into the same any-data shape squiggly's renderer

@@ -1469,7 +1469,8 @@ object App {
       ("now"             -> nowMap) +
       ("events"          -> eventsList) +
       ("calendar"        -> calendarData) +
-      ("photos"          -> photosList)
+      ("photos"          -> photosList) +
+      ("data"            -> site.data)
 
     def findLayout(folders: List[String], name: String): Option[TemplateFile] =
       site.layoutTemplates
