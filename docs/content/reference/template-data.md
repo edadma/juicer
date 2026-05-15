@@ -30,6 +30,7 @@ The merged site config (`site.toml` overlaid on the baseline) plus a few compute
 | `.site.calendar` | `List[Map]`         | Pre-computed N months of calendar grid starting at the current month, with weekly recurring events expanded onto every matching weekday (see below) |
 | `.site.photos`   | `List[Map]`         | Aggregated `photos:` frontmatter entries from every page, sorted by parent-page date descending (see below) |
 | `.site.data`     | `Map[String, Any]`  | Nested namespace of structured data loaded from `data/` files (see below) |
+| `.site.comments` | `Map[String, Any]?` | The `[comments]` config block from `site.toml` (provider + provider-specific keys), or absent if no `[comments]` table is set (see below) |
 
 ### `Term` shape
 
@@ -253,6 +254,38 @@ parse to a list (`data/sponsors.yaml` starting with `- name: ...`) or a
 scalar, but a map is by far the most useful shape because nested-field
 access (`.site.data.sponsors[0].name`) is more readable than positional
 indexing in most templates.
+
+### `.site.comments`
+
+A pass-through of the `[comments]` table from `site.toml` (see
+[Config → `[comments]`](../config/#comments--comments-provider-config-slot)).
+juicer never ships a comments backend — the config block is opaque to
+the engine, and theme partials are responsible for reading it and
+emitting the embed HTML.
+
+`provider` is the only convention; everything else is provider-specific
+and theme-defined. A theme that supports several providers typically
+branches on it:
+
+```squiggly
+{{ if .site.comments }}
+  {{ if eq .site.comments.provider 'giscus' }}
+    {{ partial 'comments/giscus.html' . }}
+  {{ end }}
+  {{ if eq .site.comments.provider 'utterances' }}
+    {{ partial 'comments/utterances.html' . }}
+  {{ end }}
+  {{ if eq .site.comments.provider 'disqus' }}
+    {{ partial 'comments/disqus.html' . }}
+  {{ end }}
+{{ end }}
+```
+
+The outer `{{ if .site.comments }}` is the right gate for "comments on
+or off site-wide" — when no `[comments]` table is set in `site.toml`,
+`.site.comments` is absent and the conditional evaluates falsy. Themes
+that allow per-page opt-out also check `{{ if .page.comments }}` (or
+similar) so individual posts can override the site-wide setting.
 
 ## Alias pages
 
