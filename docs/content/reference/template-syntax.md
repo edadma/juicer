@@ -27,6 +27,36 @@ Call them as expressions:
 | `{{ emojify s }}`           | Replace `:smile:` etc. with Unicode emoji |
 | `{{ i18n lang 'key' }}`     | Look up an i18n string (falls back to default lang then literal key) |
 | `{{ ogTags .page }}`        | Emit OpenGraph + Twitter card `<meta>` tags for a page record |
+| `{{ imageDims '/path' }}`   | Read pixel dimensions of an on-disk image; returns `{width, height}` or empty map (see below) |
+
+### `imageDims`
+
+Reads the header of an image on disk and returns a map with `width` and
+`height` (pixel ints). Useful for emitting `<img width=... height=...>`
+so the browser can reserve space before the bytes arrive — eliminates
+cumulative layout shift.
+
+```squiggly
+{{ d := imageDims '/img/hero.jpg' }}
+{{ if d.width }}
+  <img src="/img/hero.jpg" width="{{ d.width }}" height="{{ d.height }}" alt="" />
+{{ else }}
+  <img src="/img/hero.jpg" alt="" />
+{{ end }}
+```
+
+Resolution order: the path is looked up first under the built output
+directory (so theme + site `static/` files and any generated images
+work), then under the source root. Paths can be site-absolute
+(`/img/x.png`) or relative; absolute URLs (`http://…`) are not fetched.
+
+Returns an empty map when the file is missing, unreadable, or in a
+format the header parser does not understand. Recognized formats:
+**PNG, JPEG (baseline + progressive), GIF87a/89a, WebP** (VP8 / VP8L /
+VP8X). Pure Scala — no `javax.imageio`, no FFI, works on every target.
+
+Per-build cache: each unique path is read once even if a shortcode
+fires across hundreds of pages.
 
 ## Conditionals
 

@@ -47,7 +47,8 @@ Additional rules specific to blog work:
 | Open Graph / Twitter cards | template-only | Phase 2 (helpers) |
 | Future-dated posts | rendered as normal | Phase 2 (`--future` flag) |
 | Server-side syntax highlighting | done (0d714ec) | ✓ |
-| Image optimization (srcset, blurhash) | none | Phase 3 |
+| Image dimensions (`imageDims` builtin) | done | ✓ |
+| Image variants (srcset, WebP/AVIF, blurhash) | none | Phase 3 — design call pending |
 | Comments slot (`[comments]` config + `.site.comments`) | done | ✓ |
 | Asset fingerprinting | none | **deferred indefinitely** |
 | Comments / analytics backends | none | **deferred indefinitely (theme slots only)** |
@@ -315,6 +316,42 @@ pick up if a real user is asking.
   passthrough. ~300 LOC plus a hard look at whether we want a
   `javax.imageio` dependency in core or a separate `juicer-images`
   module.
+
+  **Foundation shipped:** the `imageDims` template builtin reads
+  pixel width/height from PNG/JPEG/GIF/WebP headers via a pure-Scala
+  parser (no `javax.imageio`, no FFI). Themes can emit `<img>` with
+  proper `width`/`height` attributes today and dodge cumulative
+  layout shift. See `reference/template-syntax.md#imagedims` for
+  the template contract; tests live in
+  `ImageDimensionsSpec` + `ImageDimsBuiltinSpec`.
+
+  **Open design call** for variant generation (the resizing /
+  format-conversion piece). Three viable paths, none auto-pickable:
+
+  1. *Pure-JVM via `javax.imageio` + TwelveMonkeys plugins.* New
+     dep in `.jvmSettings`, source split in `jvm/src/main/scala`,
+     stub no-op in `js/` + `native/`. PNG/JPEG/GIF/WebP reading
+     works. WebP/AVIF *writing* needs an extra dep
+     (`webp-imageio` is unmaintained, `imageio-avif` is alpha) —
+     this option locks us to a stale image stack.
+  2. *Shell out to `magick` / `cwebp` / `avifenc`.* Zero JVM
+     deps; quality is best-in-class; requires the user to install
+     those tools. Cross-target friendly only on JVM + Native
+     (JS would need Node's `child_process`, awkward in the SJS
+     facade). Cache by content hash + variant config under
+     `dst/.image-cache/` so incremental builds skip reprocessing.
+  3. *Separate `juicer-images-jvm` published artifact.* Strictest
+     module hygiene; users who don't want image processing don't
+     pull the deps. Adds another publish step + version coupling.
+
+  Recommendation when a real user files an issue: go with **option 2**
+  (shell-out), because it (a) keeps the juicer dep graph clean,
+  (b) gives users the freshest WebP/AVIF encoders without juicer
+  needing to track upstream releases, and (c) the cache key
+  (`hash(srcBytes) + variantParams`) makes it incremental-friendly.
+  The `[images]` config block then just declares variant widths
+  + which encoders to use, and missing tools degrade gracefully
+  to a passthrough.
 
 - **Comments slot.** ✓ Done. `[comments]` table in `site.toml` flows
   through to `.site.comments` automatically via the existing

@@ -278,7 +278,7 @@ object App {
       new TemplateRenderer(
         partials  = partialsLoader,
         data      = rendererData,
-        functions = TemplateBuiltin.functions ++ juicerUrlBuiltins(siteMarkdownConfig),
+        functions = TemplateBuiltin.functions ++ juicerUrlBuiltins(siteMarkdownConfig, src1, dst1),
       )
     val shortcodesLoader: TemplateLoader =
       (name: String) =>
@@ -2461,7 +2461,24 @@ object App {
     * carries the `codeHighlighter` callback — flows into `markdownify`. */
   private def juicerUrlBuiltins(
       mdConfig: io.github.edadma.markdown.MarkdownConfig,
+      srcRoot: io.github.edadma.path.Path,
+      dstRoot: io.github.edadma.path.Path,
   ): Map[String, TemplateFunction] = {
+    val imageDimsCache = scala.collection.mutable.HashMap.empty[String, Option[ImageDimensions.Dims]]
+    def resolveImagePath(arg: String): Option[io.github.edadma.path.Path] = {
+      val trimmed = arg.trim
+      if (trimmed.isEmpty || absoluteURL(trimmed)) None
+      else {
+        val rel = if (trimmed.startsWith("/")) trimmed.drop(1) else trimmed
+        val parts = rel.split('/').filter(_.nonEmpty).toList
+        val dstP = parts.foldLeft(dstRoot)(_ / _)
+        if (dstP.exists) Some(dstP)
+        else {
+          val srcP = parts.foldLeft(srcRoot)(_ / _)
+          if (srcP.exists) Some(srcP) else None
+        }
+      }
+    }
     def baseFromContext(con: io.github.edadma.squiggly.Context): BaseURL =
       con.renderer.data("baseURL").asInstanceOf[BaseURL]
 
@@ -2536,6 +2553,30 @@ object App {
         "emojify",
         1,
         { case (con, Seq(s: String)) => io.github.edadma.emoji.Emoji(s) },
+      ),
+      // Read pixel dimensions of an on-disk image so layouts/shortcodes
+      // can emit `<img width=... height=...>` and dodge layout-shift.
+      // Path is resolved against the built output (`publicDir`) first,
+      // then against the source root — so theme + site static assets
+      // and any generated images all work. Returns a `Map(width, height)`
+      // when the image is found and its header is recognized (PNG, JPEG,
+      // GIF, WebP), or an empty map otherwise — never throws. Decoded
+      // dimensions are cached per build so a shortcode that fires
+      // 50 times only reads each header once.
+      "imageDims" -> TemplateFunction(
+        "imageDims",
+        1,
+        { case (con, Seq(arg: String)) =>
+          val key = arg.trim
+          val dimsOpt = imageDimsCache.getOrElseUpdate(
+            key,
+            resolveImagePath(key).flatMap(ImageDimensions.fromFile),
+          )
+          dimsOpt match {
+            case Some(d) => Map[String, Any]("width" -> d.width, "height" -> d.height)
+            case None    => Map.empty[String, Any]
+          }
+        },
       ),
       // OpenGraph + Twitter card meta tags (Phase 2.7). Pass a page record
       // (typically `.page`); returns a multi-line string of `<meta>`
