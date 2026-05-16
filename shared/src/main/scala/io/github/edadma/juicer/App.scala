@@ -274,11 +274,25 @@ object App {
 
           t.template
         }.orElse(problem(s"partial '$name' not found"))
+
+    // `[images]` block in site.toml → variant generator. Parsing is
+    // tolerant of missing/malformed keys (falls back to disabled),
+    // and the backend probes for `magick` on first use, so the bare
+    // construction here never throws or shells out.
+    val imageVariantConfig = ImageVariants.Config.parseFromToml(confdata.toMap)
+    val imageGen: ImageVariantGenerator =
+      new ImageVariantGenerator(
+        config  = imageVariantConfig,
+        backend = newImageEncoderBackend(),
+        srcRoot = src1,
+        dstRoot = dst1,
+      )
+
     val templateRenderer: TemplateRenderer =
       new TemplateRenderer(
         partials  = partialsLoader,
         data      = rendererData,
-        functions = TemplateBuiltin.functions ++ juicerUrlBuiltins(siteMarkdownConfig, src1, dst1),
+        functions = TemplateBuiltin.functions ++ juicerUrlBuiltins(siteMarkdownConfig, src1, dst1, imageGen),
       )
     val shortcodesLoader: TemplateLoader =
       (name: String) =>
@@ -2463,6 +2477,7 @@ object App {
       mdConfig: io.github.edadma.markdown.MarkdownConfig,
       srcRoot: io.github.edadma.path.Path,
       dstRoot: io.github.edadma.path.Path,
+      imageGen: ImageVariantGenerator,
   ): Map[String, TemplateFunction] = {
     val imageDimsCache = scala.collection.mutable.HashMap.empty[String, Option[ImageDimensions.Dims]]
     def resolveImagePath(arg: String): Option[io.github.edadma.path.Path] = {
@@ -2576,6 +2591,55 @@ object App {
             case Some(d) => Map[String, Any]("width" -> d.width, "height" -> d.height)
             case None    => Map.empty[String, Any]
           }
+        },
+      ),
+      // Image-variant generation (Phase 3). Resolves a source image,
+      // generates resized + reformatted copies under
+      // `[images] cacheDir`, and returns a Map describing the variant
+      // set for a `<picture>` / `<img srcset>` block:
+      //
+      //   .original       — URL of the passthrough original
+      //   .originalWidth  — pixel width of the source (0 if unknown)
+      //   .originalHeight — pixel height of the source (0 if unknown)
+      //   .variants       — list of { width, format, url, mime }
+      //
+      // When `[images]` is disabled, the encoder is unavailable
+      // (Native/JS targets, or `magick` missing on PATH), or the
+      // source can't be resolved, `variants` is empty — themes branch
+      // on `if v.variants` and fall back to a plain `<img src>`.
+      // Variant generation is memoised per build, so a 50-call layout
+      // produces variants once.
+      "imageVariants" -> TemplateFunction(
+        "imageVariants",
+        1,
+        { case (con, Seq(arg: String)) =>
+          val vs = imageGen.variantsFor(arg)
+          Map[String, Any](
+            "original"       -> vs.original,
+            "originalWidth"  -> vs.originalWidth,
+            "originalHeight" -> vs.originalHeight,
+            "variants"       -> vs.variants.map(v =>
+              Map[String, Any](
+                "width"  -> v.width,
+                "format" -> v.format,
+                "url"    -> v.url,
+                "mime"   -> v.mime,
+              ),
+            ),
+          )
+        },
+      ),
+      // Shorthand for the common case: emit just the `srcset`
+      // attribute body (`"x-320.webp 320w, x-640.webp 640w"`) for one
+      // format. The two-arg call shape — `srcset '/img/x.jpg' 'webp'`
+      // — lets a layout author keep their `<img>`/`<source>` markup
+      // explicit while still benefiting from generated variants.
+      // Returns "" when there are no variants of the requested format.
+      "srcset" -> TemplateFunction(
+        "srcset",
+        2,
+        { case (con, Seq(arg: String, format: String)) =>
+          imageGen.srcsetFor(arg, format.trim.toLowerCase)
         },
       ),
       // OpenGraph + Twitter card meta tags (Phase 2.7). Pass a page record

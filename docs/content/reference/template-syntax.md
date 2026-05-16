@@ -28,6 +28,8 @@ Call them as expressions:
 | `{{ i18n lang 'key' }}`     | Look up an i18n string (falls back to default lang then literal key) |
 | `{{ ogTags .page }}`        | Emit OpenGraph + Twitter card `<meta>` tags for a page record |
 | `{{ imageDims '/path' }}`   | Read pixel dimensions of an on-disk image; returns `{width, height}` or empty map (see below) |
+| `{{ imageVariants '/path' }}` | Generate resized + reformatted variants of an image; returns `{original, originalWidth, originalHeight, variants}` (see below) |
+| `{{ srcset '/path' 'fmt' }}`  | One-liner: build the comma-separated `srcset` body for one variant format (see below) |
 
 ### `imageDims`
 
@@ -57,6 +59,80 @@ VP8X). Pure Scala — no `javax.imageio`, no FFI, works on every target.
 
 Per-build cache: each unique path is read once even if a shortcode
 fires across hundreds of pages.
+
+### `imageVariants` and `srcset`
+
+Opt-in build-time image-variant generation. With an `[images]` block in
+`site.toml` and ImageMagick (`magick`) on PATH, juicer will resize and
+reformat source images into a `<picture>`-ready variant set:
+
+```toml
+[images]
+enabled  = true
+widths   = [320, 640, 960, 1280]
+formats  = ["webp", "original"]   # most-modern first; original is a passthrough
+quality  = 80
+cacheDir = ".image-cache"
+```
+
+`imageVariants` returns the full structured shape — useful when a theme
+emits its own `<picture>` markup:
+
+```squiggly
+{{ v := imageVariants '/img/hero.jpg' }}
+{{ if v.variants }}
+  <picture>
+    {{ for src <- v.variants }}
+      {{ if src.mime and src.format != 'original' }}
+        <source srcset="{{ src.url }} {{ src.width }}w" type="{{ src.mime }}" />
+      {{ end }}
+    {{ end }}
+    <img src="{{ v.original }}" width="{{ v.originalWidth }}" height="{{ v.originalHeight }}" alt="" />
+  </picture>
+{{ else }}
+  <img src="{{ v.original }}" alt="" />
+{{ end }}
+```
+
+Returned map:
+
+| Key              | Type   | What |
+|------------------|--------|------|
+| `original`       | string | URL of the passthrough original (site-absolute) |
+| `originalWidth`  | int    | Pixel width of the source (`0` if unknown) |
+| `originalHeight` | int    | Pixel height of the source (`0` if unknown) |
+| `variants`       | list   | One `{width, format, url, mime}` per generated variant |
+
+`srcset` is a one-liner shorthand for the common case where a layout
+wants to drop the variant list straight into an `<img srcset=...>`
+attribute for a single format:
+
+```squiggly
+<img src="/img/hero.jpg"
+     srcset="{{ srcset '/img/hero.jpg' 'webp' }}"
+     sizes="(min-width: 800px) 50vw, 100vw"
+     alt="" />
+```
+
+Returns `""` when the requested format isn't in `[images].formats`, the
+source can't be resolved, or variants weren't generated (feature off,
+encoder missing, etc.).
+
+**Cache & encoder.** Every generated filename embeds a 64-bit FNV-1a
+hash of the source bytes (`hero-640w.<hash>.webp`), so re-running the
+build on an unchanged image skips the encoder shell-out and editing the
+image invalidates every variant in one shot. The encoder backend
+(`magick`) is probed once per build; if it's not on PATH a single
+advisory prints to stderr and the feature degrades cleanly to a
+passthrough-only `VariantSet` (`variants` is empty). Same behaviour on
+the Scala Native and Scala.js targets until process-spawn lands in
+`cross_platform`.
+
+Widths above the source's own width are dropped (no upscaling); the
+source's exact width is always included so the fallback `<img>` can
+point at a same-size variant. The `original` slot at the source width
+is a 1:1 byte copy rather than an encoder round-trip — keeps build time
+sane on photo-heavy sites and preserves source bytes exactly.
 
 ## Conditionals
 
