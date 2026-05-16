@@ -366,6 +366,11 @@ object App {
         case ContentFolder(outdir) :: t =>
           sitetoc += TOCLabel(outdir.filename)
           mktocFromContent(t, start)
+        case (_: ContentAsset) :: t =>
+          // Bundle assets don't appear in the site TOC — they're not
+          // pages. Skip and keep walking; the asset-copy pass picks
+          // them up separately from `site.content`.
+          mktocFromContent(t, start)
         case (c: ContentFile) :: _ =>
           val (headings: List[ContentItem], rest) = l.span(_.isInstanceOf[ContentFile])
           val files                               = headings.collect { case f: ContentFile => f }
@@ -463,6 +468,16 @@ object App {
       * non-`_index` child. */
     val sectionIndex: Map[Path, ContentFile] =
       contentFiles.collect { case c if c.name == folderContent => c.outdir -> c }.toMap
+
+    /** Page-bundle assets grouped by their section's outdir. Each
+      * directory under `content/` that holds at least one markdown file
+      * contributes its non-markdown siblings here; the rendering pass
+      * copies them to `outdir/<name>` and templates reach them via
+      * `.page.assets` / `.section.assets`. Sorted by filename so
+      * templates that iterate get a stable order. */
+    val assetsByOutdir: Map[Path, List[ContentAsset]] =
+      site.content.collect { case a: ContentAsset => a }
+        .groupBy(_.outdir).map { case (k, v) => k -> v.sortBy(_.name) }
 
     // ----- Frontmatter cascade -----
     //
@@ -668,6 +683,49 @@ object App {
           val joined     = pathSegs.mkString("/")
           if (joined.isEmpty) basePath + "/"
           else basePath + "/" + joined + "/"
+      }
+    }
+
+    // ----- Page-bundle asset URL + record helpers -----
+    //
+    // The asset URL is the section's permalink + the asset's on-disk
+    // filename: a bundle at `content/iceland-2024/` with `skogafoss.jpg`
+    // exposes it at `/iceland-2024/skogafoss.jpg`. We derive the section
+    // URL by reusing `relPermalinkFor` against the section's `_index.md`
+    // when present; otherwise we synthesize the same URL the implicit
+    // section would have used (outdir relative to dst, minus htmlDir).
+
+    /** Section URL for an outdir — `relPermalinkFor` on the section
+      * index when there is one, else the outdir-derived fallback used
+      * by `relPermalinkFor` for `_index.md`. Always ends with `/`. */
+    def sectionUrlFor(outdir: Path): String = sectionIndex.get(outdir) match {
+      case Some(idx) => relPermalinkFor(idx)
+      case None =>
+        val basePath = if (baseURL.path == "/" || baseURL.path.isEmpty) "" else baseURL.path
+        val rel      = outdir.relativeTo(dst1)
+        val allSegs  = if (outdir == dst1) Nil else rel.segments.toList
+        val pathSegs = if (html != "" && allSegs.nonEmpty) allSegs.drop(1) else allSegs
+        val joined   = pathSegs.mkString("/")
+        if (joined.isEmpty) basePath + "/" else basePath + "/" + joined + "/"
+    }
+
+    /** Bundle assets for a section's outdir, rendered as the per-asset
+      * Map shape templates iterate: `name`, `url`, `ext` (lowercase, no
+      * leading dot — empty when the file has no extension). Order
+      * matches `assetsByOutdir` (filename ascending). Empty list when
+      * the section has no bundle assets. */
+    def assetsForOutdir(outdir: Path): List[Map[String, Any]] = {
+      val baseUrl = sectionUrlFor(outdir)
+      assetsByOutdir.getOrElse(outdir, Nil).map { a =>
+        val ext = {
+          val dot = a.name.lastIndexOf('.')
+          if (dot <= 0 || dot == a.name.length - 1) "" else a.name.substring(dot + 1).toLowerCase
+        }
+        Map[String, Any](
+          "name" -> a.name,
+          "url"  -> (baseUrl + a.name),
+          "ext"  -> ext,
+        )
       }
     }
 
@@ -953,6 +1011,11 @@ object App {
         // other). Templates that need richer referrer data can look
         // up `.site.pagesByPath[bl.url]`.
         "backlinks"    -> backlinksFor(c),
+        // Page-bundle assets at this page's section level. For a
+        // section index this is the section's own assets; for a leaf
+        // page it's the parent section's bundle (assets are
+        // per-directory, not per-page). Empty list when there are none.
+        "assets"       -> assetsForOutdir(c.outdir),
       )
       if (c.name == folderContent) {
         val info = sectionInfoByOutdir(c.outdir)
@@ -1091,6 +1154,10 @@ object App {
         "pages"       -> info.pages.map(basic),
         "subsections" -> info.subsections.map(basic),
         "index"       -> info.index.map(basic).orNull,
+        // Bundle assets for the enclosing section — same list every
+        // page in the same directory sees. Templates iterate as
+        // `for a <- .section.assets` with `.name`, `.url`, `.ext`.
+        "assets"      -> assetsForOutdir(c.outdir),
       )
     }
 
@@ -1625,6 +1692,30 @@ object App {
       }
     }
 
+    // ----- Page-bundle asset copy -----
+    //
+    // Non-markdown siblings of any page (image, attachment, etc.) get
+    // copied to the section's outdir so the section's permalink hosts
+    // the asset. The page record exposes `.page.assets` /
+    // `.section.assets` so templates can iterate, and bundle-relative
+    // paths like `imageVariants 'photo.jpg'` resolve against the source
+    // bundle dir. Copies preserve mtime so an unchanged bundle re-build
+    // is a stat-and-skip; only changed source bytes trigger a write.
+    for (assets <- assetsByOutdir.values; a <- assets) {
+      val target = a.outdir / a.name
+      val needsCopy = !target.exists || {
+        val sm = a.srcPath.lastModified
+        val tm = target.lastModified
+        sm == 0L || tm == 0L || sm > tm
+      }
+      if (needsCopy) {
+        target.parent.foreach(_.createDirectories())
+        show(s"bundle asset: copy ${a.srcPath} => $target")
+        if (target.exists) target.delete()
+        a.srcPath.copyTo(target)
+      }
+    }
+
     def findLayout(folders: List[String], name: String): Option[TemplateFile] =
       site.layoutTemplates
         .get((folders, name))
@@ -1755,14 +1846,24 @@ object App {
             (pagedir / "index.html").toString
           }
 
+        // `__bundleSrc` is the source directory of this page — used by
+        // `imageVariants` / `srcset` / `imageDims` to resolve bare
+        // (non-leading-`/`) paths against the page's bundle before
+        // falling back to the source root. Top-level (not inside
+        // `page`) so it survives the data-scope changes squiggly does
+        // inside `for` loops over sub-pages.
+        val bundleSrc: String =
+          if (c.srcPath ne null) c.srcPath.parent.map(_.toString).getOrElse("") else ""
+
         val pagedata = Map(
-          "site"    -> sitedata,
-          "page"    -> pageMap,
-          "section" -> (sectionDataFor(c) + ("paginator" -> Paginate.sliceToMap(slice))),
-          "content" -> content,
-          "toc"     -> toc,
-          "sub"     -> sub,
-          "tocList" -> tocList,
+          "site"        -> sitedata,
+          "page"        -> pageMap,
+          "section"     -> (sectionDataFor(c) + ("paginator" -> Paginate.sliceToMap(slice))),
+          "content"     -> content,
+          "toc"         -> toc,
+          "sub"         -> sub,
+          "tocList"     -> tocList,
+          "__bundleSrc" -> bundleSrc,
         )
 
         def render(template: TemplateAST): Unit = {
@@ -2653,10 +2754,41 @@ object App {
       imageGen: ImageVariantGenerator,
   ): Map[String, TemplateFunction] = {
     val imageDimsCache = scala.collection.mutable.HashMap.empty[String, Option[ImageDimensions.Dims]]
-    def resolveImagePath(arg: String): Option[io.github.edadma.path.Path] = {
+
+    /** Read the rendering page's bundle source directory out of pagedata
+      * (stashed as the top-level `__bundleSrc` key in App.build's
+      * pagedata Map). Empty string when absent (templates rendered
+      * outside a page context — taxonomy archives, year pages, etc.).
+      * The resolver uses this to prefer bundle-relative paths over
+      * srcRoot-relative ones when the path doesn't start with `/`. */
+    def bundleSrcFromContext(con: io.github.edadma.squiggly.Context): String =
+      con.data match {
+        case m: Map[?, ?] =>
+          m.asInstanceOf[Map[Any, Any]].get("__bundleSrc") match {
+            case Some(s: String) => s
+            case _               => ""
+          }
+        case _ => ""
+      }
+
+    def resolveImagePath(
+        arg: String,
+        bundleSrc: String = "",
+    ): Option[io.github.edadma.path.Path] = {
       val trimmed = arg.trim
       if (trimmed.isEmpty || absoluteURL(trimmed)) None
       else {
+        // Bare paths (no leading `/`) try the page's bundle dir first.
+        // This is what makes `imageVariants 'photo.jpg'` work inside a
+        // bundle without an absolute URL — the same path Hugo's bundle
+        // shortcodes use, and the same shape `_index.md` co-locates
+        // assets with.
+        if (!trimmed.startsWith("/") && bundleSrc.nonEmpty) {
+          val bundle = io.github.edadma.path.Path(bundleSrc)
+          val parts  = trimmed.split('/').filter(_.nonEmpty).toList
+          val bp     = parts.foldLeft(bundle)(_ / _)
+          if (bp.exists) return Some(bp)
+        }
         val rel = if (trimmed.startsWith("/")) trimmed.drop(1) else trimmed
         val parts = rel.split('/').filter(_.nonEmpty).toList
         val dstP = parts.foldLeft(dstRoot)(_ / _)
@@ -2734,10 +2866,11 @@ object App {
         "imageDims",
         1,
         { case (con, Seq(arg: String)) =>
-          val key = arg.trim
+          val bundleSrc = bundleSrcFromContext(con)
+          val key       = bundleSrc + "|" + arg.trim
           val dimsOpt = imageDimsCache.getOrElseUpdate(
             key,
-            resolveImagePath(key).flatMap(ImageDimensions.fromFile),
+            resolveImagePath(arg.trim, bundleSrc).flatMap(ImageDimensions.fromFile),
           )
           dimsOpt match {
             case Some(d) => Map[String, Any]("width" -> d.width, "height" -> d.height)
@@ -2765,7 +2898,7 @@ object App {
         "imageVariants",
         1,
         { case (con, Seq(arg: String)) =>
-          val vs = imageGen.variantsFor(arg)
+          val vs = imageGen.variantsFor(arg, bundleSrcFromContext(con))
           Map[String, Any](
             "original"       -> vs.original,
             "originalWidth"  -> vs.originalWidth,
@@ -2791,7 +2924,7 @@ object App {
         "srcset",
         2,
         { case (con, Seq(arg: String, format: String)) =>
-          imageGen.srcsetFor(arg, format.trim.toLowerCase)
+          imageGen.srcsetFor(arg, format.trim.toLowerCase, bundleSrcFromContext(con))
         },
       ),
       // OpenGraph + Twitter card meta tags (Phase 2.7). Pass a page record

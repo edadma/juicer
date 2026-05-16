@@ -54,12 +54,26 @@ class ImageVariantGenerator(
     * the built `dst` tree (handles generated images + theme-shipped
     * statics that have already been copied) and falling back to the
     * `src` tree (handles raw source images that have not been copied
-    * yet, e.g. when generating from inside a templating pass). */
-  private def resolveSource(arg: String): Option[Path] = {
+    * yet, e.g. when generating from inside a templating pass).
+    *
+    * When `bundleSrc` is non-empty, a bare (no-leading-`/`) path tries
+    * the page's bundle source dir first — this is what lets
+    * `imageVariants 'photo.jpg'` resolve inside a page bundle without
+    * an absolute URL. Leading-`/` paths always go straight to the
+    * dst→src fallback chain so authors can opt out per-call. */
+  private def resolveSource(arg: String, bundleSrc: String): Option[Path] = {
     val trimmed = arg.trim
     if (trimmed.isEmpty || trimmed.startsWith("http://") || trimmed.startsWith("https://")
         || trimmed.startsWith("data:") || trimmed.startsWith("//")) None
     else {
+      if (!trimmed.startsWith("/") && bundleSrc.nonEmpty) {
+        val bundle = Path(bundleSrc)
+        val parts  = trimmed.split('/').filter(_.nonEmpty).toList
+        if (parts.nonEmpty) {
+          val bp = parts.foldLeft(bundle)(_ / _)
+          if (bp.exists) return Some(bp)
+        }
+      }
       val rel   = if (trimmed.startsWith("/")) trimmed.drop(1) else trimmed
       val parts = rel.split('/').filter(_.nonEmpty).toList
       if (parts.isEmpty) None
@@ -108,24 +122,27 @@ class ImageVariantGenerator(
     * In every degraded case the `VariantSet.original` URL still
     * reflects the input argument so themes can emit a sensible
     * `<img src=...>` fallback. */
-  def variantsFor(arg: String): ImageVariants.VariantSet = {
-    val key = arg.trim
+  def variantsFor(arg: String, bundleSrc: String = ""): ImageVariants.VariantSet = {
+    // Cache by (bundleSrc, arg) — the same bare path resolved from
+    // two different bundles is two different source images, and
+    // memoizing only by arg would silently alias them.
+    val key = bundleSrc + "|" + arg.trim
     cache.get(key) match {
       case Some(vs) => vs
       case None =>
-        val vs = compute(key)
+        val vs = compute(arg.trim, bundleSrc)
         cache.put(key, vs)
         vs
     }
   }
 
-  private def compute(arg: String): ImageVariants.VariantSet = {
+  private def compute(arg: String, bundleSrc: String): ImageVariants.VariantSet = {
     val passthroughUrl =
       if (arg.startsWith("/") || arg.startsWith("http://") || arg.startsWith("https://")
           || arg.startsWith("data:") || arg.startsWith("//")) arg
       else "/" + arg
 
-    resolveSource(arg) match {
+    resolveSource(arg, bundleSrc) match {
       case None => ImageVariants.VariantSet(passthroughUrl, 0, 0, Nil)
       case Some(srcPath) =>
         val srcBytes = try srcPath.readBytes catch { case _: Throwable => Array.empty[Byte] }
@@ -192,8 +209,8 @@ class ImageVariantGenerator(
 
   /** Build a CSS-friendly `srcset` string for the variants of a single
     * format: `"foo-320w.<hash>.webp 320w, foo-640w.<hash>.webp 640w"`. */
-  def srcsetFor(arg: String, format: String): String = {
-    val vs = variantsFor(arg)
+  def srcsetFor(arg: String, format: String, bundleSrc: String = ""): String = {
+    val vs = variantsFor(arg, bundleSrc)
     vs.variants.filter(_.format == format).map(v => s"${v.url} ${v.width}w").mkString(", ")
   }
 }

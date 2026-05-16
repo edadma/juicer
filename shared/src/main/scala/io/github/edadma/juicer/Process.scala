@@ -201,6 +201,30 @@ object Process {
             contentItems += contentFile
           }
         }
+
+        // ----- Page-bundle assets -----
+        //
+        // Any non-markdown, non-config file sitting next to markdown files
+        // in this directory is a bundle asset. The rendering pass copies
+        // them to `outdir / <name>` so the section's permalink hosts the
+        // asset (e.g. `iceland-2024/skogafoss.jpg`). Skip directories that
+        // contain no markdown — assets without a page would just be orphan
+        // bytes, and the user can use `static/` for that.
+        //
+        // Excluded extensions:
+        //   - markdown extensions (already handled above as content)
+        //   - YAML / TOML (frontmatter / data fragments — never assets)
+        //   - HTML / SQ (template-shaped files belong in `layouts/`)
+        if (files.nonEmpty) {
+          val assetFiles = filesExcludingExtensions(
+            listing,
+            (markdownExtensions ++ Seq("toml", "yaml", "yml", "html", "sq"))*,
+          )
+          show(s"bundle assets: ${assetFiles.map(_.filename).mkString(", ")}", assetFiles.nonEmpty)
+          assetFiles foreach { p =>
+            contentItems += ContentAsset(outdir, p, p.filename)
+          }
+        }
       }
 
       // Data files: `<dataDir>/team.toml` → `.site.data.team`,
@@ -429,6 +453,18 @@ case class ContentFile(
 ) extends ContentItem
 case class ContentFolder(outdir: Path) extends ContentItem
 case class ContentLabel(label: String) extends ContentItem { val outdir: Path = null }
+
+/** A page-bundle asset — a non-markdown, non-config file living alongside the
+  * markdown files in a content directory. The discovery pass emits one
+  * `ContentAsset` per such file when the directory has at least one
+  * markdown file (an empty bundle would orphan the asset). The rendering
+  * pass copies `srcPath` to `outdir / name` and the page record exposes
+  * the asset to templates via `.page.assets` / `.section.assets`.
+  *
+  * `name` is the on-disk filename — preserved verbatim so a photo named
+  * `Skogafoss-2024.JPG` keeps its case and dot for the asset URL. Bundle
+  * paths are NOT slugified; that's the bundle authoring contract. */
+case class ContentAsset(outdir: Path, srcPath: Path, name: String) extends ContentItem
 
 case class TemplateFile(path: Path, name: String, var template: TemplateAST)
 

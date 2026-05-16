@@ -333,6 +333,7 @@ The current page's enriched record:
 | `.page.author`         | `Map?`    | First (or only) resolved author registry record, or `null` |
 | `.page.authors`        | `List[Map]` | All resolved author records — empty list when none |
 | `.page.backlinks`      | `List[Map]` | Thin `{title, url, summary}` records for every page that links *to* this one — empty list when nothing points here (see below) |
+| `.page.assets`         | `List[Map]` | Page-bundle assets at this page's section level — `{name, url, ext}` per file. Empty list when the bundle has no assets (see [Page bundles](#page-bundles)) |
 | `.page.<custom>`       | varies    | Any frontmatter key |
 
 ### `.page.series` shape
@@ -407,6 +408,7 @@ Always available (for non-`_index` pages it describes the enclosing section):
 | `.section.pages`        | `List[Map]` | Non-`_index` siblings, sorted |
 | `.section.subsections`  | `List[Map]` | Direct child sections, sorted |
 | `.section.index`        | `Map?`      | Section's `_index` record |
+| `.section.assets`       | `List[Map]` | Page-bundle assets for the enclosing section (see [Page bundles](#page-bundles)) |
 | `.section.paginator`    | `Map`       | Pagination state for the current slice (always present — see below) |
 
 ### `.section.paginator`
@@ -427,6 +429,82 @@ unconditionally.
 
 Slice 2+ lives at `<section>/page/<N>/index.html` — directory-style URLs that
 work on any static host without rewrite rules.
+
+## Page bundles
+
+A *page bundle* is a content directory whose non-markdown files
+(images, attachments, anything that isn't `.md` / `.toml` / `.yaml` /
+`.yml` / `.html` / `.sq`) are co-located with the page and get copied
+to the section's output URL.
+
+Drop assets next to the markdown:
+
+```
+content/iceland-2024/
+  _index.md
+  hero.jpg
+  skogafoss.jpg
+  notes.md
+```
+
+At build time juicer copies the assets to the section's outdir and
+exposes them on the page record:
+
+- `hero.jpg` → `dst/html/iceland-2024/hero.jpg` → URL
+  `/iceland-2024/hero.jpg`.
+- `{{ .page.assets }}` on the section index OR on `notes.md` is the
+  same list — assets are per-directory, not per-page. `.section.assets`
+  is an alias for templates that prefer to read them off the section.
+
+Each asset record:
+
+| Key    | Type     | What |
+|--------|----------|------|
+| `name` | `String` | On-disk filename, preserved verbatim (case, dot) — assets are NOT slugified |
+| `url`  | `String` | Site-relative URL — `<section-permalink>/<name>` |
+| `ext`  | `String` | Lowercase extension without the dot, or `""` for extensionless files |
+
+Iterate in a layout to render a gallery, an attachments list, etc.:
+
+```squiggly
+{{ if .page.assets }}
+  <ul class="bundle-files">
+    {{ for a <- .page.assets }}
+      <li><a href="{{ a.url }}">{{ a.name }}</a></li>
+    {{ end }}
+  </ul>
+{{ end }}
+```
+
+### Bundle-relative image paths
+
+Inside a bundle, `imageVariants`, `srcset`, and `imageDims` resolve
+bare (no-leading-`/`) paths against the page's source bundle before
+falling back to `static/`. That means a hero image lives at the page
+and the template doesn't need to know where:
+
+```squiggly
+{{ with vs = imageVariants 'hero.jpg' }}
+  <picture>
+    <source type="image/webp" srcset="{{ srcset 'hero.jpg' 'webp' }}">
+    <img src="{{ vs.original }}" width="{{ vs.originalWidth }}" height="{{ vs.originalHeight }}" alt="">
+  </picture>
+{{ end }}
+```
+
+Move the bundle to a different URL, the layout still works. Absolute
+paths (`/static/hero.jpg`) continue to resolve from the source root —
+the bundle preference only kicks in for bare paths.
+
+### When NOT to use a bundle
+
+- Site-wide chrome (logo, favicon, fonts): keep these in `static/` so
+  every page can reach them via an absolute URL.
+- Shared assets used from many pages: same — bundles are for
+  page-specific files. Putting a logo in every bundle would duplicate
+  bytes and break a logo swap.
+- Files in a directory with **no** markdown content. Bundles need a
+  page to anchor them; orphan assets are silently skipped.
 
 ## Site-wide chrome keys
 
