@@ -132,6 +132,53 @@ Keys juicerstudy reads from each page's frontmatter:
 | `author`  | string | (none)  | Surfaces in the topbar metadata block (when present) and the atom feed |
 | `minutes` | int    | (none)  | Read-time hint, surfaced by the `section-list` shortcode for landing pages that list children |
 
+### Root landing (`_index.md`) extras
+
+Keys juicerstudy reads on the **root** `_index.md` to drive the
+landing-page hero:
+
+| Key                | Type   | Default | What |
+|--------------------|--------|---------|------|
+| `heroTitle`        | string | (none)  | Big hero headline. When set, the title text replaces the plain `<h1>` and you can highlight one word via `heroHighlight`. |
+| `heroHighlight`    | string | (none)  | One word from the hero rendered with the brand-gradient `juicerstudy-grad` treatment. |
+| `heroSuffix`       | string | `.`     | Appended after the highlight word — typically a period or exclamation point. |
+| `heroImage`        | path   | (none)  | Optional hero image, rendered through `imageVariants` for responsive `<picture>` markup. |
+| `heroImageAlt`     | string | (none)  | Alt text for the hero image. |
+| `heroImageCaption` | string | (none)  | Caption shown under the hero image. |
+
+These are *root-only* — nested section landings render with a simpler
+header + subsection-card grid (and ignore the hero keys).
+
+### Site-level landing tokens
+
+The root landing also reads two `[juicerstudy]` keys that control the
+hero's CTAs:
+
+| Key                          | Type     | Default | What |
+|------------------------------|----------|---------|------|
+| `juicerstudy.startReading`   | bool or string | `false` | When `true`, emits a "Start reading" CTA pointing at `/start/`. Set to a path string (e.g. `"/intro/"`) to point elsewhere. |
+| `juicerstudy.logo`           | path     | (none)  | Logo image shown in the hero's meta row above the title. |
+| `juicerstudy.version`        | string   | (none)  | Optional version chip shown next to the logo. |
+
+A top-level `repoURL` (the standard juicer key) adds a "View on GitHub" CTA button when set.
+
+## Image variants
+
+`[images] enabled = true` in `site.toml` turns on responsive image
+delivery for both the `heroImage` and any use of the `figure`
+shortcode. The build runs `magick` (ImageMagick 7) once per source,
+caches by content hash, and reuses across builds. See [Reference →
+Image variants](/reference/image-variants/) for the full configuration
+surface.
+
+```toml
+[images]
+enabled = true
+widths  = [480, 960, 1600]
+formats = ["webp", "original"]
+quality = 78
+```
+
 All other juicer engine frontmatter (`date`, `weight`, `aliases`, `permalinks`, etc.) works as documented in [Reference → Frontmatter](/reference/frontmatter/) — juicerstudy doesn't override or hide any of it.
 
 ## Shortcodes

@@ -10,6 +10,8 @@ them. Not just underlines: questions in the margin, arrows to other
 pages, an occasional *no*, an occasional *yes*. A few stars next to the
 paragraphs I want to find again.
 
+[= figure src="/img/marginalia-book.jpg" alt="A book open to a page with pencilled notes in the margin" caption="A working page — pencilled questions, arrows, and one decisive yes." /=]
+
 People are sometimes scandalized. *You write in books?* As though the
 book were the thing, rather than the reading. As though a clean book
 were evidence of a respect that a marked-up book lacks.
