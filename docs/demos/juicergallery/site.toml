@@ -1,0 +1,54 @@
+# Demo site for the juicergallery theme — three galleries built out of
+# synthetic gradient placeholders. Showcases the new image-variants
+# pipeline that produces webp + downscaled JPG variants for every photo.
+#
+# Local preview:
+#   sbt 'juicerJVM/run serve -s docs/demos/juicergallery -L'
+
+title       = "Hella Studio"
+tagline     = "Photography, Reykjavík"
+author      = "Hella Carlsen"
+baseURL     = "http://localhost:8080"
+description = "Hella Carlsen is a Reykjavík-based photographer. Selected work in landscape, portraiture, and the small hours."
+
+themeDir = "../../themes"
+theme    = "juicergallery"
+
+htmlDir = ""
+sortBy  = "date"
+
+# Person JSON-LD on the homepage.
+[person]
+name     = "Hella Carlsen"
+jobTitle = "Photographer"
+email    = "hella@hellastudio.example"
+
+# Image variants — the showpiece feature. The build will run `magick`
+# for every photo and emit downscaled JPG + webp variants.
+[images]
+enabled = true
+widths  = [480, 960, 1600]
+formats = ["webp", "original"]
+quality = 78
+
+# Topbar nav.
+[[topnav]]
+label = "Work"
+url   = "/"
+
+[[topnav]]
+label = "About"
+url   = "/about/"
+
+# Footer.
+[contact]
+email    = "studio@hellastudio.example"
+location = "Reykjavík, Iceland"
+
+[[links]]
+label = "Instagram"
+url   = "https://instagram.com/example"
+
+[[links]]
+label = "Are.na"
+url   = "https://are.na/example"

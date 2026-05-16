@@ -1,0 +1,63 @@
+<!-- Gallery detail page. Renders the section's frontmatter `photos:`
+     list as a CSS column-masonry grid. Each photo is responsive via
+     imageVariants + srcset, and the click target opens the largest
+     variant in a new tab (no lightbox JS by design).
+
+     `photos:` accepts either a plain string (the image path) or a
+     map `{src, caption, alt}`. The ternary `if-then-else` form
+     normalises each entry without needing block-scope reassignment. -->
+{{ define content }}
+  <article class="juicergallery-detail">
+    <header class="juicergallery-detail-head">
+      {{ if .page.title }}<h1 class="juicergallery-detail-title">{{ .page.title }}</h1>{{ end }}
+      <p class="juicergallery-detail-meta">
+        {{ if .page.dateLong }}<time datetime="{{ .page.dateISO }}">{{ .page.dateLong }}</time>{{ end }}
+        {{ if .page.photos }}{{ if .page.dateLong }} · {{ end }}<span>{{ length .page.photos }} photos</span>{{ end }}
+      </p>
+      {{ if .content }}<div class="juicergallery-detail-blurb">{{ .content }}</div>{{ end }}
+    </header>
+
+    {{ if .page.photos }}
+    <section class="juicergallery-masonry" aria-label="Photos">
+      {{ sizes := '(min-width: 96rem) 25vw, (min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw' }}
+      {{ for p <- .page.photos }}
+        {{ pSrc := if p.src then p.src else p }}
+        {{ pAlt := if p.alt then p.alt else (if p.caption then p.caption else '') }}
+        {{ v := imageVariants pSrc }}
+        {{ webp := srcset pSrc 'webp' }}
+        {{ orig := srcset pSrc 'original' }}
+        <figure class="juicergallery-photo">
+          <a class="juicergallery-photo-link" href="{{ v.original }}" target="_blank" rel="noopener">
+            {{ if v.variants }}
+            <picture>
+              {{ if webp }}<source srcset="{{ webp }}" type="image/webp" sizes="{{ sizes }}" />{{ end }}
+              <img src="{{ v.original }}"
+                   {{ if orig }}srcset="{{ orig }}" sizes="{{ sizes }}"{{ end }}
+                   {{ if v.originalWidth }}width="{{ v.originalWidth }}" height="{{ v.originalHeight }}"{{ end }}
+                   alt="{{ pAlt }}"
+                   loading="lazy" decoding="async" />
+            </picture>
+            {{ else }}
+            <img src="{{ v.original }}"
+                 {{ if v.originalWidth }}width="{{ v.originalWidth }}" height="{{ v.originalHeight }}"{{ end }}
+                 alt="{{ pAlt }}"
+                 loading="lazy" decoding="async" />
+            {{ end }}
+          </a>
+          {{ if p.caption }}<figcaption class="juicergallery-photo-caption">{{ p.caption }}</figcaption>{{ end }}
+        </figure>
+      {{ end }}
+    </section>
+    {{ end }}
+
+    {{ if .page.subsections }}
+    <section class="juicergallery-subsections" aria-label="More">
+      <ul class="juicergallery-subsection-list">
+        {{ for s <- .page.subsections }}
+        <li><a href="{{ s.url }}">{{ s.title }}</a>{{ if s.dateLong }} <span class="juicergallery-subsection-date">{{ s.dateLong }}</span>{{ end }}</li>
+        {{ end }}
+      </ul>
+    </section>
+    {{ end }}
+  </article>
+{{ end }}

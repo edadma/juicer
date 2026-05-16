@@ -1,0 +1,12 @@
+<!-- Generic single-page layout for about / contact / colophon / etc.
+     Constrained measure for prose; the gallery layout handles the
+     image-heavy pages. -->
+{{ define content }}
+  <article class="juicergallery-page-wrap">
+    {{ if .page.title }}<h1 class="juicergallery-page-title">{{ .page.title }}</h1>{{ end }}
+    {{ if .page.summary }}<p class="juicergallery-page-summary">{{ .page.summary }}</p>{{ end }}
+    <div class="juicergallery-content">
+      {{ .content }}
+    </div>
+  </article>
+{{ end }}
