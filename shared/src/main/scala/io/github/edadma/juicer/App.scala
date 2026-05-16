@@ -2,7 +2,7 @@ package io.github.edadma.juicer
 
 import io.github.edadma.markdown.{Document, Inline, Heading => MdHeading, Link, Paragraph}
 import io.github.edadma.path.Path
-import io.github.edadma.squiggly.{BaseURL, TemplateAST, TemplateBuiltin, TemplateFunction, TemplateLoader, TemplateRenderer}
+import io.github.edadma.squiggly.{BaseURL, Slug, TemplateAST, TemplateBuiltin, TemplateFunction, TemplateLoader, TemplateRenderer}
 import io.github.edadma.toml.{TomlDocument, TomlValue}
 
 import scala.annotation.tailrec
@@ -136,7 +136,7 @@ object App {
     //
     // `:year`/`:month`/`:day` come from the parsed `.page.date` (frontmatter
     // or filesystem-mtime fallback); `:slug` is the cleaned filename;
-    // `:title` is `slugify(.page.title)` (falls back to `:slug` when title
+    // `:title` is `Slug.slugify(.page.title)` (falls back to `:slug` when title
     // is absent); `:section` is the section name itself. Section pages
     // (`_index.md`) are NEVER routed through permalink templates — they
     // always sit at the section root.
@@ -548,7 +548,7 @@ object App {
         .replace(":year",    f"${instant.getYear}%04d")
         .replace(":month",   f"${instant.getMonthValue}%02d")
         .replace(":day",     f"${instant.getDayOfMonth}%02d")
-        .replace(":title",   slugify(title))
+        .replace(":title",   Slug.slugify(title))
         .replace(":section", sectionN)
         .replace(":slug",    c.name)
       val trimmed = expanded.stripPrefix("/").stripSuffix("/")
@@ -1193,7 +1193,7 @@ object App {
           case _                => Nil
         }
         for (t <- terms) {
-          val slug = slugify(t)
+          val slug = Slug.slugify(t)
           // `slugify` only returns the placeholder `"-"` for inputs with zero
           // alphanumerics — drop those silently rather than minting a degenerate
           // archive at `/tags/-/`.
@@ -2604,49 +2604,15 @@ object App {
           io.github.edadma.markdown.renderToHTML(parseMarkdown(s, mdConfig), mdConfig).trim
         },
       ),
-      // JSON-string escape — for emitting page data inside JSON-LD
-      // (<script type="application/ld+json">). Escapes the characters
-      // RFC 8259 §7 requires for a JSON string body: `"`, `\`, the
-      // control characters, plus the Unicode line/paragraph separators
-      // U+2028 / U+2029 (which are valid JSON but break JavaScript
-      // parsers when JSON-LD lands inside an HTML <script>).
-      "jsonStr" -> TemplateFunction(
-        "jsonStr",
-        1,
-        { case (con, Seq(v: Any)) =>
-          val s = v match {
-            case null | () => ""
-            case x         => x.toString
-          }
-          val sb = new StringBuilder(s.length + 8)
-          var i  = 0
-          while (i < s.length) {
-            val c = s.charAt(i)
-            c match {
-              case '"'      => sb.append("\\\"")
-              case '\\'     => sb.append("\\\\")
-              case '\n'     => sb.append("\\n")
-              case '\r'     => sb.append("\\r")
-              case '\t'     => sb.append("\\t")
-              case '\b'     => sb.append("\\b")
-              case '\f'     => sb.append("\\f")
-              case c if c.toInt == 0x2028 => sb.append("\\u2028")
-              case c if c.toInt == 0x2029 => sb.append("\\u2029")
-              case c if c < 0x20 =>
-                sb.append("\\u%04x".format(c.toInt))
-              case c => sb.append(c)
-            }
-            i += 1
-          }
-          sb.toString
-        },
-      ),
-      // Substitute :shortcode: tokens with the corresponding Unicode emoji.
-      "emojify" -> TemplateFunction(
-        "emojify",
-        1,
-        { case (con, Seq(s: String)) => io.github.edadma.emoji.Emoji(s) },
-      ),
+      // `jsonStr` and `emojify` moved to squiggly's TemplateBuiltin
+      // in 0.3.0 — they were pure string transforms that didn't need
+      // juicer's site context. juicer just inherits them via
+      // `TemplateBuiltin.functions ++ juicerUrlBuiltins(...)` now.
+      //
+      // `markdownify` (below) STAYS overridden here because juicer's
+      // version uses the per-site `mdConfig` to pick up the
+      // configured code highlighter — a feature retention, not a
+      // backwards-compat shim.
       // Read pixel dimensions of an on-disk image so layouts/shortcodes
       // can emit `<img width=... height=...>` and dodge layout-shift.
       // Path is resolved against the built output (`publicDir`) first,

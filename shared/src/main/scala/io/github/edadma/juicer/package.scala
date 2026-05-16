@@ -436,87 +436,10 @@ package object juicer {
 
   // ===== Slug computation =====
   //
-  // Single helper used by tags, categories, future series/authors/permalinks.
-  // Don't reinvent five times.
-  //
-  // Pipeline: lowercase → fold common Latin diacritics to ASCII → replace runs
-  // of non-alphanumeric with `-` → strip leading/trailing `-`. The fold table
-  // is hand-rolled (rather than `java.text.Normalizer`) so the helper compiles
-  // identically on JVM / Scala.js / Native — `java.text.Normalizer` doesn't
-  // ship in scala-native's javalib stubs.
-
-  /** Map common Latin diacritics to ASCII. Covers the Latin-1 Supplement +
-    * Latin Extended-A characters most likely to appear in author-supplied
-    * tags or titles. Anything outside the table falls through unchanged and
-    * the slug step then strips it. */
-  private val diacriticFold: Map[Char, String] = Map(
-    'à' -> "a", 'á' -> "a", 'â' -> "a", 'ã' -> "a", 'ä' -> "a", 'å' -> "a", 'ā' -> "a", 'ą' -> "a",
-    'ç' -> "c", 'ć' -> "c", 'č' -> "c",
-    'ď' -> "d", 'đ' -> "d",
-    'è' -> "e", 'é' -> "e", 'ê' -> "e", 'ë' -> "e", 'ē' -> "e", 'ę' -> "e", 'ě' -> "e",
-    'ğ' -> "g",
-    'ì' -> "i", 'í' -> "i", 'î' -> "i", 'ï' -> "i", 'ī' -> "i",
-    'ł' -> "l", 'ľ' -> "l",
-    'ñ' -> "n", 'ń' -> "n", 'ň' -> "n",
-    'ò' -> "o", 'ó' -> "o", 'ô' -> "o", 'õ' -> "o", 'ö' -> "o", 'ø' -> "o", 'ō' -> "o", 'ő' -> "o",
-    'ŕ' -> "r", 'ř' -> "r",
-    'ś' -> "s", 'š' -> "s", 'ş' -> "s",
-    'ť' -> "t", 'ţ' -> "t",
-    'ù' -> "u", 'ú' -> "u", 'û' -> "u", 'ü' -> "u", 'ū' -> "u", 'ů' -> "u", 'ű' -> "u",
-    'ý' -> "y", 'ÿ' -> "y",
-    'ź' -> "z", 'ż' -> "z", 'ž' -> "z",
-    'ß' -> "ss", 'æ' -> "ae", 'œ' -> "oe", 'ð' -> "d", 'þ' -> "th",
-  )
-
-  /** ASCII-fold a string by mapping known Latin diacritics. Characters not in
-    * the table pass through; the slugify step decides what to do with them. */
-  def asciiFold(s: String): String = {
-    val sb = new StringBuilder(s.length)
-    var i = 0
-    while (i < s.length) {
-      val c = s.charAt(i)
-      diacriticFold.get(c) match {
-        case Some(repl) => sb.append(repl)
-        case None       => sb.append(c)
-      }
-      i += 1
-    }
-    sb.toString
-  }
-
-  /** Convert a free-form string into a URL-safe slug. Lowercases, ASCII-folds
-    * common Latin diacritics, replaces every run of non-alphanumeric ASCII
-    * with a single `-`, and trims leading/trailing dashes. Empty / all-symbol
-    * inputs collapse to `"-"` so the result is always a non-empty path
-    * segment.
-    *
-    * Examples:
-    *   slugify("Hello, World!")  == "hello-world"
-    *   slugify("Café au lait")   == "cafe-au-lait"
-    *   slugify("C++")            == "c"
-    *   slugify("___")            == "-"
-    */
-  def slugify(s: String): String = {
-    val folded = asciiFold(s.toLowerCase)
-    val sb     = new StringBuilder(folded.length)
-    var lastDash = false
-    var i = 0
-    while (i < folded.length) {
-      val c = folded.charAt(i)
-      if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
-        sb.append(c)
-        lastDash = false
-      } else if (!lastDash && sb.nonEmpty) {
-        sb.append('-')
-        lastDash = true
-      }
-      i += 1
-    }
-    // Trim a trailing dash that the loop left behind. Leading dashes can't
-    // happen because we suppress dashes until at least one alnum has landed.
-    val out = if (sb.nonEmpty && sb.last == '-') sb.dropRight(1).toString else sb.toString
-    if (out.isEmpty) "-" else out
-  }
+  // `slugify` (+ asciiFold + the diacritic-fold table) moved to
+  // `io.github.edadma.squiggly.Slug` in squiggly 0.3.0 — same shape, same
+  // semantics, just lives where it belongs (pure transform with no juicer
+  // dependency). Call sites now reach for `Slug.slugify(...)` directly.
 
   /** Parse a frontmatter `date:` value. Three input shapes are recognised
     * (widest first so a fully-qualified timestamp doesn't lose precision
