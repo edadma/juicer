@@ -38,6 +38,26 @@ favicon = "/juicer-logo.png"
 # the URL the docs sidebar's "Demo site" leaf points at).
 excludeDirs = ["demos"]
 
+# Recompile the juicerdocs theme's CSS from its SCSS source on every
+# build, fingerprint the output for cache-busting, and bundle/minify
+# the theme JS via esbuild. When `sass` / `esbuild` aren't on PATH
+# the pipeline degrades to a verbatim copy of the source — the URL
+# still resolves so the page still renders, just without the freshly-
+# compiled rebuild. See docs/content/reference/config.md → [assets].
+[assets]
+enabled     = true
+fingerprint = true
+
+[[assets.sass]]
+input  = "themes/juicerdocs/src/scss/juicerdocs.scss"
+output = "/juicerdocs.css"
+minify = true
+
+[[assets.esbuild]]
+input  = "themes/juicerdocs/static/juicerdocs.js"
+output = "/juicerdocs.js"
+minify = true
+
 [juicerdocs]
 version = "v0.2.0"
 # `logo` was previously hard-coded as a fallback in the juicerdocs theme

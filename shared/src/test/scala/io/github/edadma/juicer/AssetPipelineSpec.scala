@@ -147,9 +147,9 @@ class AssetPipelineSpec extends AnyFlatSpec with Matchers with JuicerTestSupport
     m2("site.css") shouldBe url
   }
 
-  it should "fall back to a verbatim copy when the backend reports unavailable" in {
+  it should "register a sass entry's URL in the manifest without writing the file when the backend is unavailable" in {
     (src / "src").createDirectories()
-    (src / "src" / "site.scss").writeText("body { color: red; }\n")
+    (src / "src" / "site.scss").writeText("@use 'foo'; body { color: red; }\n")
     dst.createDirectories()
 
     val cfg = AssetPipeline.Config(
@@ -159,9 +159,33 @@ class AssetPipelineSpec extends AnyFlatSpec with Matchers with JuicerTestSupport
     )
     val manifest = AssetPipeline.run(cfg, new FakeBackend(sassOk = false), src, dst)
 
+    // Manifest still gets the URL — themes typically ship a
+    // pre-compiled fallback CSS that the static-copy pass writes to
+    // this same path, so the URL resolves. We deliberately do NOT
+    // write the SCSS source bytes to /css/site.css because they're
+    // not valid CSS in general (`@use` would break).
     manifest should contain("site.css" -> "/css/site.css")
-    // Verbatim copy: the .scss source bytes show up at /css/site.css.
-    (dst / "css" / "site.css").readText() should include("body { color: red; }")
+    (dst / "css" / "site.css").exists shouldBe false
+  }
+
+  it should "fall back to a verbatim copy for esbuild entries when the backend is unavailable" in {
+    (src / "src").createDirectories()
+    (src / "src" / "main.js").writeText("console.log('hi');\n")
+    dst.createDirectories()
+
+    val cfg = AssetPipeline.Config(
+      enabled     = true,
+      fingerprint = false,
+      entries     = List(AssetPipeline.EsbuildEntry("main.js", "src/main.js", "/js/main.js", minify = false)),
+    )
+    val manifest = AssetPipeline.run(cfg, new FakeBackend(esbuildOk = false), src, dst)
+
+    // JS-source-without-bundling is usually still valid JS, so a
+    // verbatim copy is a reasonable degradation: the URL resolves
+    // and the script runs (just no import-resolution from the
+    // bundler).
+    manifest should contain("main.js" -> "/js/main.js")
+    (dst / "js" / "main.js").readText() should include("console.log('hi')")
   }
 
   it should "skip an entry whose source is missing" in {
@@ -203,7 +227,7 @@ class AssetPipelineSpec extends AnyFlatSpec with Matchers with JuicerTestSupport
     out("index.html") should include("<link href=\"site.css\">")
   }
 
-  it should "resolve to the verbatim-copy URL when sass isn't on PATH" in {
+  it should "register the configured sass output URL in the manifest regardless of whether sass is available" in {
     writeAt(
       "site.toml",
       """title = "S"
@@ -227,14 +251,14 @@ class AssetPipelineSpec extends AnyFlatSpec with Matchers with JuicerTestSupport
 
     build()
 
-    // On a machine without `sass` on PATH the pipeline degrades to a
-    // byte-for-byte copy, the URL still resolves, and the manifest
-    // entry is populated — that's what the rendered HTML checks for.
-    // Whether or not real sass is installed in CI is irrelevant to
-    // this assertion: real sass would emit `body { color: red; }`
-    // expanded just like the verbatim copy.
+    // The URL assertion is what's invariant across "sass installed"
+    // and "sass missing" environments. With sass installed, the
+    // pipeline compiles to /css/site.css. Without sass, the
+    // manifest still registers /css/site.css (themes ship static
+    // fallbacks at that path); we deliberately do NOT write the
+    // SCSS source bytes there, so a file-existence assertion would
+    // pass only in one of the two environments.
     out("index.html") should include("<link href=\"/css/site.css\">")
-    (dst / "css" / "site.css").exists shouldBe true
   }
 
   it should "fingerprint the URL when [assets] fingerprint = true" in {

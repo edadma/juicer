@@ -1,29 +1,10 @@
-/*
- * juicerdocs — hand-rolled stylesheet for the juicer documentation theme.
- *
- *   1.  Reset + base
- *   2.  Tokens (light + dark palette, sizing)
- *   3.  Generic helpers
- *   4.  Layout (topbar + 3-col grid)
- *   5.  Topbar
- *   6.  Sidebar
- *   7.  Right-rail TOC
- *   8.  Breadcrumbs + prev/next
- *   9.  Hero / cards / buttons
- *  10.  Markdown content typography
- *  11.  Shortcodes (callouts, steps, tabs, kbd, badge, collapse, filetree, …)
- *  12.  JS-driven state (copy buttons, search popup, mobile sidebar)
- *  13.  404 page
- *  14.  Footer
- *  15.  Misc text utilities
- */
-
-
+@charset "UTF-8";
 /* ============================================================
  * 1. Reset + base
  * ============================================================ */
-
-*, *::before, *::after { box-sizing: border-box; }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
 html {
   -webkit-text-size-adjust: 100%;
@@ -42,7 +23,10 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-img, svg, video { display: block; max-width: 100%; }
+img, svg, video {
+  display: block;
+  max-width: 100%;
+}
 
 button {
   font-family: inherit;
@@ -60,8 +44,14 @@ input, textarea, select {
   color: inherit;
 }
 
-a { color: var(--brand); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
 
 hr {
   border: 0;
@@ -69,105 +59,98 @@ hr {
   margin: 2rem 0;
 }
 
-::selection { background: var(--brand-soft); color: var(--brand-strong); }
-
+::selection {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
 
 /* ============================================================
  * 2. Tokens
  * ============================================================ */
-
 :root {
   /* Palette — light theme (default).
      Tuned to the logo: magenta-pink primary + purple accent + leaf-green
      supporting note. Surfaces stay neutral so the brand colors carry the
      personality without the page reading "purple". */
-  --bg:           #ffffff;
-  --bg-soft:      #fafafa;
-  --surface:      #f5f4f7;
-  --surface-2:    #fbfafc;
-  --border:       #e7e3ec;
-  --border-soft:  #f1eef5;
-  --fg:           #18181b;
-  --fg-soft:      #27272a;
-  --muted:        #71717a;
-
-  --brand:        #d61472;
+  --bg: #ffffff;
+  --bg-soft: #fafafa;
+  --surface: #f5f4f7;
+  --surface-2: #fbfafc;
+  --border: #e7e3ec;
+  --border-soft: #f1eef5;
+  --fg: #18181b;
+  --fg-soft: #27272a;
+  --muted: #71717a;
+  --brand: #d61472;
   --brand-strong: #a30d57;
-  --brand-soft:   #fce7f3;
-  --accent:       #6f1f9e;
-  --leaf:         #65a30d;
-
-  --code-bg:      #faf7fa;
-  --code-fg:      #1f1b24;
-  --code-border:  #ead5e6;
-
+  --brand-soft: #fce7f3;
+  --accent: #6f1f9e;
+  --leaf: #65a30d;
+  --code-bg: #faf7fa;
+  --code-fg: #1f1b24;
+  --code-border: #ead5e6;
   --shadow-sm: 0 1px 2px rgba(0,0,0,.04), 0 1px 1px rgba(0,0,0,.03);
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.05);
-
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-
   /* Sizing */
-  --topbar-h:     3.5rem;
-  --sidebar-w:    16rem;
-  --rail-w:       18rem;
-  --content-max:  48rem;
-  --site-max:     90rem;
-  --radius-sm:    0.25rem;
-  --radius-md:    0.375rem;
-  --radius-lg:    0.5rem;
+  --topbar-h: 3.5rem;
+  --sidebar-w: 16rem;
+  --rail-w: 18rem;
+  --content-max: 48rem;
+  --site-max: 90rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
 }
 
-[data-theme="dark"] {
-  --bg:           #0b0a10;
-  --bg-soft:      #0f0e15;
-  --surface:      #16141d;
-  --surface-2:    #1c1925;
-  --border:       #2a2533;
-  --border-soft:  #1e1a26;
-  --fg:           #f4f4f5;
-  --fg-soft:      #d4d4d4;
-  --muted:        #a1a1aa;
-
-  --brand:        #ec4899;
+[data-theme=dark] {
+  --bg: #0b0a10;
+  --bg-soft: #0f0e15;
+  --surface: #16141d;
+  --surface-2: #1c1925;
+  --border: #2a2533;
+  --border-soft: #1e1a26;
+  --fg: #f4f4f5;
+  --fg-soft: #d4d4d4;
+  --muted: #a1a1aa;
+  --brand: #ec4899;
   --brand-strong: #f472b6;
-  --brand-soft:   rgba(236,72,153,0.18);
-  --accent:       #c084fc;
-  --leaf:         #a3e635;
-
-  --code-bg:      #15131c;
-  --code-fg:      #ececf1;
-  --code-border:  #2a2533;
-
+  --brand-soft: rgba(236,72,153,0.18);
+  --accent: #c084fc;
+  --leaf: #a3e635;
+  --code-bg: #15131c;
+  --code-fg: #ececf1;
+  --code-border: #2a2533;
   --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,.5), 0 2px 4px -2px rgba(0,0,0,.4);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.6), 0 4px 6px -4px rgba(0,0,0,.5);
 }
 
-
 /* ============================================================
  * 3. Generic helpers
  * ============================================================ */
-
 .juicerdocs-sr-only {
   position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
-  clip: rect(0,0,0,0);
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
 }
 
-[hidden] { display: none !important; }
-
+[hidden] {
+  display: none !important;
+}
 
 /* ============================================================
  * 4. Layout
  * ============================================================ */
-
 .juicerdocs-page {
   display: flex;
   max-width: var(--site-max);
@@ -223,6 +206,7 @@ hr {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
+
 .juicerdocs-sidebar-aside::-webkit-scrollbar,
 .juicerdocs-rail-aside::-webkit-scrollbar,
 .juicerdocs-content pre::-webkit-scrollbar,
@@ -231,6 +215,7 @@ hr {
   width: 8px;
   height: 8px;
 }
+
 .juicerdocs-sidebar-aside::-webkit-scrollbar-track,
 .juicerdocs-rail-aside::-webkit-scrollbar-track,
 .juicerdocs-content pre::-webkit-scrollbar-track,
@@ -238,6 +223,7 @@ hr {
 .juicerdocs-content .juicerdocs-filetree::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .juicerdocs-sidebar-aside::-webkit-scrollbar-thumb,
 .juicerdocs-rail-aside::-webkit-scrollbar-thumb,
 .juicerdocs-content pre::-webkit-scrollbar-thumb,
@@ -246,6 +232,7 @@ hr {
   background: var(--border);
   border-radius: 4px;
 }
+
 .juicerdocs-sidebar-aside::-webkit-scrollbar-thumb:hover,
 .juicerdocs-rail-aside::-webkit-scrollbar-thumb:hover,
 .juicerdocs-content pre::-webkit-scrollbar-thumb:hover,
@@ -255,24 +242,25 @@ hr {
 }
 
 @media (max-width: 1023px) {
-  .juicerdocs-sidebar-aside { display: none; }
+  .juicerdocs-sidebar-aside {
+    display: none;
+  }
 }
 @media (max-width: 1279px) {
-  .juicerdocs-rail-aside { display: none; }
+  .juicerdocs-rail-aside {
+    display: none;
+  }
 }
-
-
 /* ============================================================
  * 5. Topbar
  * ============================================================ */
-
 .juicerdocs-topbar {
   position: sticky;
   top: 0;
   z-index: 30;
   height: var(--topbar-h);
   border-bottom: 1px solid var(--border);
-  background: rgb(from var(--bg) r g b / 0.9);
+  background: rgb(from var(--bg) r g b/0.9);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -294,7 +282,10 @@ hr {
   flex-shrink: 0;
   color: var(--fg);
 }
-.juicerdocs-brand:hover { text-decoration: none; }
+
+.juicerdocs-brand:hover {
+  text-decoration: none;
+}
 
 .juicerdocs-brand-logo {
   width: 2rem;
@@ -307,10 +298,12 @@ hr {
   letter-spacing: -0.025em;
   line-height: 1;
 }
-@media (max-width: 639px) {
-  .juicerdocs-brand-name { display: none; }
-}
 
+@media (max-width: 639px) {
+  .juicerdocs-brand-name {
+    display: none;
+  }
+}
 /* Search trigger — a compact button in the topbar that opens the
    Cmd-K modal. Looks like a search field but doesn't accept input
    directly; the real input lives in the dialog. The right-aligned
@@ -335,6 +328,7 @@ hr {
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
+
 .juicerdocs-search-trigger:hover {
   border-color: var(--brand);
   color: var(--fg);
@@ -376,10 +370,9 @@ hr {
     padding: 0 0.5rem;
   }
 }
-
 /* Search modal — native <dialog>. ::backdrop carries the scrim. */
 .juicerdocs-search-modal {
-  width: min(40rem, calc(100vw - 2rem));
+  width: min(40rem, 100vw - 2rem);
   max-height: 70vh;
   margin-top: 6rem;
   margin-inline: auto;
@@ -391,10 +384,12 @@ hr {
   box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
+
 .juicerdocs-search-modal::backdrop {
   background: rgba(15, 15, 20, 0.55);
   backdrop-filter: blur(2px);
 }
+
 .juicerdocs-search-modal[open] {
   display: flex;
   flex-direction: column;
@@ -432,6 +427,7 @@ hr {
   font-family: inherit;
   outline: none;
 }
+
 .juicerdocs-search-modal-input::placeholder {
   color: var(--muted);
 }
@@ -452,6 +448,7 @@ hr {
   overflow-y: auto;
   max-height: 24rem;
 }
+
 .juicerdocs-search-modal-results:not(.is-populated) {
   display: none;
 }
@@ -464,13 +461,18 @@ hr {
   text-decoration: none;
   transition: background 0.1s, color 0.1s;
 }
-.juicerdocs-search-modal-result:last-child { border-bottom: none; }
+
+.juicerdocs-search-modal-result:last-child {
+  border-bottom: none;
+}
+
 .juicerdocs-search-modal-result:hover,
 .juicerdocs-search-modal-result.is-active {
   background: var(--brand-soft);
   color: var(--fg);
   text-decoration: none;
 }
+
 .juicerdocs-search-modal-result.is-active {
   outline: 2px solid var(--brand);
   outline-offset: -2px;
@@ -480,6 +482,7 @@ hr {
   display: block;
   font-weight: 500;
 }
+
 .juicerdocs-search-modal-result-snippet {
   display: block;
   margin-top: 0.125rem;
@@ -508,6 +511,7 @@ hr {
   font-size: 0.75rem;
   color: var(--muted);
 }
+
 .juicerdocs-search-modal-hint kbd {
   display: inline-flex;
   align-items: center;
@@ -546,31 +550,46 @@ hr {
   background: transparent;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
+
 .juicerdocs-icon-btn:hover {
   color: var(--brand);
   background: var(--brand-soft);
   text-decoration: none;
 }
+
 .juicerdocs-icon-btn svg {
   width: 1.25rem;
   height: 1.25rem;
 }
 
-.juicerdocs-icon-light { display: none; }
-.juicerdocs-icon-dark  { display: block; }
-[data-theme="dark"] .juicerdocs-icon-light { display: block; }
-[data-theme="dark"] .juicerdocs-icon-dark  { display: none; }
-
-.juicerdocs-sidebar-toggle { display: none; }
-@media (max-width: 1023px) {
-  .juicerdocs-sidebar-toggle { display: inline-flex; }
+.juicerdocs-icon-light {
+  display: none;
 }
 
+.juicerdocs-icon-dark {
+  display: block;
+}
 
+[data-theme=dark] .juicerdocs-icon-light {
+  display: block;
+}
+
+[data-theme=dark] .juicerdocs-icon-dark {
+  display: none;
+}
+
+.juicerdocs-sidebar-toggle {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .juicerdocs-sidebar-toggle {
+    display: inline-flex;
+  }
+}
 /* ============================================================
  * 6. Sidebar
  * ============================================================ */
-
 .juicerdocs-nav {
   font-size: 0.875rem;
 }
@@ -596,10 +615,12 @@ hr {
   text-decoration: none;
   border-radius: var(--radius-md);
 }
+
 .juicerdocs-nav-heading:hover {
   color: var(--brand);
   text-decoration: none;
 }
+
 /* Section heading is the active link when the user is on the
    section's `_index` page. Mirrors the .juicerdocs-nav-link.is-active
    colour treatment (without the border-left accent, since the heading
@@ -634,11 +655,13 @@ hr {
   text-decoration: none;
   transition: color 0.1s, background 0.1s, border-color 0.1s;
 }
+
 .juicerdocs-nav-link:hover {
   color: var(--brand);
   background: var(--brand-soft);
   text-decoration: none;
 }
+
 .juicerdocs-nav-link.is-active {
   color: var(--brand);
   background: var(--brand-soft);
@@ -655,11 +678,9 @@ hr {
   font-weight: 500;
 }
 
-
 /* ============================================================
  * 7. Right-rail TOC
  * ============================================================ */
-
 .juicerdocs-toc-wrap {
   font-size: 0.875rem;
 }
@@ -679,6 +700,7 @@ hr {
   padding: 0;
   border-left: 1px solid var(--border);
 }
+
 .juicerdocs-toc ul {
   list-style: none;
   margin: 0;
@@ -697,25 +719,39 @@ hr {
   overflow-wrap: anywhere;
   transition: color 0.1s, border-color 0.1s;
 }
+
 .juicerdocs-toc-link:hover {
   color: var(--fg);
   text-decoration: none;
 }
+
 .juicerdocs-toc-link.is-active {
   color: var(--brand);
   border-left-color: var(--brand);
   font-weight: 500;
 }
-.juicerdocs-toc-link[data-toc-level="2"] { padding-left: 0.75rem; }
-.juicerdocs-toc-link[data-toc-level="3"] { padding-left: 1.5rem; }
-.juicerdocs-toc-link[data-toc-level="4"] { padding-left: 2.25rem; font-size: 0.8125rem; }
-.juicerdocs-toc-link[data-toc-level="5"] { padding-left: 3rem;    font-size: 0.8125rem; }
 
+.juicerdocs-toc-link[data-toc-level="2"] {
+  padding-left: 0.75rem;
+}
+
+.juicerdocs-toc-link[data-toc-level="3"] {
+  padding-left: 1.5rem;
+}
+
+.juicerdocs-toc-link[data-toc-level="4"] {
+  padding-left: 2.25rem;
+  font-size: 0.8125rem;
+}
+
+.juicerdocs-toc-link[data-toc-level="5"] {
+  padding-left: 3rem;
+  font-size: 0.8125rem;
+}
 
 /* ============================================================
  * 8. Breadcrumbs + prev/next
  * ============================================================ */
-
 .juicerdocs-breadcrumbs {
   font-size: 0.875rem;
   color: var(--muted);
@@ -731,20 +767,27 @@ hr {
   align-items: center;
   gap: 0.375rem;
 }
+
 .juicerdocs-breadcrumbs li {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
 }
-.juicerdocs-breadcrumbs-link { color: inherit; }
+
+.juicerdocs-breadcrumbs-link {
+  color: inherit;
+}
+
 .juicerdocs-breadcrumbs-link:hover {
   color: var(--brand);
   text-decoration: none;
 }
+
 .juicerdocs-breadcrumbs-current {
   color: var(--fg-soft);
   font-weight: 500;
 }
+
 .juicerdocs-breadcrumbs-sep {
   width: 0.75rem;
   height: 0.75rem;
@@ -770,43 +813,45 @@ hr {
   text-decoration: none;
   transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 }
+
 .juicerdocs-prevnext-card:hover {
   border-color: var(--brand);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
   text-decoration: none;
 }
-.juicerdocs-prevnext-card-next { text-align: right; }
+
+.juicerdocs-prevnext-card-next {
+  text-align: right;
+}
 
 .juicerdocs-prevnext-label {
   font-size: 0.75rem;
   color: var(--muted);
 }
+
 .juicerdocs-prevnext-title {
   font-weight: 600;
   color: var(--fg);
   margin-top: 0.25rem;
 }
 
-
 /* ============================================================
  * 9. Hero / cards / buttons
  * ============================================================ */
-
 .juicerdocs-hero {
   position: relative;
   padding: 3.5rem 1rem 2rem;
   margin: 0 -1rem;
   overflow: hidden;
 }
+
 .juicerdocs-hero::before {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(800px 400px at 20% 0%,  var(--brand-soft), transparent 60%),
-    radial-gradient(600px 300px at 90% 30%, rgb(from var(--accent) r g b / 0.10), transparent 60%);
+  background: radial-gradient(800px 400px at 20% 0%, var(--brand-soft), transparent 60%), radial-gradient(600px 300px at 90% 30%, rgb(from var(--accent) r g b/0.1), transparent 60%);
   z-index: -1;
 }
 
@@ -816,10 +861,12 @@ hr {
   gap: 1rem;
   margin-bottom: 1rem;
 }
+
 .juicerdocs-hero-logo {
   width: 3.5rem;
   height: 3.5rem;
 }
+
 .juicerdocs-hero-version {
   font-size: 0.875rem;
   font-family: var(--font-mono);
@@ -849,11 +896,17 @@ hr {
   color: var(--fg-soft);
   line-height: 1.6;
 }
+
 /* markdownify emits the summary text wrapped in its own <p>; reset
    browser defaults so the visual rhythm matches the old plain-text
    version. */
-.juicerdocs-hero-summary p { margin: 0; }
-.juicerdocs-hero-summary p + p { margin-top: 0.6em; }
+.juicerdocs-hero-summary p {
+  margin: 0;
+}
+
+.juicerdocs-hero-summary p + p {
+  margin-top: 0.6em;
+}
 
 .juicerdocs-hero-actions {
   display: flex;
@@ -868,13 +921,17 @@ hr {
   grid-template-columns: 1fr;
   margin-top: 3rem;
 }
+
 @media (min-width: 768px) {
-  .juicerdocs-cards { grid-template-columns: 1fr 1fr; }
+  .juicerdocs-cards {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 @media (min-width: 1024px) {
-  .juicerdocs-cards { grid-template-columns: 1fr 1fr 1fr; }
+  .juicerdocs-cards {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
 }
-
 .juicerdocs-card {
   display: block;
   padding: 1.25rem;
@@ -885,12 +942,14 @@ hr {
   text-decoration: none;
   transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 }
+
 .juicerdocs-card:hover {
   border-color: var(--brand);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
   text-decoration: none;
 }
+
 .juicerdocs-card-icon {
   display: inline-flex;
   align-items: center;
@@ -902,12 +961,18 @@ hr {
   color: var(--brand);
   margin-bottom: 0.75rem;
 }
-.juicerdocs-card-icon svg { width: 1.25rem; height: 1.25rem; }
+
+.juicerdocs-card-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 .juicerdocs-card-title {
   font-weight: 600;
   font-size: 1rem;
   color: var(--fg);
 }
+
 .juicerdocs-card-summary {
   margin-top: 0.25rem;
   font-size: 0.875rem;
@@ -923,25 +988,31 @@ hr {
 .juicerdocs-page-splash .juicerdocs-content {
   max-width: 64rem;
 }
+
 .juicerdocs-page-splash .juicerdocs-hero {
   text-align: center;
   padding-top: 5rem;
   padding-bottom: 3rem;
 }
+
 .juicerdocs-page-splash .juicerdocs-hero-meta {
   justify-content: center;
 }
+
 .juicerdocs-page-splash .juicerdocs-hero-summary {
   margin-left: auto;
   margin-right: auto;
 }
+
 .juicerdocs-page-splash .juicerdocs-hero-actions {
   justify-content: center;
 }
-@media (min-width: 1024px) {
-  .juicerdocs-page-splash .juicerdocs-cards { grid-template-columns: 1fr 1fr 1fr; }
-}
 
+@media (min-width: 1024px) {
+  .juicerdocs-page-splash .juicerdocs-cards {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
 .juicerdocs-section-heading {
   font-size: 1.25rem;
   font-weight: 600;
@@ -954,16 +1025,19 @@ hr {
   margin: 0;
   padding: 0;
 }
+
 .juicerdocs-page-list li {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
   padding: 0.375rem 0;
 }
+
 .juicerdocs-page-list a {
   color: var(--brand);
   font-weight: 500;
 }
+
 .juicerdocs-page-list-summary {
   font-size: 0.875rem;
   color: var(--muted);
@@ -982,26 +1056,44 @@ hr {
   transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.05s;
   cursor: pointer;
 }
-.juicerdocs-btn:hover { text-decoration: none; }
-.juicerdocs-btn:active { transform: translateY(1px); }
-.juicerdocs-btn svg { width: 1rem; height: 1rem; }
+
+.juicerdocs-btn:hover {
+  text-decoration: none;
+}
+
+.juicerdocs-btn:active {
+  transform: translateY(1px);
+}
+
+.juicerdocs-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
 
 .juicerdocs-btn-primary {
   background: var(--brand);
   color: #ffffff;
 }
+
 .juicerdocs-btn-primary:hover {
   background: var(--brand-strong);
   color: #ffffff;
 }
-[data-theme="dark"] .juicerdocs-btn-primary { color: #0a0a0a; }
-[data-theme="dark"] .juicerdocs-btn-primary:hover { color: #0a0a0a; }
+
+[data-theme=dark] .juicerdocs-btn-primary {
+  color: #0a0a0a;
+}
+
+[data-theme=dark] .juicerdocs-btn-primary:hover {
+  color: #0a0a0a;
+}
 
 .juicerdocs-btn-secondary {
   background: var(--surface);
   color: var(--fg);
   border-color: var(--border);
 }
+
 .juicerdocs-btn-secondary:hover {
   border-color: var(--brand);
   color: var(--brand);
@@ -1013,13 +1105,18 @@ hr {
   margin: 0 0 2rem 0;
   line-height: 1.6;
 }
+
 /* Lead is now a <div> wrapping markdownify output. The inner <p>s carry
  * their default margins, which would double-up against the lead's own
  * bottom margin; flatten them so the lead reads as a single block of
  * text the way it did when it was a plain <p>. */
-.juicerdocs-lead p { margin: 0; }
-.juicerdocs-lead p + p { margin-top: 0.6em; }
+.juicerdocs-lead p {
+  margin: 0;
+}
 
+.juicerdocs-lead p + p {
+  margin-top: 0.6em;
+}
 
 /* ============================================================
  * 10. Markdown content typography
@@ -1028,7 +1125,6 @@ hr {
  * Default styles target unprefixed tags so authors can write plain
  * Markdown and still get the polished look.
  * ============================================================ */
-
 .juicerdocs-content {
   color: var(--fg);
   line-height: 1.7;
@@ -1058,7 +1154,9 @@ hr {
    keeps the rule out of nested lists / blockquotes that own their
    own internal rhythm. */
 .juicerdocs-content > * + *,
-.juicerdocs-content article > * + * { margin-top: 1.25em; }
+.juicerdocs-content article > * + * {
+  margin-top: 1.25em;
+}
 
 .juicerdocs-content h1,
 .juicerdocs-content h2,
@@ -1072,12 +1170,14 @@ hr {
   scroll-margin-top: calc(var(--topbar-h) + 1.5rem);
   line-height: 1.25;
 }
+
 .juicerdocs-content h1 {
   font-size: 2.25rem;
   margin: 0 0 1.25rem 0;
   font-weight: 800;
   letter-spacing: -0.025em;
 }
+
 .juicerdocs-content h2 {
   font-size: 1.75rem;
   margin-top: 2.75rem;
@@ -1085,16 +1185,19 @@ hr {
   padding-bottom: 0.375rem;
   border-bottom: 1px solid var(--border);
 }
+
 .juicerdocs-content h3 {
   font-size: 1.375rem;
   margin-top: 2.25rem;
   margin-bottom: 0.75rem;
 }
+
 .juicerdocs-content h4 {
   font-size: 1.125rem;
   margin-top: 1.75rem;
   margin-bottom: 0.5rem;
 }
+
 .juicerdocs-content h5,
 .juicerdocs-content h6 {
   font-size: 1rem;
@@ -1104,33 +1207,54 @@ hr {
 
 /* (.juicerdocs-content p reset moved above, before the universal
    stack-rhythm rule, to win on cascade tie — see comment there.) */
-
 /* Markdown-body links — scoped via :not() so the rule doesn't bleed into
    buttons / cards / prev-next anchors, which own their own colors. */
-.juicerdocs-content a:not([class*="juicerdocs-"]) {
+.juicerdocs-content a:not([class*=juicerdocs-]) {
   color: var(--brand);
   text-decoration: underline;
-  text-decoration-color: rgb(from var(--brand) r g b / 0.4);
+  text-decoration-color: rgb(from var(--brand) r g b/0.4);
   text-underline-offset: 2px;
   transition: text-decoration-color 0.15s;
 }
-.juicerdocs-content a:not([class*="juicerdocs-"]):hover {
+
+.juicerdocs-content a:not([class*=juicerdocs-]):hover {
   text-decoration-color: var(--brand);
 }
 
-.juicerdocs-content strong { color: var(--fg); font-weight: 700; }
-.juicerdocs-content em { color: inherit; }
+.juicerdocs-content strong {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.juicerdocs-content em {
+  color: inherit;
+}
 
 .juicerdocs-content ul,
 .juicerdocs-content ol {
   padding-left: 1.5rem;
   color: var(--fg-soft);
 }
-.juicerdocs-content ul { list-style: disc; }
-.juicerdocs-content ol { list-style: decimal; }
-.juicerdocs-content li { margin: 0.375rem 0; }
-.juicerdocs-content li > p { margin: 0; }
-.juicerdocs-content li::marker { color: var(--muted); }
+
+.juicerdocs-content ul {
+  list-style: disc;
+}
+
+.juicerdocs-content ol {
+  list-style: decimal;
+}
+
+.juicerdocs-content li {
+  margin: 0.375rem 0;
+}
+
+.juicerdocs-content li > p {
+  margin: 0;
+}
+
+.juicerdocs-content li::marker {
+  color: var(--muted);
+}
 
 .juicerdocs-content ul ul,
 .juicerdocs-content ul ol,
@@ -1160,7 +1284,10 @@ hr {
   border-radius: var(--radius-md);
 }
 
-.juicerdocs-content figure { margin: 1.5rem 0; }
+.juicerdocs-content figure {
+  margin: 1.5rem 0;
+}
+
 .juicerdocs-content figcaption {
   margin-top: 0.5rem;
   font-size: 0.875rem;
@@ -1176,7 +1303,7 @@ hr {
   border-radius: var(--radius-sm);
   background: var(--brand-soft);
   color: var(--brand);
-  border: 1px solid rgb(from var(--brand) r g b / 0.15);
+  border: 1px solid rgb(from var(--brand) r g b/0.15);
   white-space: nowrap;
 }
 
@@ -1195,6 +1322,7 @@ hr {
   overflow-x: auto;
   box-shadow: var(--shadow-sm);
 }
+
 .juicerdocs-content pre code {
   font-family: inherit;
   font-size: inherit;
@@ -1204,6 +1332,7 @@ hr {
   border: 0;
   white-space: pre;
 }
+
 .juicerdocs-content pre[data-language]::before {
   content: attr(data-language);
   position: absolute;
@@ -1215,6 +1344,7 @@ hr {
   color: var(--muted);
   pointer-events: none;
 }
+
 .juicerdocs-content pre[data-language] {
   padding-top: 1.75rem;
 }
@@ -1235,24 +1365,75 @@ hr {
    pick up the accent violet so the page reads as one piece. Dark-mode
    swaps to lighter, slightly cooler tones so the accents don't burn
    against the deep code background. */
-.juicerdocs-content .hl-keyword     { color: #a30d57; font-weight: 600; }
-.juicerdocs-content .hl-string      { color: #4d7c0f; }
-.juicerdocs-content .hl-comment     { color: #71717a; font-style: italic; }
-.juicerdocs-content .hl-number      { color: #b91c1c; }
-.juicerdocs-content .hl-type        { color: #6f1f9e; }
-.juicerdocs-content .hl-function    { color: #1d4ed8; }
-.juicerdocs-content .hl-variable    { color: inherit; }
-.juicerdocs-content .hl-operator    { color: #52525b; }
-.juicerdocs-content .hl-punctuation { color: #71717a; }
+.juicerdocs-content .hl-keyword {
+  color: #a30d57;
+  font-weight: 600;
+}
 
-[data-theme="dark"] .juicerdocs-content .hl-keyword     { color: #f472b6; }
-[data-theme="dark"] .juicerdocs-content .hl-string      { color: #a3e635; }
-[data-theme="dark"] .juicerdocs-content .hl-comment     { color: #a1a1aa; }
-[data-theme="dark"] .juicerdocs-content .hl-number      { color: #fb7185; }
-[data-theme="dark"] .juicerdocs-content .hl-type        { color: #c084fc; }
-[data-theme="dark"] .juicerdocs-content .hl-function    { color: #93c5fd; }
-[data-theme="dark"] .juicerdocs-content .hl-operator    { color: #d4d4d8; }
-[data-theme="dark"] .juicerdocs-content .hl-punctuation { color: #a1a1aa; }
+.juicerdocs-content .hl-string {
+  color: #4d7c0f;
+}
+
+.juicerdocs-content .hl-comment {
+  color: #71717a;
+  font-style: italic;
+}
+
+.juicerdocs-content .hl-number {
+  color: #b91c1c;
+}
+
+.juicerdocs-content .hl-type {
+  color: #6f1f9e;
+}
+
+.juicerdocs-content .hl-function {
+  color: #1d4ed8;
+}
+
+.juicerdocs-content .hl-variable {
+  color: inherit;
+}
+
+.juicerdocs-content .hl-operator {
+  color: #52525b;
+}
+
+.juicerdocs-content .hl-punctuation {
+  color: #71717a;
+}
+
+[data-theme=dark] .juicerdocs-content .hl-keyword {
+  color: #f472b6;
+}
+
+[data-theme=dark] .juicerdocs-content .hl-string {
+  color: #a3e635;
+}
+
+[data-theme=dark] .juicerdocs-content .hl-comment {
+  color: #a1a1aa;
+}
+
+[data-theme=dark] .juicerdocs-content .hl-number {
+  color: #fb7185;
+}
+
+[data-theme=dark] .juicerdocs-content .hl-type {
+  color: #c084fc;
+}
+
+[data-theme=dark] .juicerdocs-content .hl-function {
+  color: #93c5fd;
+}
+
+[data-theme=dark] .juicerdocs-content .hl-operator {
+  color: #d4d4d8;
+}
+
+[data-theme=dark] .juicerdocs-content .hl-punctuation {
+  color: #a1a1aa;
+}
 
 /* Tables */
 .juicerdocs-content table {
@@ -1264,10 +1445,12 @@ hr {
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
 }
+
 .juicerdocs-content thead {
   background: var(--surface);
   border-top: 2px solid var(--brand);
 }
+
 .juicerdocs-content th {
   text-align: left;
   padding: 0.625rem 0.875rem;
@@ -1275,27 +1458,45 @@ hr {
   color: var(--fg);
   border-bottom: 1px solid var(--border);
 }
+
 .juicerdocs-content td {
   padding: 0.625rem 0.875rem;
   border-bottom: 1px solid var(--border-soft);
   color: var(--fg-soft);
 }
-.juicerdocs-content tbody tr:nth-child(even) { background: var(--bg-soft); }
-.juicerdocs-content tbody tr:hover { background: var(--brand-soft); }
-.juicerdocs-content tr:last-child td { border-bottom: 0; }
+
+.juicerdocs-content tbody tr:nth-child(even) {
+  background: var(--bg-soft);
+}
+
+.juicerdocs-content tbody tr:hover {
+  background: var(--brand-soft);
+}
+
+.juicerdocs-content tr:last-child td {
+  border-bottom: 0;
+}
 
 /* Definition lists */
-.juicerdocs-content dl { margin: 1rem 0; }
-.juicerdocs-content dt { font-weight: 600; color: var(--fg); margin-top: 0.75rem; }
-.juicerdocs-content dd { margin-left: 1.5rem; color: var(--fg-soft); }
+.juicerdocs-content dl {
+  margin: 1rem 0;
+}
 
+.juicerdocs-content dt {
+  font-weight: 600;
+  color: var(--fg);
+  margin-top: 0.75rem;
+}
+
+.juicerdocs-content dd {
+  margin-left: 1.5rem;
+  color: var(--fg-soft);
+}
 
 /* ============================================================
  * 11. Shortcodes
  * ============================================================ */
-
 /* ----- Callouts (note / tip / warning / danger) ----- */
-
 .juicerdocs-callout {
   position: relative;
   margin: 1.5rem 0;
@@ -1305,6 +1506,7 @@ hr {
   background: var(--callout-bg, var(--surface-2));
   color: var(--fg);
 }
+
 .juicerdocs-callout::before {
   content: "";
   position: absolute;
@@ -1314,99 +1516,121 @@ hr {
   height: 1.25rem;
   background-color: var(--callout-accent, var(--muted));
   -webkit-mask-image: var(--callout-icon);
-          mask-image: var(--callout-icon);
+  mask-image: var(--callout-icon);
   -webkit-mask-size: contain;
-          mask-size: contain;
+  mask-size: contain;
   -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   -webkit-mask-position: center;
-          mask-position: center;
+  mask-position: center;
 }
+
 .juicerdocs-callout > strong {
   display: block;
   font-weight: 600;
   margin-bottom: 0.25rem;
   color: var(--callout-accent, var(--fg));
 }
+
 .juicerdocs-callout-body {
   font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--fg-soft);
 }
-.juicerdocs-callout-body > *:first-child { margin-top: 0; }
-.juicerdocs-callout-body > *:last-child  { margin-bottom: 0; }
-.juicerdocs-callout-body p { margin: 0.5rem 0; }
-.juicerdocs-callout-body p:first-child { margin-top: 0; }
-.juicerdocs-callout-body p:last-child  { margin-bottom: 0; }
+
+.juicerdocs-callout-body > *:first-child {
+  margin-top: 0;
+}
+
+.juicerdocs-callout-body > *:last-child {
+  margin-bottom: 0;
+}
+
+.juicerdocs-callout-body p {
+  margin: 0.5rem 0;
+}
+
+.juicerdocs-callout-body p:first-child {
+  margin-top: 0;
+}
+
+.juicerdocs-callout-body p:last-child {
+  margin-bottom: 0;
+}
+
 .juicerdocs-callout-body code:not(pre code) {
   font-family: var(--font-mono);
   font-size: 0.875em;
   padding: 0.1em 0.3em;
   border-radius: var(--radius-sm);
-  background: rgb(from var(--callout-accent, var(--brand)) r g b / 0.15);
+  background: rgb(from var(--callout-accent, var(--brand)) r g b/0.15);
   color: var(--callout-accent, var(--brand));
 }
 
 .juicerdocs-callout-note {
-  --callout-accent:  #2563eb;
-  --callout-bg:      #eff6ff;
-  --callout-border:  #bfdbfe;
-  --callout-icon:    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'/></svg>");
+  --callout-accent: #2563eb;
+  --callout-bg: #eff6ff;
+  --callout-border: #bfdbfe;
+  --callout-icon: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'/></svg>");
 }
-[data-theme="dark"] .juicerdocs-callout-note {
+
+[data-theme=dark] .juicerdocs-callout-note {
   --callout-accent: #60a5fa;
-  --callout-bg:     rgba(37,99,235,0.10);
+  --callout-bg: rgba(37,99,235,0.10);
   --callout-border: rgba(37,99,235,0.35);
 }
 
 .juicerdocs-callout-tip {
   --callout-accent: #16a34a;
-  --callout-bg:     #f0fdf4;
+  --callout-bg: #f0fdf4;
   --callout-border: #bbf7d0;
-  --callout-icon:   url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547Z'/></svg>");
+  --callout-icon: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547Z'/></svg>");
 }
-[data-theme="dark"] .juicerdocs-callout-tip {
+
+[data-theme=dark] .juicerdocs-callout-tip {
   --callout-accent: #4ade80;
-  --callout-bg:     rgba(22,163,74,0.10);
+  --callout-bg: rgba(22,163,74,0.10);
   --callout-border: rgba(22,163,74,0.35);
 }
 
 .juicerdocs-callout-warning {
   --callout-accent: #ca8a04;
-  --callout-bg:     #fefce8;
+  --callout-bg: #fefce8;
   --callout-border: #fde68a;
-  --callout-icon:   url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z'/></svg>");
+  --callout-icon: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z'/></svg>");
 }
-[data-theme="dark"] .juicerdocs-callout-warning {
+
+[data-theme=dark] .juicerdocs-callout-warning {
   --callout-accent: #facc15;
-  --callout-bg:     rgba(202,138,4,0.10);
+  --callout-bg: rgba(202,138,4,0.10);
   --callout-border: rgba(202,138,4,0.35);
 }
 
 .juicerdocs-callout-danger {
   --callout-accent: #dc2626;
-  --callout-bg:     #fef2f2;
+  --callout-bg: #fef2f2;
   --callout-border: #fecaca;
-  --callout-icon:   url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'/></svg>");
+  --callout-icon: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'/></svg>");
 }
-[data-theme="dark"] .juicerdocs-callout-danger {
+
+[data-theme=dark] .juicerdocs-callout-danger {
   --callout-accent: #f87171;
-  --callout-bg:     rgba(220,38,38,0.10);
+  --callout-bg: rgba(220,38,38,0.10);
   --callout-border: rgba(220,38,38,0.35);
 }
 
-
 /* ----- Steps ----- */
-
 .juicerdocs-steps {
   margin: 2rem 0;
   counter-reset: jd-step;
 }
+
 .juicerdocs-steps > ol {
   list-style: none;
   margin: 0;
   padding: 0;
 }
+
 .juicerdocs-steps > ol > li {
   position: relative;
   padding-left: 3rem;
@@ -1415,10 +1639,12 @@ hr {
   margin-left: 1rem;
   counter-increment: jd-step;
 }
+
 .juicerdocs-steps > ol > li:last-child {
   border-left-color: transparent;
   padding-bottom: 0;
 }
+
 .juicerdocs-steps > ol > li::before {
   content: counter(jd-step);
   position: absolute;
@@ -1435,11 +1661,12 @@ hr {
   font-weight: 600;
   font-size: 0.875rem;
 }
-[data-theme="dark"] .juicerdocs-steps > ol > li::before { color: #0a0a0a; }
 
+[data-theme=dark] .juicerdocs-steps > ol > li::before {
+  color: #0a0a0a;
+}
 
 /* ----- Tabs ----- */
-
 .juicerdocs-tabs {
   margin: 1.5rem 0;
   border: 1px solid var(--border);
@@ -1447,6 +1674,7 @@ hr {
   overflow: hidden;
   background: var(--surface-2);
 }
+
 .juicerdocs-tabs-bar {
   display: flex;
   gap: 0.25rem;
@@ -1454,6 +1682,7 @@ hr {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
+
 .juicerdocs-tabs-button {
   padding: 0.5rem 0.875rem;
   font-size: 0.875rem;
@@ -1466,20 +1695,26 @@ hr {
   cursor: pointer;
   transition: color 0.1s, border-color 0.1s;
 }
-.juicerdocs-tabs-button:hover { color: var(--fg); }
+
+.juicerdocs-tabs-button:hover {
+  color: var(--fg);
+}
+
 .juicerdocs-tabs-button.is-active {
   color: var(--brand);
   border-bottom-color: var(--brand);
 }
+
 .juicerdocs-tab-panel {
   padding: 1rem 1.25rem;
   display: none;
 }
-.juicerdocs-tab-panel.is-active { display: block; }
 
+.juicerdocs-tab-panel.is-active {
+  display: block;
+}
 
 /* ----- Filetree ----- */
-
 .juicerdocs-filetree {
   margin: 1.5rem 0;
   padding: 1rem 1.25rem;
@@ -1494,9 +1729,7 @@ hr {
   overflow-x: auto;
 }
 
-
 /* ----- kbd ----- */
-
 .juicerdocs-kbd {
   display: inline-block;
   padding: 0.125rem 0.375rem;
@@ -1509,15 +1742,14 @@ hr {
   border-radius: var(--radius-sm);
 }
 
-
 /* ----- Collapse ----- */
-
 .juicerdocs-collapse {
   margin: 1rem 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface-2);
 }
+
 .juicerdocs-collapse > summary {
   cursor: pointer;
   padding: 0.625rem 1rem;
@@ -1529,37 +1761,55 @@ hr {
   align-items: center;
   gap: 0.5rem;
 }
-.juicerdocs-collapse > summary::-webkit-details-marker { display: none; }
+
+.juicerdocs-collapse > summary::-webkit-details-marker {
+  display: none;
+}
+
 .juicerdocs-collapse > summary::before {
   content: "";
   width: 0.75rem;
   height: 0.75rem;
   background-color: currentColor;
   -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M9 6 15 12 9 18Z'/></svg>");
-          mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M9 6 15 12 9 18Z'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M9 6 15 12 9 18Z'/></svg>");
   -webkit-mask-size: contain;
-          mask-size: contain;
+  mask-size: contain;
   -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   -webkit-mask-position: center;
-          mask-position: center;
+  mask-position: center;
   transition: transform 0.2s;
 }
-.juicerdocs-collapse[open] > summary::before { transform: rotate(90deg); }
-.juicerdocs-collapse > summary:hover { background: var(--surface); }
-.juicerdocs-collapse[open] > summary { border-bottom: 1px solid var(--border); }
+
+.juicerdocs-collapse[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.juicerdocs-collapse > summary:hover {
+  background: var(--surface);
+}
+
+.juicerdocs-collapse[open] > summary {
+  border-bottom: 1px solid var(--border);
+}
+
 .juicerdocs-collapse-body {
   padding: 0.75rem 1rem;
   font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--fg-soft);
 }
-.juicerdocs-collapse-body > *:first-child { margin-top: 0; }
-.juicerdocs-collapse-body > *:last-child  { margin-bottom: 0; }
 
+.juicerdocs-collapse-body > *:first-child {
+  margin-top: 0;
+}
+
+.juicerdocs-collapse-body > *:last-child {
+  margin-bottom: 0;
+}
 
 /* ----- Badge ----- */
-
 .juicerdocs-badge {
   display: inline-flex;
   align-items: center;
@@ -1571,17 +1821,17 @@ hr {
   color: var(--brand);
 }
 
-
 /* ----- Figure ----- */
-
 .juicerdocs-figure {
   margin: 1.5rem 0;
 }
+
 .juicerdocs-figure img {
   width: 100%;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
 }
+
 .juicerdocs-figure figcaption {
   margin-top: 0.5rem;
   font-size: 0.875rem;
@@ -1589,16 +1839,15 @@ hr {
   text-align: center;
 }
 
-
 /* ----- YouTube ----- */
-
 .juicerdocs-youtube {
   margin: 1.5rem 0;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16/9;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border);
 }
+
 .juicerdocs-youtube iframe {
   width: 100%;
   height: 100%;
@@ -1606,9 +1855,7 @@ hr {
   display: block;
 }
 
-
 /* ----- GitHub repo card ----- */
-
 .juicerdocs-github {
   display: flex;
   align-items: center;
@@ -1622,17 +1869,25 @@ hr {
   text-decoration: none;
   transition: border-color 0.15s, transform 0.15s;
 }
+
 .juicerdocs-github:hover {
   border-color: var(--brand);
   transform: translateY(-2px);
   text-decoration: none;
 }
-.juicerdocs-github svg { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
+
+.juicerdocs-github svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
 .juicerdocs-github-body {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
+
 .juicerdocs-github-name {
   font-weight: 600;
   color: var(--fg);
@@ -1640,14 +1895,13 @@ hr {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .juicerdocs-github-sub {
   font-size: 0.75rem;
   color: var(--muted);
 }
 
-
 /* ----- Buttons row ----- */
-
 .juicerdocs-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -1655,13 +1909,10 @@ hr {
   margin: 1.5rem 0;
 }
 
-
 /* ============================================================
  * 12. JS-driven state
  * ============================================================ */
-
 /* ----- Code block "copy" buttons ----- */
-
 .juicerdocs-copy {
   position: absolute;
   top: 0.375rem;
@@ -1671,26 +1922,29 @@ hr {
   font-family: var(--font-sans);
   border-radius: var(--radius-sm);
   color: var(--muted);
-  background: rgb(from var(--fg) r g b / 0.08);
-  border: 1px solid rgb(from var(--fg) r g b / 0.12);
+  background: rgb(from var(--fg) r g b/0.08);
+  border: 1px solid rgb(from var(--fg) r g b/0.12);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s, color 0.15s, background 0.15s;
 }
+
 .juicerdocs-content pre:hover .juicerdocs-copy,
-.juicerdocs-copy:focus-visible { opacity: 1; }
+.juicerdocs-copy:focus-visible {
+  opacity: 1;
+}
+
 .juicerdocs-copy:hover {
   color: var(--fg);
-  background: rgb(from var(--fg) r g b / 0.16);
+  background: rgb(from var(--fg) r g b/0.16);
 }
+
 .juicerdocs-copy.is-copied {
   color: var(--leaf);
   opacity: 1;
 }
 
-
 /* ----- Mobile sidebar overlay ----- */
-
 .juicerdocs-sidebar-backdrop {
   display: none;
   position: fixed;
@@ -1700,7 +1954,7 @@ hr {
 }
 
 @media (max-width: 1023px) {
-  body[data-sidebar-open="true"] .juicerdocs-sidebar-aside {
+  body[data-sidebar-open=true] .juicerdocs-sidebar-aside {
     display: block;
     position: fixed;
     top: var(--topbar-h);
@@ -1713,16 +1967,13 @@ hr {
     background: var(--bg);
     box-shadow: var(--shadow-lg);
   }
-  body[data-sidebar-open="true"] .juicerdocs-sidebar-backdrop {
+  body[data-sidebar-open=true] .juicerdocs-sidebar-backdrop {
     display: block;
   }
 }
-
-
 /* ============================================================
  * 13. 404
  * ============================================================ */
-
 .juicerdocs-404 {
   min-height: 100vh;
   display: flex;
@@ -1731,34 +1982,39 @@ hr {
   padding: 2rem 1rem;
   text-align: center;
 }
-.juicerdocs-404-inner { max-width: 24rem; }
+
+.juicerdocs-404-inner {
+  max-width: 24rem;
+}
+
 .juicerdocs-404-logo {
   width: 5rem;
   height: 5rem;
   margin: 0 auto 1.5rem;
   opacity: 0.9;
 }
+
 .juicerdocs-404-title {
   margin: 0 0 0.5rem 0;
   font-size: 3rem;
   font-weight: 700;
   color: var(--fg);
 }
+
 .juicerdocs-404-msg {
   margin: 0 0 2rem 0;
   font-size: 1.125rem;
   color: var(--muted);
 }
 
-
 /* ============================================================
  * 14. Footer
  * ============================================================ */
-
 .juicerdocs-footer {
   margin-top: 4rem;
   border-top: 1px solid var(--border);
 }
+
 .juicerdocs-footer-inner {
   max-width: var(--site-max);
   margin: 0 auto;
@@ -1769,22 +2025,40 @@ hr {
   font-size: 0.875rem;
   color: var(--muted);
 }
+
 @media (min-width: 640px) {
   .juicerdocs-footer-inner {
     flex-direction: row;
     justify-content: space-between;
   }
 }
-.juicerdocs-footer p { margin: 0; }
-.juicerdocs-footer a { color: var(--brand); }
-.juicerdocs-footer a:hover { text-decoration: underline; }
+.juicerdocs-footer p {
+  margin: 0;
+}
 
+.juicerdocs-footer a {
+  color: var(--brand);
+}
+
+.juicerdocs-footer a:hover {
+  text-decoration: underline;
+}
 
 /* ============================================================
  * 15. Misc text utilities (used outside .juicerdocs-content)
  * ============================================================ */
+.juicerdocs-text-muted {
+  color: var(--muted);
+}
 
-.juicerdocs-text-muted { color: var(--muted); }
-.juicerdocs-text-soft  { color: var(--fg-soft); }
-.juicerdocs-text-brand { color: var(--brand); }
-.juicerdocs-mono       { font-family: var(--font-mono); }
+.juicerdocs-text-soft {
+  color: var(--fg-soft);
+}
+
+.juicerdocs-text-brand {
+  color: var(--brand);
+}
+
+.juicerdocs-mono {
+  font-family: var(--font-mono);
+}
