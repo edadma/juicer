@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Not found — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerwiki.css' }}">
+  <!-- 404 / tag-list / tag-page are rendered without going through
+       baseof, so they need their own <head> + topbar + footer. -->
+</head>
+<body>
+  <div class="juicerwiki-page">
+    <header class="juicerwiki-topbar">
+      <div class="juicerwiki-topbar-inner">
+        <a class="juicerwiki-brand" href="{{ relURL '/' }}">
+          <span class="juicerwiki-brand-name">{{ .site.title }}</span>
+        </a>
+      </div>
+    </header>
+    <main class="juicerwiki-main">
+      <article class="juicerwiki-note juicerwiki-404">
+        <h1 class="juicerwiki-note-title">Not found</h1>
+        <p>That note doesn't exist. <a href="{{ relURL '/' }}">Back to the index</a>.</p>
+      </article>
+    </main>
+    <footer class="juicerwiki-footer">
+      <div class="juicerwiki-footer-inner">
+        <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

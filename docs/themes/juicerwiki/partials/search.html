@@ -1,0 +1,87 @@
+<!-- Search modal — full-screen overlay with an input + results list.
+     Opens on click of the topbar trigger or Cmd/Ctrl-K. Fetches
+     /search.json lazily on first open. Filters by substring match
+     against title + body content. -->
+<div class="juicerwiki-search-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="Search">
+  <div class="juicerwiki-search-modal-inner">
+    <div class="juicerwiki-search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="juicerwiki-search-input" type="text" placeholder="Search notes…" autocomplete="off" />
+      <button class="juicerwiki-search-close" type="button" aria-label="Close">Esc</button>
+    </div>
+    <ul class="juicerwiki-search-results" role="listbox"></ul>
+    <p class="juicerwiki-search-empty" hidden>No matches.</p>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var modal = document.querySelector('.juicerwiki-search-modal');
+    var trigger = document.querySelector('.juicerwiki-search-trigger');
+    var input = modal && modal.querySelector('.juicerwiki-search-input');
+    var results = modal && modal.querySelector('.juicerwiki-search-results');
+    var empty = modal && modal.querySelector('.juicerwiki-search-empty');
+    var closeBtn = modal && modal.querySelector('.juicerwiki-search-close');
+    if (!modal || !trigger || !input) return;
+
+    var index = null;
+    var loading = false;
+
+    function open() {
+      modal.hidden = false;
+      modal.setAttribute('aria-hidden', 'false');
+      setTimeout(function () { input.focus(); input.select(); }, 0);
+      if (!index && !loading) loadIndex();
+    }
+    function close() {
+      modal.hidden = true;
+      modal.setAttribute('aria-hidden', 'true');
+      input.value = '';
+      render([]);
+    }
+    function loadIndex() {
+      loading = true;
+      fetch('{{ relURL '/search.json' }}', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) { index = data; runQuery(); })
+        .catch(function () { loading = false; });
+    }
+    function runQuery() {
+      if (!index) return;
+      var q = input.value.trim().toLowerCase();
+      if (!q) { render([]); return; }
+      var hits = [];
+      for (var i = 0; i < index.length && hits.length < 20; i++) {
+        var e = index[i];
+        var hay = (e.title + ' ' + (e.summary || '') + ' ' + (e.content || '')).toLowerCase();
+        if (hay.indexOf(q) !== -1) hits.push(e);
+      }
+      render(hits);
+    }
+    function render(hits) {
+      results.innerHTML = '';
+      empty.hidden = !(input.value.trim() && hits.length === 0);
+      hits.forEach(function (e) {
+        var li = document.createElement('li');
+        li.className = 'juicerwiki-search-result';
+        var a = document.createElement('a');
+        a.className = 'juicerwiki-search-result-link';
+        a.href = e.url;
+        a.innerHTML = '<span class="juicerwiki-search-result-title"></span><span class="juicerwiki-search-result-summary"></span>';
+        a.querySelector('.juicerwiki-search-result-title').textContent = e.title || e.url;
+        a.querySelector('.juicerwiki-search-result-summary').textContent = e.summary || '';
+        li.appendChild(a);
+        results.appendChild(li);
+      });
+    }
+
+    trigger.addEventListener('click', open);
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+    input.addEventListener('input', runQuery);
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); open(); }
+      if (e.key === 'Escape' && !modal.hidden) close();
+    });
+  })();
+</script>

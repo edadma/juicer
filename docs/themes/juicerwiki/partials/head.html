@@ -1,0 +1,42 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{{ if .page.title }}{{ if .page.title = .site.title }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ else }}<title>{{ .page.title }} — {{ .site.title }}</title>{{ end }}{{ else }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ end }}
+{{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
+
+{{ partial 'seo' . }}
+
+<script>
+  (function() {
+    try {
+      var stored = localStorage.getItem('juicerwiki-theme');
+      var dark = stored
+        ? stored === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    } catch (e) {}
+  })();
+</script>
+
+<link rel="stylesheet" href="{{ relURL '/juicerwiki.css' }}">
+
+{{ if .site.customCSS }}{{ for css <- .site.customCSS }}<link rel="stylesheet" href="{{ relURL css }}">
+{{ end }}{{ end }}
+
+{{ if .site.juicerwiki }}
+<style>
+  :root {
+    {{ if .site.juicerwiki.brand }}--brand: {{ .site.juicerwiki.brand }};{{ end }}
+    {{ if .site.juicerwiki.brandStrong }}--brand-strong: {{ .site.juicerwiki.brandStrong }};{{ end }}
+    {{ if .site.juicerwiki.brandSoft }}--brand-soft: {{ .site.juicerwiki.brandSoft }};{{ end }}
+    {{ if .site.juicerwiki.accent }}--accent: {{ .site.juicerwiki.accent }};{{ end }}
+    {{ if .site.juicerwiki.fontSans }}--font-sans: {{ .site.juicerwiki.fontSans }};{{ end }}
+    {{ if .site.juicerwiki.fontSerif }}--font-serif: {{ .site.juicerwiki.fontSerif }};{{ end }}
+    {{ if .site.juicerwiki.fontMono }}--font-mono: {{ .site.juicerwiki.fontMono }};{{ end }}
+  }
+  [data-theme="dark"] {
+    {{ if .site.juicerwiki.brandDark }}--brand: {{ .site.juicerwiki.brandDark }};{{ end }}
+    {{ if .site.juicerwiki.brandStrongDark }}--brand-strong: {{ .site.juicerwiki.brandStrongDark }};{{ end }}
+    {{ if .site.juicerwiki.accentDark }}--accent: {{ .site.juicerwiki.accentDark }};{{ end }}
+  }
+</style>
+{{ end }}

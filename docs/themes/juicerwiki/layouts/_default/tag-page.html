@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#{{ .term.name }} — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerwiki.css' }}">
+  <!-- tag-list / tag-page / 404 bypass baseof — keep the chrome
+       inlined here. The layout receives `.term` (the Term record),
+       not `.page.tag`. -->
+</head>
+<body>
+  <div class="juicerwiki-page">
+    <header class="juicerwiki-topbar">
+      <div class="juicerwiki-topbar-inner">
+        <a class="juicerwiki-brand" href="{{ relURL '/' }}">
+          <span class="juicerwiki-brand-name">{{ .site.title }}</span>
+          {{ if .site.tagline }}<span class="juicerwiki-brand-tagline">{{ .site.tagline }}</span>{{ end }}
+        </a>
+        <nav class="juicerwiki-nav" aria-label="Main">
+          <a href="{{ relURL '/' }}">Home</a>
+          <a href="{{ relURL '/tags/' }}">Tags</a>
+        </nav>
+      </div>
+    </header>
+    <main class="juicerwiki-main">
+      <article class="juicerwiki-note">
+        <header class="juicerwiki-note-head">
+          <h1 class="juicerwiki-note-title">#{{ .term.name }}</h1>
+          <p class="juicerwiki-note-meta">{{ .term.count }} notes</p>
+          <p class="juicerwiki-note-summary"><a href="{{ relURL '/tags/' }}">← All tags</a></p>
+        </header>
+        {{ if .term.pages }}
+        <ol class="juicerwiki-notelist">
+          {{ for p <- .term.pages }}
+          <li class="juicerwiki-notelist-item">
+            <h3 class="juicerwiki-notelist-title">
+              <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+            </h3>
+            {{ if p.dateLong }}<p class="juicerwiki-notelist-meta"><time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time></p>{{ end }}
+            {{ if p.summary }}<p class="juicerwiki-notelist-summary">{{ p.summary }}</p>{{ end }}
+          </li>
+          {{ end }}
+        </ol>
+        {{ end }}
+      </article>
+    </main>
+    <footer class="juicerwiki-footer">
+      <div class="juicerwiki-footer-inner">
+        <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

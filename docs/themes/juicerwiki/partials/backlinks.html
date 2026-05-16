@@ -1,0 +1,16 @@
+{{ // backlinks partial — renders the "Linked from" panel under a
+   // note. Empty when no other page links here. Each row carries the
+   // referrer title + short summary; clicking jumps to the source. }}
+{{ if .page.backlinks }}
+<aside class="juicerwiki-backlinks" aria-labelledby="juicerwiki-backlinks-h">
+  <h2 id="juicerwiki-backlinks-h" class="juicerwiki-backlinks-title">Linked from</h2>
+  <ul class="juicerwiki-backlinks-list">
+    {{ for bl <- .page.backlinks }}
+    <li class="juicerwiki-backlinks-item">
+      <a class="juicerwiki-backlinks-link" href="{{ bl.url }}">{{ bl.title }}</a>
+      {{ if bl.summary }}<p class="juicerwiki-backlinks-summary">{{ bl.summary }}</p>{{ end }}
+    </li>
+    {{ end }}
+  </ul>
+</aside>
+{{ end }}

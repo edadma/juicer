@@ -1,0 +1,39 @@
+<!-- Wiki JSON-LD: WebSite on the root, Article on notes with a date,
+     BreadcrumbList on the rare nested page. -->
+{{ if not .page.noindex }}
+{{ if .page.isSection and not .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "{{ jsonStr .site.title }}",
+  "url": "{{ relURL '/' }}"{{ if .site.description }},
+  "description": "{{ jsonStr .site.description }}"{{ end }}
+}
+</script>
+{{ else }}{{ if .page.dateISO }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ jsonStr .page.title }}",
+  "url": "{{ jsonStr .page.permalink }}",
+  "datePublished": "{{ jsonStr .page.dateISO }}"{{ if .page.summary }},
+  "description": "{{ jsonStr .page.summary }}"{{ end }}{{ if .page.author }}{{ if .page.author.name }},
+  "author": { "@type": "Person", "name": "{{ jsonStr .page.author.name }}" }{{ end }}{{ end }}
+}
+</script>
+{{ end }}{{ end }}
+{{ if .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{ for a, i <- .page.ancestors }}{ "@type": "ListItem", "position": {{ i + 1 }}, "name": "{{ jsonStr a.title }}", "item": "{{ jsonStr a.permalink }}" },
+    {{ end }}{ "@type": "ListItem", "position": {{ (.page.ancestors | length) + 1 }}, "name": "{{ jsonStr .page.title }}", "item": "{{ jsonStr .page.permalink }}" }
+  ]
+}
+</script>
+{{ end }}
+{{ end }}
