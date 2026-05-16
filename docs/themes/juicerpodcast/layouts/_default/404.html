@@ -4,23 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Not found — {{ .site.title }}</title>
+  {{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
+
+  <script>
+    (function() {
+      try {
+        var stored = localStorage.getItem('juicerpodcast-theme');
+        var dark = stored
+          ? stored === 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      } catch (e) {}
+    })();
+  </script>
+
   <link rel="stylesheet" href="{{ relURL '/juicerpodcast.css' }}">
+
+  {{ if .site.juicerpodcast }}
+  <style>
+    :root {
+      {{ if .site.juicerpodcast.brand }}--brand: {{ .site.juicerpodcast.brand }};{{ end }}
+      {{ if .site.juicerpodcast.accent }}--accent: {{ .site.juicerpodcast.accent }};{{ end }}
+    }
+    [data-theme="dark"] {
+      {{ if .site.juicerpodcast.brandDark }}--brand: {{ .site.juicerpodcast.brandDark }};{{ end }}
+      {{ if .site.juicerpodcast.accentDark }}--accent: {{ .site.juicerpodcast.accentDark }};{{ end }}
+    }
+  </style>
+  {{ end }}
 </head>
 <body>
   <div class="juicerpodcast-page">
-    <header class="juicerpodcast-topbar">
-      <div class="juicerpodcast-topbar-inner">
-        <a class="juicerpodcast-brand" href="{{ relURL '/' }}">
-          <span class="juicerpodcast-brand-name">{{ .site.title }}</span>
-        </a>
-      </div>
-    </header>
+    {{ partial 'topbar' . }}
     <main class="juicerpodcast-main">
       <article class="juicerpodcast-section juicerpodcast-404">
         <h1>Episode not found</h1>
         <p>That episode isn't here. <a href="{{ relURL '/' }}">Browse the feed</a>.</p>
       </article>
     </main>
+    {{ partial 'footer' . }}
   </div>
 </body>
 </html>

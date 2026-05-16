@@ -4,17 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tags — {{ .site.title }}</title>
+  {{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
+
+  <!-- tag-list / tag-page / 404 bypass baseof, so the pre-paint theme
+       script + site palette overrides are inlined here. -->
+  <script>
+    (function() {
+      try {
+        var stored = localStorage.getItem('juicerpodcast-theme');
+        var dark = stored
+          ? stored === 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      } catch (e) {}
+    })();
+  </script>
+
   <link rel="stylesheet" href="{{ relURL '/juicerpodcast.css' }}">
+
+  {{ if .site.juicerpodcast }}
+  <style>
+    :root {
+      {{ if .site.juicerpodcast.brand }}--brand: {{ .site.juicerpodcast.brand }};{{ end }}
+      {{ if .site.juicerpodcast.brandStrong }}--brand-strong: {{ .site.juicerpodcast.brandStrong }};{{ end }}
+      {{ if .site.juicerpodcast.brandSoft }}--brand-soft: {{ .site.juicerpodcast.brandSoft }};{{ end }}
+      {{ if .site.juicerpodcast.accent }}--accent: {{ .site.juicerpodcast.accent }};{{ end }}
+      {{ if .site.juicerpodcast.fontSans }}--font-sans: {{ .site.juicerpodcast.fontSans }};{{ end }}
+      {{ if .site.juicerpodcast.fontSerif }}--font-serif: {{ .site.juicerpodcast.fontSerif }};{{ end }}
+    }
+    [data-theme="dark"] {
+      {{ if .site.juicerpodcast.brandDark }}--brand: {{ .site.juicerpodcast.brandDark }};{{ end }}
+      {{ if .site.juicerpodcast.accentDark }}--accent: {{ .site.juicerpodcast.accentDark }};{{ end }}
+    }
+  </style>
+  {{ end }}
 </head>
 <body>
   <div class="juicerpodcast-page">
-    <header class="juicerpodcast-topbar">
-      <div class="juicerpodcast-topbar-inner">
-        <a class="juicerpodcast-brand" href="{{ relURL '/' }}">
-          <span class="juicerpodcast-brand-name">{{ .site.title }}</span>
-        </a>
-      </div>
-    </header>
+    {{ partial 'topbar' . }}
     <main class="juicerpodcast-main">
       <article class="juicerpodcast-section">
         <header class="juicerpodcast-section-head">
@@ -30,11 +57,7 @@
         {{ end }}
       </article>
     </main>
-    <footer class="juicerpodcast-footer">
-      <div class="juicerpodcast-footer-inner">
-        <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
-      </div>
-    </footer>
+    {{ partial 'footer' . }}
   </div>
 </body>
 </html>

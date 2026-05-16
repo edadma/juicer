@@ -4,30 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Not found — {{ .site.title }}</title>
+  {{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
+
+  <script>
+    (function() {
+      try {
+        var stored = localStorage.getItem('juicerwiki-theme');
+        var dark = stored
+          ? stored === 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      } catch (e) {}
+    })();
+  </script>
+
   <link rel="stylesheet" href="{{ relURL '/juicerwiki.css' }}">
-  <!-- 404 / tag-list / tag-page are rendered without going through
-       baseof, so they need their own <head> + topbar + footer. -->
+
+  {{ if .site.juicerwiki }}
+  <style>
+    :root {
+      {{ if .site.juicerwiki.brand }}--brand: {{ .site.juicerwiki.brand }};{{ end }}
+      {{ if .site.juicerwiki.accent }}--accent: {{ .site.juicerwiki.accent }};{{ end }}
+    }
+    [data-theme="dark"] {
+      {{ if .site.juicerwiki.brandDark }}--brand: {{ .site.juicerwiki.brandDark }};{{ end }}
+      {{ if .site.juicerwiki.accentDark }}--accent: {{ .site.juicerwiki.accentDark }};{{ end }}
+    }
+  </style>
+  {{ end }}
 </head>
 <body>
   <div class="juicerwiki-page">
-    <header class="juicerwiki-topbar">
-      <div class="juicerwiki-topbar-inner">
-        <a class="juicerwiki-brand" href="{{ relURL '/' }}">
-          <span class="juicerwiki-brand-name">{{ .site.title }}</span>
-        </a>
-      </div>
-    </header>
+    {{ partial 'topbar' . }}
     <main class="juicerwiki-main">
       <article class="juicerwiki-note juicerwiki-404">
         <h1 class="juicerwiki-note-title">Not found</h1>
         <p>That note doesn't exist. <a href="{{ relURL '/' }}">Back to the index</a>.</p>
       </article>
     </main>
-    <footer class="juicerwiki-footer">
-      <div class="juicerwiki-footer-inner">
-        <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
-      </div>
-    </footer>
+    {{ partial 'footer' . }}
   </div>
+  {{ partial 'search' . }}
 </body>
 </html>
