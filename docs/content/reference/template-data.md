@@ -332,6 +332,7 @@ The current page's enriched record:
 | `.page.series`         | `Map?`    | Series block — `null` when the page is not in a series (see below) |
 | `.page.author`         | `Map?`    | First (or only) resolved author registry record, or `null` |
 | `.page.authors`        | `List[Map]` | All resolved author records — empty list when none |
+| `.page.backlinks`      | `List[Map]` | Thin `{title, url, summary}` records for every page that links *to* this one — empty list when nothing points here (see below) |
 | `.page.<custom>`       | varies    | Any frontmatter key |
 
 ### `.page.series` shape
@@ -356,6 +357,46 @@ For section index pages (where `.page.isSection` is `true`), additionally:
 |----------------------|-------------|------|
 | `.page.pages`        | `List[Map]` | Non-`_index` siblings, sorted |
 | `.page.subsections`  | `List[Map]` | Direct child sections, sorted |
+
+### `.page.backlinks` shape
+
+A list of thin records — one per page that contains an internal link
+pointing at the current page's permalink. Sorted by referrer title for
+deterministic rendering.
+
+| Key       | Type     | What |
+|-----------|----------|------|
+| `title`   | `String` | Referrer's frontmatter title (or URL if title absent) |
+| `url`     | `String` | Referrer's site-relative URL |
+| `summary` | `String` | Referrer's resolved summary |
+
+Templates that need a richer referrer record (tags, date, author, etc.)
+look it up via `.site.pagesByPath[bl.url]` — keeping the embedded
+records thin avoids cycles when two pages link each other.
+
+The inverted index is built during the markdown pass from each page's
+AST link destinations. Filtered out at collection time: absolute URLs
+(`https://…`, `mailto:`, `tel:`), fragment-only anchors (`#section`),
+and self-links. Query strings and fragments are stripped before
+matching, so `[X](/target/#section)` and `[X](/target/?q=1)` both count
+as a link to `/target/`. Lists, tables, definition lists, footnote
+definitions, blockquotes, and list items are all walked — anywhere an
+author can drop a `[text](url)` in markdown, it counts.
+
+Wiki-style "Linked from" footer in a layout:
+
+```squiggly
+{{ if .page.backlinks }}
+  <aside class="backlinks">
+    <h2>Linked from</h2>
+    <ul>
+      {{ for bl <- .page.backlinks }}
+        <li><a href="{{ bl.url }}">{{ bl.title }}</a>{{ if bl.summary }} — {{ bl.summary }}{{ end }}</li>
+      {{ end }}
+    </ul>
+  </aside>
+{{ end }}
+```
 
 ## `.section`
 
