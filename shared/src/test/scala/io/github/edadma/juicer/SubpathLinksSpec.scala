@@ -115,6 +115,37 @@ class SubpathLinksSpec extends AnyFlatSpec with Matchers with JuicerTestSupport 
     out("index.html") should include("href=\"/foo/there/\"")
   }
 
+  it should "prefix links inside a markdownify'd template string" in {
+    // Hero summaries and similar template-rendered markdown go through
+    // the `markdownify` template function, not the content-file pipeline.
+    // Without explicit handling in markdownify, those links would skip
+    // the baseURL.path prefix and 404 on a subpath deploy.
+    writeAt("site.toml", Site)
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: Home
+        |summary: See [Reference](/reference/opcodes/) for details.
+        |---
+        |
+        |body
+        |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      """<p class="summary">{{ markdownify .page.summary }}</p>
+        |<body>{{ .content }}</body>
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", MinimalLayout)
+
+    build()
+
+    val html = out("index.html")
+    html should include("href=\"/foo/reference/opcodes/\"")
+    html should not include "href=\"/reference/opcodes/\""
+  }
+
   it should "leave absolute http(s) URLs alone" in {
     writeAt("site.toml", Site)
     writeAt(

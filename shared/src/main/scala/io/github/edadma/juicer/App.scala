@@ -2631,11 +2631,24 @@ object App {
       ),
       // Render a markdown string to HTML directly, for templates that want
       // to mix markdown into a layout without going through a content file.
+      // Root-relative `/foo/` links are rewritten through `baseURL.path`
+      // the same way they are for content files — without this, a link in
+      // a markdownify'd hero summary on a subpath deploy would 404.
       "markdownify" -> TemplateFunction(
         "markdownify",
         1,
         { case (con, Seq(s: String)) =>
-          io.github.edadma.markdown.renderToHTML(parseMarkdown(s, mdConfig), mdConfig).trim
+          val base = baseFromContext(con)
+          val callback: String => String = (url: String) =>
+            if (absoluteURL(url)) url
+            else {
+              val basePath = if (base.path.endsWith("/")) base.path.dropRight(1) else base.path
+              val tail     = if (url.startsWith("/")) url else "/" + url
+              basePath + tail
+            }
+          val raw         = parseMarkdown(s, mdConfig)
+          val transformed = transformLinks(raw, callback)
+          io.github.edadma.markdown.renderToHTML(transformed, mdConfig).trim
         },
       ),
       // `jsonStr` and `emojify` moved to squiggly's TemplateBuiltin
