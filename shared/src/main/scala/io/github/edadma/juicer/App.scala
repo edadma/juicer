@@ -322,6 +322,16 @@ object App {
         renderer   = templateRenderer,
       )
 
+    // Outgoing-link inverted index, built as the markdown pass scans
+    // each file. The map's key is the source ContentFile; the value is
+    // the set of internal link destinations that file references —
+    // site-absolute, with absolute URLs (`http://`, `mailto:`, etc.)
+    // and fragment-only anchors (`#…`) filtered out at collection
+    // time. `buildBasic` inverts this to produce each page's
+    // `.page.backlinks` list.
+    val outLinksPerFile: scala.collection.mutable.HashMap[ContentFile, Set[String]] =
+      scala.collection.mutable.HashMap.empty
+
     // Markdown render pass: parse each content file's source, build the TOC,
     // produce the rendered HTML body, and compute a summary. Heading levels
     // and link destinations are pre-transformed at the AST level so the
@@ -333,6 +343,7 @@ object App {
       val raw = parseMarkdown(preprocessor.process(c.source), siteMarkdownConfig)
       val doc = transformLinks(shiftHeadings(raw, by = conf.int.headingShift), linkCallback)
 
+      outLinksPerFile(c) = collectLinkTargets(raw)
       c.toc = buildToc(doc)
       c.content = io.github.edadma.markdown.renderToHTML(doc, siteMarkdownConfig).trim
       c.summary = computeSummary(c, doc, preprocessor, linkCallback, siteMarkdownConfig)
@@ -817,6 +828,29 @@ object App {
       * `isSection` always overwrite so authors can't accidentally shadow
       * them.
       */
+    /** Build the thin record entries for `.page.backlinks` — every page
+      * that links to `target`'s permalink. Returns `{title, url,
+      * summary}` per source page (no nested fields, so we don't
+      * recurse into the source's own backlinks). Sources are sorted by
+      * title for deterministic output. */
+    def backlinksFor(target: ContentFile): List[Map[String, Any]] = {
+      val targetUrl = relPermalinkFor(target)
+      val rows = outLinksPerFile.iterator.flatMap {
+        case (src, outs) if (src ne target) && outs.contains(targetUrl) =>
+          val fm      = frontmatterMap(src.page)
+          val srcUrl  = relPermalinkFor(src)
+          val title   = fm.get("title").collect { case s: String => s }.getOrElse(srcUrl)
+          val summary = if (src.summary eq null) "" else src.summary
+          Some(Map[String, Any](
+            "title"   -> title,
+            "url"     -> srcUrl,
+            "summary" -> summary,
+          ))
+        case _ => None
+      }
+      rows.toList.sortBy(_("title").asInstanceOf[String])
+    }
+
     def buildBasic(c: ContentFile): Map[String, Any] = {
       val rel   = relPermalinkFor(c)
       val abs   = baseURL.base + rel
@@ -851,6 +885,13 @@ object App {
         // is always present (empty list when none).
         "author"       -> authors.headOption.orNull,
         "authors"      -> authors,
+        // Pages that link TO this one — `{title, url, summary}` per
+        // referrer. Empty list when nothing in the site links here.
+        // Records are thin so we don't recurse into the referrer's
+        // own backlinks (avoids cycles when two pages link each
+        // other). Templates that need richer referrer data can look
+        // up `.site.pagesByPath[bl.url]`.
+        "backlinks"    -> backlinksFor(c),
       )
       if (c.name == folderContent) {
         val info = sectionInfoByOutdir(c.outdir)
@@ -2819,6 +2860,67 @@ object App {
       case other                                   => other
     }
     Document(doc.children.map(shiftBlock))
+  }
+
+  /** Collect every internal link destination referenced in `doc`.
+    * Used to build the backlinks inverted index. Returns site-relative
+    * targets only — absolute URLs (`http://`, `mailto:`, `tel:`, …)
+    * and fragment-only anchors (`#…`) are filtered out. Query strings
+    * and fragments after the path are stripped so `[X](/foo/#bar)`
+    * matches `/foo/` cleanly.
+    *
+    * Walks the same block / inline shapes as [[transformLinks]] plus
+    * lists, tables, definition lists, and footnote definitions — any
+    * place an author might drop a `[text](url)`. Skips images
+    * (their `dest` is an image path, not a content reference). */
+  private def collectLinkTargets(doc: Document): Set[String] = {
+    import io.github.edadma.markdown._
+    val out = scala.collection.mutable.HashSet.empty[String]
+    def normalize(dest: String): Option[String] = {
+      val stripped = dest.takeWhile(c => c != '#' && c != '?').trim
+      if (stripped.isEmpty) None
+      else if (absoluteURL(stripped)) None
+      // `mailto:`, `tel:`, `javascript:`, `data:` etc. — anything with
+      // a scheme that isn't a relative path. The conservative check is
+      // a `:` before the first `/`.
+      else {
+        val slash = stripped.indexOf('/')
+        val colon = stripped.indexOf(':')
+        if (colon >= 0 && (slash < 0 || colon < slash)) None
+        else {
+          val rel = if (stripped.startsWith("./")) stripped.drop(2) else stripped
+          val abs = if (rel.startsWith("/")) rel else "/" + rel
+          Some(abs)
+        }
+      }
+    }
+    def goInline(i: Inline): Unit = i match {
+      case Link(dest, _, children) =>
+        normalize(dest).foreach(out.add)
+        children.foreach(goInline)
+      case Emphasis(c)      => c.foreach(goInline)
+      case Strong(c)        => c.foreach(goInline)
+      case Strikethrough(c) => c.foreach(goInline)
+      case _                => ()
+    }
+    def goBlock(b: Block): Unit = b match {
+      case Paragraph(inlines)         => inlines.foreach(goInline)
+      case h: Heading                 => h.inlines.foreach(goInline)
+      case BlockQuote(c)              => c.foreach(goBlock)
+      case ListBlock(_, items)        => items.foreach(it => it.content.foreach(goBlock))
+      case ListItem(c)                => c.foreach(goBlock)
+      case TableRow(cells)            => cells.foreach(_.content.foreach(goInline))
+      case TableCell(content)         => content.foreach(goInline)
+      case DefinitionListBlock(items) =>
+        items.foreach { case (term, defs) =>
+          term.foreach(goInline)
+          defs.foreach(goBlock)
+        }
+      case FootnoteDefinition(_, c) => c.foreach(goBlock)
+      case _                        => ()
+    }
+    doc.children.foreach(goBlock)
+    out.toSet
   }
 
   /** Apply `f` to every link / image destination in the document. */
