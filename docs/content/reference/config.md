@@ -271,6 +271,41 @@ config slot only. If a provider needs server-side state, that belongs in
 the provider's own infrastructure, not in juicer.
 [= /note =]
 
+## `[images]` — image variant generation
+
+Opt-in build-time generation of resized + reformatted image variants
+(`webp`, `avif`, etc.) for responsive `<picture>` / `<img srcset>`
+markup. The feature is **disabled by default** — sites that don't set
+this table build byte-identically to pre-`[images]` juicer.
+
+```toml
+[images]
+enabled  = true
+widths   = [320, 640, 960, 1280]
+formats  = ["webp", "original"]   # most-modern first; "original" passes through
+quality  = 80
+cacheDir = ".image-cache"          # under dst; variants land here
+```
+
+| Key        | Default                            | What |
+|------------|------------------------------------|------|
+| `enabled`  | `false`                            | Master switch. `false` → templates that call `imageVariants` get a passthrough-only set with no `<source>` rows. |
+| `widths`   | `[320, 640, 960, 1280]`            | Target widths in pixels. Widths ≥ the source's own width are dropped (no upscaling); the source's exact width is always included. |
+| `formats`  | `["webp", "original"]`             | Output formats in priority order. Known: `webp`, `avif`, `jpeg`, `png`, `original`. Unknown names are dropped. |
+| `quality`  | `80`                               | Encoder quality (1–100). Used for lossy formats; `png` ignores it. |
+| `cacheDir` | `".image-cache"`                   | Directory under `dst` where generated variants live. Content-hashed filenames mean re-runs on unchanged sources skip the encoder shell-out. |
+
+**Encoder.** Juicer shells out to ImageMagick (`magick`) — install with
+`brew install imagemagick` / `apt install imagemagick` /
+`dnf install ImageMagick`. When `magick` is not on PATH the build still
+succeeds, but `imageVariants` returns a passthrough-only set (a single
+advisory line prints to stderr). The Scala Native and Scala.js targets
+ship a stub backend; full variant generation is JVM-only today.
+
+Template side: see
+[Template syntax → `imageVariants` and `srcset`](../template-syntax/#imagevariants-and-srcset)
+for the helpers themes call.
+
 ## `[[authors]]` — author registry
 
 An array of tables describing the people who write posts on the site.

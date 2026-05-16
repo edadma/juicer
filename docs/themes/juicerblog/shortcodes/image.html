@@ -1,0 +1,42 @@
+{{ // image shortcode — emit a responsive <picture> wrapping a
+   //   resized + reformatted variant set for one source image.
+   //
+   // Usage in markdown content:
+   //
+   //   [= image src="/img/hero.jpg" alt="A sunset over the lake" /=]
+   //
+   // Optional named args:
+   //
+   //   sizes  — the `sizes` attribute for srcset, default
+   //            "(min-width: 800px) 50vw, 100vw"
+   //   class  — CSS class on the <img>
+   //
+   // When `[images] enabled = true` is set in site.toml AND ImageMagick
+   // is on PATH, the shortcode generates webp + original variants at
+   // the configured widths and emits one <source> per format. When the
+   // feature is off or the encoder is unavailable, it degrades cleanly
+   // to a plain <img> (still with width/height attributes from the
+   // header reader, so layout-shift is still pinned).
+   //
+   // Named args land in the shortcode template as bare top-level keys
+   // by squiggly's preprocessor convention — `.src`, `.alt`, etc. }}
+{{ v := imageVariants .src }}
+{{ s := .sizes }}
+{{ if not s }}{{ s = '(min-width: 800px) 50vw, 100vw' }}{{ end }}
+{{ if v.variants }}
+<picture>
+  {{ for src <- v.variants }}{{ if src.mime }}{{ if src.format != 'original' }}<source srcset="{{ src.url }}" type="{{ src.mime }}" />
+  {{ end }}{{ end }}{{ end }}<img src="{{ v.original }}"
+       {{ if v.originalWidth }}width="{{ v.originalWidth }}" height="{{ v.originalHeight }}"{{ end }}
+       sizes="{{ s }}"
+       alt="{{ .alt }}"
+       {{ if .class }}class="{{ .class }}"{{ end }}
+       loading="lazy" decoding="async" />
+</picture>
+{{ else }}
+<img src="{{ v.original }}"
+     {{ if v.originalWidth }}width="{{ v.originalWidth }}" height="{{ v.originalHeight }}"{{ end }}
+     alt="{{ .alt }}"
+     {{ if .class }}class="{{ .class }}"{{ end }}
+     loading="lazy" decoding="async" />
+{{ end }}
