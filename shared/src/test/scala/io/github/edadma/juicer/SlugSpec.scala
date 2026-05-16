@@ -1,10 +1,15 @@
 package io.github.edadma.juicer
 
+import io.github.edadma.squiggly.Slug.slugify
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 /** Tests for the slug helper (used by tags / categories / future series +
-  * permalinks) — extracted from JuicerBuildSpec for readability.
+  * permalinks) — extracted from JuicerBuildSpec for readability. The
+  * helper itself moved to squiggly's `Slug` object in squiggly 0.3.0;
+  * the tests stay in juicer as a regression guard against any future
+  * change that affects URL-slug behaviour at the juicer integration
+  * level.
   */
 class SlugSpec extends AnyFlatSpec with Matchers with JuicerTestSupport {
 
