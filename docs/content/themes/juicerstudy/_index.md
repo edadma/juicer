@@ -35,10 +35,24 @@ table of contents. The sidebar is the canonical browse surface.
 - **Light + dark mode** driven by `[data-theme="dark"]` overrides
   on CSS custom properties; pre-paint apply script in `<head>`
   prevents the white flash on dark.
-- **Author-driven section landings** (`folder.html`) — the layout
-  renders the page's frontmatter title + summary + body, nothing
-  more. The opt-in `\[= section-list =]` shortcode is available for
-  pages that want an explicit catalog of children.
+- **Root landing page with a hero** — the root `_index.md` opts into
+  a frontmatter-driven hero (set `heroTitle`, `heroHighlight`,
+  `heroSuffix` to render a gradient-highlighted headline) plus an
+  optional hero image (`heroImage:`, rendered responsive via
+  `imageVariants`), plus optional Start-reading / GitHub CTA
+  buttons, plus a card grid of top-level subsections. Same
+  enhancement pattern juicerdocs uses, adapted to the
+  reading-journal aesthetic.
+- **Author-driven non-root section landings** (`folder.html`) — for
+  nested sections, the layout renders the page's frontmatter title
+  + summary + body, plus an auto-generated card grid of child
+  subsections and a list of pieces. The opt-in
+  `\[= section-list =]` shortcode is still available for pages
+  that want a fully manual catalog of children.
+- **Responsive images via `imageVariants`** — the `figure`
+  shortcode now emits a `<picture>` with multi-width `srcset` when
+  `[images] enabled = true` is set. Hero images on the root
+  landing pull from the same pipeline.
 - **Optional KaTeX math** — set `math = true` under `[juicerstudy]`
   and `$inline$` / `$$display$$` math (plus `\( … \)` / `\[ … \]`)
   renders via KaTeX auto-render over CDN. Pinned to a recent major.

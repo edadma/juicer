@@ -980,6 +980,27 @@ hr {
   margin-top: 2rem;
 }
 
+/* Optional hero image — frontmatter `heroImage:` on the root _index.md.
+   Rendered with imageVariants for responsive delivery. */
+.juicerstudy-hero-figure {
+  margin: 3rem 0 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.juicerstudy-hero-figure img,
+.juicerstudy-hero-figure picture {
+  width: 100%;
+  display: block;
+}
+.juicerstudy-hero-figure figcaption {
+  padding: 0.6rem 1rem 0.8rem;
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+  font-style: italic;
+  background: var(--surface);
+}
+
 .juicerstudy-cards {
   display: grid;
   gap: 1rem;

@@ -1,6 +1,12 @@
 ---
 title: Marginalia
 splash: true
+heroTitle: A reader's
+heroHighlight: notebook
+heroSuffix: "."
+heroImage: /img/marginalia-hero.jpg
+heroImageAlt: Hand-written marginalia in an old book
+heroImageCaption: "Marginalia from Augustine's Confessions, anonymous 14th c."
 summary: Notes from the margins of books, written in the slow hours.
 ---
 
