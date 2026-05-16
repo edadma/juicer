@@ -6,15 +6,17 @@
    // visit to a long section. Renders titles + summaries + an optional
    // minute count. Subsections are listed if the page has them.
    //
-   // BLOCKED on juicer feature gap (2026-05-12): the Preprocessor that
-   // runs shortcodes builds its data map from positional args, named
-   // args, and inline content only — see
-   // shared/src/main/scala/io/github/edadma/juicer/Preprocessor.scala
-   // around line 25. It does not pass through `.page` or `.site`, so
-   // `{{ if .page.pages }}` here is always false at runtime and the
-   // shortcode silently renders to nothing. When juicer is updated to
-   // thread page context into shortcode rendering, this template and
-   // its CSS will start working with no changes. }}
+   // Invocation: this shortcode references `.page.pages` and
+   // `.page.subsections`, both of which are only available in juicer's
+   // DEFERRED shortcode pass. Call it with the `[~ ... ~]` delimiter
+   // pair, not the classic `[= ... =]`:
+   //
+   //   [~ section-list /~]
+   //
+   // The `[~` form runs after the page + section + site pipeline
+   // assembles its records, so it sees the full `.page.*` and
+   // `.site.*` namespaces. See reference/template-syntax.md for the
+   // immediate-vs-deferred shortcode contract. }}
 {{ if .page.pages }}
   <ul class="juicerstudy-section-list">
     {{ for p <- .page.pages }}

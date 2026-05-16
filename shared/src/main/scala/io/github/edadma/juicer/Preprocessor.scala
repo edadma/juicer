@@ -16,7 +16,25 @@ class Preprocessor(startDelim: String = "[=",
 
   case class Shortcode(pos: CharReader, name: String, params: Seq[ShortcodeParameter], buf: mutable.StringBuilder)
 
-  def process(content: String): String = {
+  /** Process a content string, expanding every `<startDelim> name =<endDelim>`
+    * shortcode call against the shortcode template registry. Args
+    * (positional + named) and inline content are the only data the
+    * template sees — page and site context are absent.
+    *
+    * This is the "immediate" pass that runs BEFORE markdown rendering,
+    * so shortcodes here can emit markdown that the parser then
+    * processes. */
+  def process(content: String): String = process(content, Map.empty[String, Any])
+
+  /** Process with an extra context map merged into the shortcode
+    * template's data scope under the keys provided. Used by the
+    * deferred-shortcode pass to thread `.page` + `.site` records
+    * (built only after the markdown + section pipeline completes) into
+    * shortcodes that need them.
+    *
+    * Existing shortcodes that don't reference `.page.*` or `.site.*`
+    * are unaffected — the keys just sit unused in the data map. */
+  def process(content: String, extraContext: Map[String, Any]): String = {
     val buf = new mutable.StringBuilder
     val stack = new mutable.Stack[Shortcode]
 
@@ -33,7 +51,7 @@ class Preprocessor(startDelim: String = "[=",
 
         val unamedData = List("args" -> unamed.toList)
         val contentData = content map (s => List("content" -> s)) getOrElse Nil
-        val data = unamedData ++ named.toList ++ contentData toMap
+        val data = (unamedData ++ named.toList ++ contentData toMap) ++ extraContext
 
         shortcodes(name) match {
           case Some(template) =>
