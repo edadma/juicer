@@ -306,6 +306,66 @@ Template side: see
 [Template syntax → `imageVariants` and `srcset`](../template-syntax/#imagevariants-and-srcset)
 for the helpers themes call.
 
+## `[assets]` — Sass / esbuild pipeline
+
+Opt-in build-time compilation of theme assets via two widely-available
+CLIs: `sass` for SCSS → CSS and `esbuild` for JS bundling and
+minification. Plus an optional fingerprinting flag that appends a
+content-hash to output filenames so deploys can ship cache-busting URLs
+without giving up long-lived `Cache-Control` headers. **Disabled by
+default** — sites that don't set this table build byte-identically to
+pre-`[assets]` juicer.
+
+```toml
+[assets]
+enabled     = true
+fingerprint = false
+
+[[assets.sass]]
+input  = "src/site.scss"
+output = "/css/site.css"
+minify = true
+
+[[assets.esbuild]]
+input  = "src/main.js"
+output = "/js/main.js"
+minify = true
+
+[[assets.copy]]
+input  = "src/robots.txt"
+output = "/robots.txt"
+```
+
+| Top-level key | Default | What |
+|---------------|---------|------|
+| `enabled`     | `false` | Master switch. `false` → no pipeline runs, the `asset` builtin returns its input unchanged. |
+| `fingerprint` | `false` | When `true`, juicer inserts the output bytes' content-hash before the extension: `/css/site.css` → `/css/site.<16-hex>.css`. The `asset` builtin resolves to the fingerprinted URL automatically. |
+
+Entry tables (any number of each; use either inline-table shorthand or
+`[[assets.kind]]` array form):
+
+| Entry kind | Required keys | Optional keys | What |
+|------------|---------------|---------------|------|
+| `[[assets.sass]]`    | `input`, `output` | `minify`, `logical` | SCSS / Sass → CSS via `sass --no-source-map [--style=expanded|compressed]`. |
+| `[[assets.esbuild]]` | `input`, `output` | `minify`, `logical` | JS bundle via `esbuild <in> --bundle [--minify] --outfile=<out>`. |
+| `[[assets.copy]]`    | `input`, `output` | `logical` | Byte-for-byte copy (no tool involved). Useful when fingerprinting a file no compiler needs to touch. |
+
+`input` is resolved under the source root; `output` is a site-rooted
+URL path (leading slash optional). `logical` defaults to the basename
+of `output` — `/css/site.css` becomes the manifest key `site.css`,
+which templates look up as `{{ asset 'site.css' }}`.
+
+**Tool installation.** Juicer shells out to `sass` (the dart-sass /
+npm package; the Ruby `sass` gem also works for the small flag subset
+juicer uses) and `esbuild`. Install with `brew install sass esbuild` /
+`npm install -g sass esbuild` / your platform's equivalent. When a
+tool isn't on PATH the build still succeeds: that entry degrades to a
+verbatim copy of its source, the URL still resolves so templates
+don't break, and a single advisory line goes to stderr. Native and JS
+targets ship stub backends; full pipeline execution is JVM-only today.
+
+Template side: see [Template data → `asset` builtin](../template-data/#asset-builtin).
+
 ## `[[authors]]` — author registry
 
 An array of tables describing the people who write posts on the site.

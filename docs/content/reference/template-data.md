@@ -506,6 +506,29 @@ the bundle preference only kicks in for bare paths.
 - Files in a directory with **no** markdown content. Bundles need a
   page to anchor them; orphan assets are silently skipped.
 
+## `asset` builtin
+
+The `asset` template function resolves a logical name into the URL of
+its compiled (and optionally fingerprinted) output. The manifest comes
+from the [`[assets]` pipeline](/reference/config/#assets--sass--esbuild-pipeline).
+
+```handlebars
+<link rel="stylesheet" href="{{ asset 'site.css' }}">
+<script src="{{ asset 'main.js' }}" defer></script>
+```
+
+| Resolution case                            | What `asset 'foo.css'` returns |
+|--------------------------------------------|---------------------------------|
+| `[assets]` disabled or no pipeline run     | `foo.css` (the input unchanged) |
+| Pipeline ran, `fingerprint = false`        | The configured `output` URL (e.g. `/css/foo.css`) |
+| Pipeline ran, `fingerprint = true`         | The fingerprinted URL (e.g. `/css/foo.<16-hex>.css`) |
+| Name not in manifest (typo / never built)  | `foo.css` (the input unchanged) — visible as a broken `<link href>` in the rendered HTML |
+
+The "input unchanged on miss" rule is deliberate: a typo's effect
+shows up in the rendered HTML rather than disappearing into an empty
+string, which is faster to spot in a build output or a browser
+devtools panel.
+
 ## Site-wide chrome keys
 
 Top-level `site.toml` keys that the bundled themes read from `.site.*` to
