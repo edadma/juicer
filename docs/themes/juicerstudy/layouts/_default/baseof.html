@@ -6,6 +6,25 @@
 <body>
   {{ partial 'topbar' . }}
 
+  {{ if .page.splash }}
+  {{ // Splash layout — used by an editorial landing (or any page that
+     // opts in via `splash: true` frontmatter). Drops the sidebar, the
+     // right-rail page-TOC, breadcrumbs, and the prev/next pager so the
+     // author's markdown takes the full width. Matches the juicerdocs
+     // splash pattern. }}
+  <div class="juicerstudy-page juicerstudy-page-splash">
+    <main class="juicerstudy-main">
+      <div class="juicerstudy-content">
+        {{ block main . }}
+          <article>
+            <h1>{{ .page.title }}</h1>
+            {{ .content }}
+          </article>
+        {{ end }}
+      </div>
+    </main>
+  </div>
+  {{ else }}
   <div class="juicerstudy-page">
     <aside class="juicerstudy-sidebar-aside">
       {{ partial 'sidebar' . }}
@@ -31,6 +50,7 @@
     </aside>
     {{ end }}
   </div>
+  {{ end }}
 
   {{ partial 'footer' . }}
 

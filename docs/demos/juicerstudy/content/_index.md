@@ -1,5 +1,6 @@
 ---
 title: Marginalia
+splash: true
 summary: Notes from the margins of books, written in the slow hours.
 ---
 
