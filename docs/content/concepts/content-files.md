@@ -65,6 +65,21 @@ By default (the `standard` baseline config) juicer writes nested sections to `ds
 
 If this surprises you, set `htmlDir = ""` in your `site.toml` to disable. Most users don't need to touch it.
 
+## Page bundles
+
+Drop non-markdown files (images, attachments, anything that isn't `.md`/`.toml`/`.yaml`/`.html`) next to a page's markdown and they ride along as **bundle assets**:
+
+```
+content/iceland-2024/
+  _index.md
+  hero.jpg
+  skogafoss.jpg
+```
+
+`hero.jpg` is copied to the section's output directory and served from `/iceland-2024/hero.jpg`. Templates iterate `.page.assets` to render a gallery or attachments list, and `imageVariants 'hero.jpg'` (no leading slash) resolves bundle-relative — move the bundle, the markup follows.
+
+Full reference (record shape, resolution rules, when NOT to use a bundle) in [Template data → Page bundles](/reference/template-data/#page-bundles).
+
 ## Drafts
 
 A page with `draft: true` is **skipped entirely** during a normal build — invisible to the TOC, sitemap, search index, and section listings. To preview drafts locally, pass `--drafts` (or `-D`):
