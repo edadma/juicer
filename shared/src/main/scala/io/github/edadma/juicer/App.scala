@@ -2923,23 +2923,49 @@ object App {
     out.toSet
   }
 
-  /** Apply `f` to every link / image destination in the document. */
+  /** Apply `f` to every link / image destination in the document.
+    *
+    * Walks every block shape the markdown library exposes (lists, tables,
+    * definition lists, callouts, collapsibles, footnote definitions,
+    * doc-tag bodies). A block type that's silently dropped here is one
+    * where the link callback never fires — that's how a root-relative
+    * `[text](/foo/)` link inside a list item ends up not being prefixed
+    * by `baseURL.path` and 404s on a subpath deploy. Mirror
+    * [[collectLinkTargets]] when adding new block shapes. */
   private def transformLinks(doc: Document, f: String => String): Document = {
+    import io.github.edadma.markdown._
     def goInline(i: Inline): Inline = i match {
-      case Link(dest, title, children)              => Link(f(dest), title, children.map(goInline))
-      case io.github.edadma.markdown.Image(dest, title, alt, attrs) =>
-        io.github.edadma.markdown.Image(f(dest), title, alt.map(goInline), attrs)
-      case io.github.edadma.markdown.Emphasis(c)    => io.github.edadma.markdown.Emphasis(c.map(goInline))
-      case io.github.edadma.markdown.Strong(c)      => io.github.edadma.markdown.Strong(c.map(goInline))
-      case io.github.edadma.markdown.Strikethrough(c) =>
-        io.github.edadma.markdown.Strikethrough(c.map(goInline))
-      case other => other
+      case Link(dest, title, children)  => Link(f(dest), title, children.map(goInline))
+      case Image(dest, title, alt, attrs) =>
+        Image(f(dest), title, alt.map(goInline), attrs)
+      case Emphasis(c)                  => Emphasis(c.map(goInline))
+      case Strong(c)                    => Strong(c.map(goInline))
+      case Strikethrough(c)             => Strikethrough(c.map(goInline))
+      case other                        => other
     }
-    def goBlock(b: io.github.edadma.markdown.Block): io.github.edadma.markdown.Block = b match {
-      case Paragraph(inlines)                       => Paragraph(inlines.map(goInline))
-      case h: MdHeading                             => h.copy(inlines = h.inlines.map(goInline))
-      case io.github.edadma.markdown.BlockQuote(c)  => io.github.edadma.markdown.BlockQuote(c.map(goBlock))
-      case other                                    => other
+    def goCell(cell: TableCell): TableCell = TableCell(cell.content.map(goInline))
+    def goRow(row: TableRow): TableRow     = TableRow(row.cells.map(goCell))
+    def goBlock(b: Block): Block = b match {
+      case Paragraph(inlines)                  => Paragraph(inlines.map(goInline))
+      case h: Heading                          => h.copy(inlines = h.inlines.map(goInline))
+      case BlockQuote(c)                       => BlockQuote(c.map(goBlock))
+      case ListBlock(data, items)              =>
+        ListBlock(data, items.map(item => ListItem(item.content.map(goBlock))))
+      case ListItem(content)                   => ListItem(content.map(goBlock))
+      case Table(header, rows, alignments)     => Table(goRow(header), rows.map(goRow), alignments)
+      case row: TableRow                       => goRow(row)
+      case cell: TableCell                     => goCell(cell)
+      case DefinitionListBlock(items)          =>
+        DefinitionListBlock(items.map { case (term, defs) =>
+          (term.map(goInline), defs.map(goBlock))
+        })
+      case FootnoteDefinition(label, content)  => FootnoteDefinition(label, content.map(goBlock))
+      case CalloutBlock(ty, title, children)   => CalloutBlock(ty, title, children.map(goBlock))
+      case CollapsibleBlock(title, isOpen, children) =>
+        CollapsibleBlock(title.map(goInline), isOpen, children.map(goBlock))
+      case DocTagBlock(name, target, body, mode) =>
+        DocTagBlock(name, target, body.map(goBlock), mode)
+      case other                               => other
     }
     Document(doc.children.map(goBlock))
   }
