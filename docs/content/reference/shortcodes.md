@@ -360,3 +360,51 @@ The build passed.
 
 See [Concepts → Shortcodes](/concepts/shortcodes/) for the full
 syntax (quoting rules, escaping, paired vs self-closing).
+
+## Deferred shortcodes — the `\[~ … ~]` delimiter
+
+The classic `\[= … =]` syntax runs **before** markdown parsing. That's
+the right phase for shortcodes that emit markdown — a `note` callout
+producing `<aside>…</aside>` flows through the markdown parser
+correctly because the parser sees plain HTML in the input.
+
+What that phase **can't** do is reach `.page.pages`, `.page.subsections`,
+`.section.*`, or any field of `.site.*` — those records don't exist
+yet during the markdown pass. Trying to render a shortcode template
+that says `{{ for p <- .page.pages }}` from `\[= … =]` silently produces
+an empty list.
+
+Juicer provides a second shortcode delimiter pair, `\[~ … ~]`, that
+runs **after** the page + section + site pipeline has finished. Inside
+a `\[~` shortcode the template sees:
+
+| Namespace        | What's available |
+|------------------|------------------|
+| `.page.*`        | Full page record — title, summary, tags, **pages**, **subsections**, permalink, ancestors, prev / next, series, authors, … |
+| `.site.*`        | Full sitedata — `.site.posts`, `.site.pages`, `.site.tags`, `.site.authors`, `.site.now`, `.site.data`, … |
+| `.args` / `.<key>` / `.content` | Same as the immediate pass |
+
+```markdown
+\[~ section-list /~]
+```
+
+```squiggly
+{{ // shortcodes/section-list.html — must be invoked with [~ ... ~]
+   // because it depends on .page.pages and .page.subsections.        }}
+{{ if .page.pages }}
+  <ul>{{ for p <- .page.pages }}<li><a href="{{ p.url }}">{{ p.title }}</a></li>{{ end }}</ul>
+{{ end }}
+```
+
+[= warning =]
+**Deferred shortcodes emit HTML, not markdown.** They run on the
+already-rendered HTML body. If your template wants to render markdown
+output, pipe it through `\{\{ markdownify ... \}\}` explicitly.
+[= /warning =]
+
+[= note =]
+**Same template registry.** Both delimiter pairs look up templates in
+`shortcodes/`; the difference is purely *when* the shortcode runs and
+*what context it sees*. A template that uses neither `.page` nor
+`.site` works identically from either pass.
+[= /note =]

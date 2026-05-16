@@ -303,6 +303,24 @@ object App {
           t.template
         }.orElse(problem(s"shortcode '$name' not found"))
     val preprocessor = new Preprocessor(shortcodes = shortcodesLoader, renderer = templateRenderer)
+    // Deferred preprocessor: same shortcode registry, but uses the
+    // `[~ ... ~]` delimiter pair and runs AFTER the section / page /
+    // site pipeline has produced its records. Shortcodes invoked this
+    // way see `.page.pages`, `.page.subsections`, `.page.permalink`,
+    // and a full `.site.*` — anything that ordinary `[= ... =]`
+    // shortcodes can't reach because they run before the pipeline.
+    // The two passes share templates: a theme can call the same
+    // template from either delimiter, and only the surrounding
+    // context differs. Trade-off: deferred shortcodes operate on the
+    // RENDERED HTML, so they emit HTML directly (the markdown parser
+    // has already run by the time they fire).
+    val deferredPreprocessor =
+      new Preprocessor(
+        startDelim = "[~",
+        endDelim   = "~]",
+        shortcodes = shortcodesLoader,
+        renderer   = templateRenderer,
+      )
 
     // Markdown render pass: parse each content file's source, build the TOC,
     // produce the rendered HTML body, and compute a summary. Heading levels
@@ -1485,6 +1503,25 @@ object App {
       ("calendar"        -> calendarData) +
       ("photos"          -> photosList) +
       ("data"            -> site.data)
+
+    // Deferred shortcode pass — runs AFTER pageEntries + sitedata are
+    // fully assembled so `[~ name ~]` shortcodes can reach
+    // `.page.pages`, `.page.subsections`, `.section.*`, and the full
+    // `.site.*`. Operates on each file's already-rendered HTML
+    // (`c.content`) — deferred shortcodes emit HTML directly, not
+    // markdown. Files with no `[~` delimiter present pay only one
+    // `String.contains` per file (the preprocessor scans the buffer
+    // for the start delimiter and exits immediately if absent), so
+    // this is a near-zero cost for sites that don't use the feature.
+    for ((c, pageMap) <- pageEntries) {
+      if ((c.content ne null) && c.content.contains("[~")) {
+        val extra: Map[String, Any] = Map(
+          "page" -> pageMap,
+          "site" -> sitedata,
+        )
+        c.content = deferredPreprocessor.process(c.content, extra)
+      }
+    }
 
     def findLayout(folders: List[String], name: String): Option[TemplateFile] =
       site.layoutTemplates

@@ -142,3 +142,38 @@ Use the `markdownify` builtin to render the body as markdown:
   {{ markdownify .content }}
 </div>
 ```
+
+## Two passes: immediate vs. deferred
+
+Juicer runs shortcodes in **two passes**:
+
+1. **Immediate** — the classic `\[= name =]` delimiter. Runs *before*
+   markdown parsing, so the shortcode's output flows through the
+   markdown parser. Best for shortcodes whose body is markdown (callouts,
+   tabs, collapsible sections, …). The trade-off: this pass happens
+   before the page + section + site pipeline assembles its data, so
+   the shortcode template sees only `.args`, named keys, and
+   `.content` — no `.page` or `.site`.
+2. **Deferred** — the `\[~ name ~]` delimiter. Runs *after* the
+   pipeline finishes, on the already-rendered HTML body. The
+   shortcode template can reach `.page.title`, `.page.pages`,
+   `.page.subsections`, `.section.*`, and the full `.site.*`.
+   Trade-off: the shortcode emits HTML directly (the markdown parser
+   has already run), so pipe markdown through `markdownify` explicitly
+   if you need it.
+
+```markdown
+\[= note =]Immediate — emits markdown that the parser then renders.\[= /note =]
+
+\[~ pagebadge /~]
+```
+
+```squiggly
+{{ // shortcodes/pagebadge.html — accesses .page.title, so must be
+   //  invoked from the deferred pass.                              }}
+<span class="badge">{{ .page.title }}</span>
+```
+
+Both passes look up templates in the same `shortcodes/` directory; the
+delimiter chooses which pass runs the template. A template that
+references neither `.page` nor `.site` can be invoked from either.
