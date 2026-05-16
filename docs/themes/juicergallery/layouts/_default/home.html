@@ -1,0 +1,54 @@
+<!-- Gallery home: optional intro paragraph from _index.md content,
+     then a cover grid of every top-level gallery section, sorted
+     newest-first by date.
+
+     A "gallery" is any top-level section with a `cover:` frontmatter.
+     Sections without a cover are silently omitted from the grid
+     (typical for about/, contact/, etc.).
+
+     Each cover uses imageVariants + srcset for responsive delivery —
+     the cover grid card is roughly half-viewport on tablet and
+     one-third on a wide desktop, so the browser pulls the smallest
+     variant that fits. -->
+{{ define content }}
+  <section class="juicergallery-home-intro">
+    <div class="juicergallery-home-intro-inner">
+      {{ if .site.title }}<h1 class="juicergallery-home-title">{{ .site.title }}</h1>{{ end }}
+      {{ if .site.tagline }}<p class="juicergallery-home-tagline">{{ .site.tagline }}</p>{{ end }}
+      {{ if .content }}<div class="juicergallery-home-blurb">{{ .content }}</div>{{ end }}
+    </div>
+  </section>
+
+  {{ galleries := .page.subsections | filter `.cover` }}
+  {{ if galleries }}
+  <section class="juicergallery-cover-grid" aria-label="Galleries">
+    {{ for g <- galleries }}
+    {{ v := imageVariants g.cover }}
+    {{ sizes := '(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw' }}
+    {{ webp := srcset g.cover 'webp' }}
+    {{ orig := srcset g.cover 'original' }}
+    <a class="juicergallery-cover-card" href="{{ g.url }}">
+      <figure class="juicergallery-cover-figure">
+        {{ if v.variants }}
+        <picture>
+          {{ if webp }}<source srcset="{{ webp }}" type="image/webp" sizes="{{ sizes }}" />{{ end }}
+          <img src="{{ v.original }}"
+               {{ if orig }}srcset="{{ orig }}" sizes="{{ sizes }}"{{ end }}
+               {{ if v.originalWidth }}width="{{ v.originalWidth }}" height="{{ v.originalHeight }}"{{ end }}
+               alt="{{ if g.coverAlt }}{{ g.coverAlt }}{{ else }}{{ g.title }}{{ end }}"
+               loading="lazy" decoding="async" />
+        </picture>
+        {{ else }}
+        <img src="{{ v.original }}" alt="{{ if g.coverAlt }}{{ g.coverAlt }}{{ else }}{{ g.title }}{{ end }}" loading="lazy" decoding="async" />
+        {{ end }}
+      </figure>
+      <figcaption class="juicergallery-cover-meta">
+        <h2 class="juicergallery-cover-title">{{ g.title }}</h2>
+        {{ if g.dateLong }}<p class="juicergallery-cover-date"><time datetime="{{ g.dateISO }}">{{ g.dateLong }}</time></p>{{ end }}
+        {{ if g.summary }}<p class="juicergallery-cover-summary">{{ g.summary }}</p>{{ end }}
+      </figcaption>
+    </a>
+    {{ end }}
+  </section>
+  {{ end }}
+{{ end }}

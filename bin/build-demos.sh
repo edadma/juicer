@@ -36,7 +36,7 @@ BASE_TRIMMED="${SITE_BASE_URL%/}"
 
 # Themes that have a docs/demos/<theme>/ source dir. juicerdocs is
 # absent on purpose (the docs site itself is the demo).
-THEMES=(juicerblog juicerstudy juicercafe juicerchurch juicerlanding juicerportfolio)
+THEMES=(juicerblog juicerstudy juicercafe juicerchurch juicerlanding juicerportfolio juicergallery)
 
 for theme in "${THEMES[@]}"; do
   SRC="docs/demos/$theme"

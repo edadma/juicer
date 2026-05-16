@@ -1,0 +1,49 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{{ if .page.title }}{{ if .page.title = .site.title }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ else }}<title>{{ .page.title }} — {{ .site.title }}</title>{{ end }}{{ else }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ end }}
+{{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
+
+{{ partial 'seo' . }}
+
+<!-- Apply theme before first paint to avoid a flash of unstyled brightness.
+     Reads localStorage 'juicergallery-theme', falls back to the system
+     preference. Sets data-theme on <html> so the CSS palette resolves
+     before any pixels paint. -->
+<script>
+  (function() {
+    try {
+      var stored = localStorage.getItem('juicergallery-theme');
+      var dark = stored
+        ? stored === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    } catch (e) {}
+  })();
+</script>
+
+<link rel="stylesheet" href="{{ relURL '/juicergallery.css' }}">
+
+{{ if .site.customCSS }}{{ for css <- .site.customCSS }}<link rel="stylesheet" href="{{ relURL css }}">
+{{ end }}{{ end }}
+
+{{ if .site.juicergallery }}
+<style>
+  :root {
+    {{ if .site.juicergallery.brand }}--brand: {{ .site.juicergallery.brand }};{{ end }}
+    {{ if .site.juicergallery.brandStrong }}--brand-strong: {{ .site.juicergallery.brandStrong }};{{ end }}
+    {{ if .site.juicergallery.brandSoft }}--brand-soft: {{ .site.juicergallery.brandSoft }};{{ end }}
+    {{ if .site.juicergallery.accent }}--accent: {{ .site.juicergallery.accent }};{{ end }}
+    {{ if .site.juicergallery.fontSans }}--font-sans: {{ .site.juicergallery.fontSans }};{{ end }}
+    {{ if .site.juicergallery.fontSerif }}--font-serif: {{ .site.juicergallery.fontSerif }};{{ end }}
+    {{ if .site.juicergallery.fontMono }}--font-mono: {{ .site.juicergallery.fontMono }};{{ end }}
+    {{ if .site.juicergallery.gutter }}--gutter: {{ .site.juicergallery.gutter }};{{ end }}
+    {{ if .site.juicergallery.radiusLg }}--radius-lg: {{ .site.juicergallery.radiusLg }};{{ end }}
+  }
+  [data-theme="dark"] {
+    {{ if .site.juicergallery.brandDark }}--brand: {{ .site.juicergallery.brandDark }};{{ end }}
+    {{ if .site.juicergallery.brandStrongDark }}--brand-strong: {{ .site.juicergallery.brandStrongDark }};{{ end }}
+    {{ if .site.juicergallery.brandSoftDark }}--brand-soft: {{ .site.juicergallery.brandSoftDark }};{{ end }}
+    {{ if .site.juicergallery.accentDark }}--accent: {{ .site.juicergallery.accentDark }};{{ end }}
+  }
+</style>
+{{ end }}

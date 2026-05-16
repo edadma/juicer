@@ -1,0 +1,22 @@
+<!-- Gallery footer: byline + optional links + small juicer credit. -->
+<footer class="juicergallery-footer">
+  <div class="juicergallery-footer-inner">
+    <div class="juicergallery-footer-brand">
+      <p class="juicergallery-footer-name">{{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</p>
+      {{ if .site.contact }}<p class="juicergallery-footer-contact">{{ if .site.contact.email }}<a href="mailto:{{ .site.contact.email }}">{{ .site.contact.email }}</a>{{ end }}{{ if .site.contact.location }}{{ if .site.contact.email }} · {{ end }}{{ .site.contact.location }}{{ end }}</p>{{ end }}
+    </div>
+
+    {{ if .site.links }}
+    <ul class="juicergallery-footer-links">
+      {{ for l <- .site.links }}<li><a href="{{ l.url }}">{{ l.label }}</a></li>{{ end }}
+    </ul>
+    {{ end }}
+  </div>
+
+  <div class="juicergallery-footer-fine">
+    <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+    {{ if not .site.hideJuicerCredit }}
+    <span class="juicergallery-footer-credit">Built with <a href="https://github.com/edadma/juicer">juicer</a></span>
+    {{ end }}
+  </div>
+</footer>

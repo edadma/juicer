@@ -1,0 +1,41 @@
+{{ // photo-card partial — renders ONE photo as <picture> + caption,
+   // pulling responsive variants via the imageVariants + srcset
+   // builtins. Provided as a convenience for layouts that want to
+   // render photos outside the masonry grid.
+   //
+   // Input data shape (call as `partial 'photo-card' p`):
+   //   .src     — image path (required)
+   //   .alt     — alt text (optional; falls back to .caption)
+   //   .caption — caption shown under the image (optional)
+   //   .href    — click-through URL (optional; defaults to original)
+   //   .sizes   — `sizes` attribute (optional; sane default supplied)
+   //
+   // Markup uses one <source> per format with a full multi-width
+   // srcset so the browser actually picks the right variant. }}
+{{ src := if .src then .src else . }}
+{{ alt := if .alt then .alt else (if .caption then .caption else '') }}
+{{ v := imageVariants src }}
+{{ href := if .href then .href else v.original }}
+{{ sizes := if .sizes then .sizes else '(min-width: 96rem) 25vw, (min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw' }}
+{{ webp := srcset src 'webp' }}
+{{ orig := srcset src 'original' }}
+<figure class="juicergallery-photo">
+  <a class="juicergallery-photo-link" href="{{ href }}" target="_blank" rel="noopener">
+    {{ if v.variants }}
+    <picture>
+      {{ if webp }}<source srcset="{{ webp }}" type="image/webp" sizes="{{ sizes }}" />{{ end }}
+      <img src="{{ v.original }}"
+           {{ if orig }}srcset="{{ orig }}" sizes="{{ sizes }}"{{ end }}
+           {{ if v.originalWidth }}width="{{ v.originalWidth }}" height="{{ v.originalHeight }}"{{ end }}
+           alt="{{ alt }}"
+           loading="lazy" decoding="async" />
+    </picture>
+    {{ else }}
+    <img src="{{ v.original }}"
+         {{ if v.originalWidth }}width="{{ v.originalWidth }}" height="{{ v.originalHeight }}"{{ end }}
+         alt="{{ alt }}"
+         loading="lazy" decoding="async" />
+    {{ end }}
+  </a>
+  {{ if .caption }}<figcaption class="juicergallery-photo-caption">{{ .caption }}</figcaption>{{ end }}
+</figure>
