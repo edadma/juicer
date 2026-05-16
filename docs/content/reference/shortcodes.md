@@ -389,8 +389,8 @@ a `\[~` shortcode the template sees:
 ```
 
 ```squiggly
-{{ // shortcodes/section-list.html — must be invoked with [~ ... ~]
-   // because it depends on .page.pages and .page.subsections.        }}
+{{ // shortcodes/section-list.html — must be invoked from the deferred
+   // pass because it depends on .page.pages and .page.subsections.   }}
 {{ if .page.pages }}
   <ul>{{ for p <- .page.pages }}<li><a href="{{ p.url }}">{{ p.title }}</a></li>{{ end }}</ul>
 {{ end }}
