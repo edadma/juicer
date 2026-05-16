@@ -230,6 +230,50 @@ from frontmatter — they're set by juicer during build:
 The full `.page` reference, including these, lives in
 [Template data → `.page`](/reference/template-data/#page).
 
+## Cascade — inherited frontmatter
+
+A section's `_index.md` may declare a `cascade:` map; every key inside it is inherited by every descendant page that doesn't set the same key in its own frontmatter. This lets a section establish defaults — author, layout, license, custom flags — without repeating them on every page.
+
+```yaml
+# content/posts/_index.md
+---
+title: Posts
+cascade:
+  author: ed
+  tone: editorial
+  license: CC-BY
+---
+```
+
+Every page under `/posts/` now picks up `.page.author = "ed"`, `.page.tone = "editorial"`, `.page.license = "CC-BY"` automatically. A specific post can override any of them:
+
+```yaml
+# content/posts/guest-piece.md
+---
+title: Guest piece
+author: alice    # overrides the cascaded "ed"
+---
+```
+
+### Resolution rules
+
+- **The page's own frontmatter wins** over any cascade value.
+- **Nearer ancestors win** over farther ancestors. Root `_index.md`'s cascade is the weakest; a deeply-nested section's cascade overrides everything above it.
+- **A section's cascade does NOT apply to its own `_index.md`.** Cascade declares defaults for *descendants*, not for the declaring page itself. The section's own `_index.md` only inherits cascades from sections above it.
+- **Sections inherit cascade from ancestor sections.** A nested section's `_index.md` picks up cascades from every ancestor section, then merges its own (own wins).
+- **Missing / empty cascade is a no-op.** Pages without any cascade in their ancestor chain see exactly the frontmatter they wrote.
+
+### What can be cascaded
+
+Any frontmatter key the engine or a theme reads. Useful candidates:
+
+- `author` / `authors` — section-wide attribution.
+- `layout` — force every page in a section through a specific template (e.g. `layout: project` across a portfolio section).
+- `tags` / `categories` — section-wide taxonomy; pages add their own and override the default list if needed.
+- Custom keys consumed by your theme — `tone`, `region`, `license`, `noindex`, …
+
+Less useful (but legal) to cascade: `date`, `title`, `summary` — these are intrinsically per-page and rarely benefit from a default. There's no enforcement; cascade is a blanket mechanism and the author is responsible for picking keys that make sense to inherit.
+
 ## Theme-specific frontmatter
 
 The bundled themes recognize their own frontmatter keys on top of
