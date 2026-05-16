@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tags — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicercook.css' }}">
+</head>
+<body>
+  <div class="juicercook-page">
+    <header class="juicercook-topbar">
+      <div class="juicercook-topbar-inner">
+        <a class="juicercook-brand" href="{{ relURL '/' }}">
+          <span class="juicercook-brand-name">{{ .site.title }}</span>
+        </a>
+      </div>
+    </header>
+    <main class="juicercook-main">
+      <article class="juicercook-section">
+        <header class="juicercook-section-head">
+          <h1 class="juicercook-section-title">All tags</h1>
+          {{ if .terms }}<p class="juicercook-section-summary">{{ length .terms }} tags</p>{{ end }}
+        </header>
+        {{ if .terms }}
+        <ul class="juicercook-taglist">
+          {{ for t <- .terms }}
+          <li><a href="{{ t.url }}">{{ t.name }}</a> <span class="juicercook-taglist-count">{{ t.count }}</span></li>
+          {{ end }}
+        </ul>
+        {{ end }}
+      </article>
+    </main>
+    <footer class="juicercook-footer">
+      <div class="juicercook-footer-inner">
+        <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

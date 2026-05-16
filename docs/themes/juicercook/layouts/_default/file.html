@@ -1,0 +1,106 @@
+<!-- Recipe page. The header carries title + summary + meta (servings,
+     times). The hero image fills the width below the meta — rendered
+     responsive via imageVariants when [images] is enabled. Then the
+     two-column recipe card: ingredients column (left, ~40 %) and
+     numbered instructions column (right, ~60 %). Optional `photos:`
+     grid sits below for step / process shots. Body content lives at
+     the bottom as optional commentary / variations / notes. -->
+{{ define content }}
+  <article class="juicercook-recipe">
+    <header class="juicercook-recipe-head">
+      <h1 class="juicercook-recipe-title">{{ .page.title }}</h1>
+      {{ if .page.summary }}<p class="juicercook-recipe-summary">{{ .page.summary }}</p>{{ end }}
+      <dl class="juicercook-recipe-meta">
+        {{ if .page.servings }}<div class="juicercook-recipe-meta-row"><dt>Servings</dt><dd>{{ .page.servings }}</dd></div>{{ end }}
+        {{ if .page.prepTime }}<div class="juicercook-recipe-meta-row"><dt>Prep</dt><dd>{{ .page.prepTime }}</dd></div>{{ end }}
+        {{ if .page.cookTime }}<div class="juicercook-recipe-meta-row"><dt>Cook</dt><dd>{{ .page.cookTime }}</dd></div>{{ end }}
+        {{ if .page.totalTime }}<div class="juicercook-recipe-meta-row"><dt>Total</dt><dd>{{ .page.totalTime }}</dd></div>{{ end }}
+        {{ if .page.category }}<div class="juicercook-recipe-meta-row"><dt>Category</dt><dd>{{ .page.category }}</dd></div>{{ end }}
+        {{ if .page.cuisine }}<div class="juicercook-recipe-meta-row"><dt>Cuisine</dt><dd>{{ .page.cuisine }}</dd></div>{{ end }}
+      </dl>
+    </header>
+
+    {{ if .page.image }}
+    {{ v := imageVariants .page.image }}
+    {{ webp := srcset .page.image 'webp' }}
+    {{ orig := srcset .page.image 'original' }}
+    {{ heroSizes := '(min-width: 56rem) 56rem, 100vw' }}
+    <figure class="juicercook-recipe-hero">
+      {{ if v.variants }}
+      <picture>
+        {{ if webp }}<source srcset="{{ webp }}" type="image/webp" sizes="{{ heroSizes }}" />{{ end }}
+        <img src="{{ v.original }}"
+             {{ if orig }}srcset="{{ orig }}" sizes="{{ heroSizes }}"{{ end }}
+             {{ if v.originalWidth }}width="{{ v.originalWidth }}" height="{{ v.originalHeight }}"{{ end }}
+             alt="{{ if .page.imageAlt }}{{ .page.imageAlt }}{{ else }}{{ .page.title }}{{ end }}" />
+      </picture>
+      {{ else }}
+      <img src="{{ relURL .page.image }}" alt="{{ if .page.imageAlt }}{{ .page.imageAlt }}{{ else }}{{ .page.title }}{{ end }}">
+      {{ end }}
+    </figure>
+    {{ end }}
+
+    <div class="juicercook-recipe-card">
+      {{ if .page.ingredients }}
+      <section class="juicercook-ingredients" aria-labelledby="juicercook-ingredients-h">
+        <h2 id="juicercook-ingredients-h" class="juicercook-section-h">Ingredients</h2>
+        <ul class="juicercook-ingredients-list">
+          {{ for ing <- .page.ingredients }}<li>{{ ing }}</li>{{ end }}
+        </ul>
+      </section>
+      {{ end }}
+
+      {{ if .page.instructions }}
+      <section class="juicercook-instructions" aria-labelledby="juicercook-instructions-h">
+        <h2 id="juicercook-instructions-h" class="juicercook-section-h">Method</h2>
+        <ol class="juicercook-instructions-list">
+          {{ for step <- .page.instructions }}<li>{{ step }}</li>{{ end }}
+        </ol>
+      </section>
+      {{ end }}
+    </div>
+
+    {{ if .page.photos }}
+    {{ photoSizes := '(min-width: 56rem) 28rem, 100vw' }}
+    <section class="juicercook-step-photos" aria-label="Process photos">
+      <h2 class="juicercook-section-h">In the kitchen</h2>
+      <div class="juicercook-step-photos-grid">
+        {{ for p <- .page.photos }}
+          {{ pSrc := if p.src then p.src else p }}
+          {{ pAlt := if p.alt then p.alt else (if p.caption then p.caption else '') }}
+          {{ pv := imageVariants pSrc }}
+          {{ pwebp := srcset pSrc 'webp' }}
+          {{ porig := srcset pSrc 'original' }}
+          <figure class="juicercook-step-photo">
+            {{ if pv.variants }}
+            <picture>
+              {{ if pwebp }}<source srcset="{{ pwebp }}" type="image/webp" sizes="{{ photoSizes }}" />{{ end }}
+              <img src="{{ pv.original }}"
+                   {{ if porig }}srcset="{{ porig }}" sizes="{{ photoSizes }}"{{ end }}
+                   {{ if pv.originalWidth }}width="{{ pv.originalWidth }}" height="{{ pv.originalHeight }}"{{ end }}
+                   alt="{{ pAlt }}"
+                   loading="lazy" decoding="async" />
+            </picture>
+            {{ else }}
+            <img src="{{ relURL pSrc }}" alt="{{ pAlt }}" loading="lazy" decoding="async">
+            {{ end }}
+            {{ if p.caption }}<figcaption>{{ p.caption }}</figcaption>{{ end }}
+          </figure>
+        {{ end }}
+      </div>
+    </section>
+    {{ end }}
+
+    {{ if .content }}
+    <div class="juicercook-recipe-body">
+      {{ .content }}
+    </div>
+    {{ end }}
+
+    {{ if .page.tags }}
+    <p class="juicercook-recipe-tags">
+      {{ for t, i <- .page.tags }}{{ if i }} · {{ end }}<a href="{{ relURL '/tags/' }}{{ slugify t }}/">#{{ t }}</a>{{ end }}
+    </p>
+    {{ end }}
+  </article>
+{{ end }}

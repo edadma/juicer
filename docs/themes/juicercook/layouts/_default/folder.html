@@ -1,0 +1,18 @@
+<!-- Section landing — e.g. /breads/, /desserts/ — with the section's
+     own intro then a grid of its recipes. Recipes are sorted by the
+     site-wide `sortBy` (date or weight). -->
+{{ define content }}
+  <article class="juicercook-section">
+    <header class="juicercook-section-head">
+      {{ if .page.title }}<h1 class="juicercook-section-title">{{ .page.title }}</h1>{{ end }}
+      {{ if .page.summary }}<p class="juicercook-section-summary">{{ .page.summary }}</p>{{ end }}
+      {{ if .content }}<div class="juicercook-section-blurb">{{ .content }}</div>{{ end }}
+    </header>
+
+    {{ if .section.pages }}
+    <section class="juicercook-cards" aria-label="Recipes in {{ .page.title }}">
+      {{ for p <- .section.pages }}{{ partial 'recipe-card' p }}{{ end }}
+    </section>
+    {{ end }}
+  </article>
+{{ end }}

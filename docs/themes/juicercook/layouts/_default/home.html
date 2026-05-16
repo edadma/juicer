@@ -1,0 +1,22 @@
+<!-- Recipe-site home: optional intro + a grid of recent recipes. -->
+{{ define content }}
+  <section class="juicercook-home-intro">
+    <div class="juicercook-home-intro-inner">
+      {{ if .site.title }}<h1 class="juicercook-home-title">{{ .site.title }}</h1>{{ end }}
+      {{ if .site.tagline }}<p class="juicercook-home-tagline">{{ .site.tagline }}</p>{{ end }}
+      {{ if .content }}<div class="juicercook-home-blurb">{{ .content }}</div>{{ end }}
+    </div>
+  </section>
+
+  {{ if .site.juicercook.categories }}
+  <nav class="juicercook-cat-strip" aria-label="Categories">
+    {{ for c <- .site.juicercook.categories }}<a class="juicercook-cat-chip" href="{{ relURL c.url }}">{{ c.label }}</a>{{ end }}
+  </nav>
+  {{ end }}
+
+  {{ if .site.posts }}
+  <section class="juicercook-cards" aria-label="Recipes">
+    {{ for p <- .site.posts }}{{ partial 'recipe-card' p }}{{ end }}
+  </section>
+  {{ end }}
+{{ end }}

@@ -1,0 +1,70 @@
+<!-- Cook JSON-LD: WebSite on the root, Recipe on every recipe page
+     (gated on .page.ingredients), BreadcrumbList where applicable.
+
+     The Recipe shape follows schema.org/Recipe — the keys map
+     directly:
+       name              ← .page.title
+       description       ← .page.summary
+       image             ← .page.image
+       datePublished     ← .page.dateISO
+       prepTime/cookTime/totalTime ← frontmatter (already ISO 8601)
+       recipeYield       ← .page.servings
+       recipeIngredient  ← .page.ingredients
+       recipeInstructions ← .page.instructions (as HowToStep)
+       recipeCategory    ← .page.category
+       recipeCuisine     ← .page.cuisine -->
+{{ if not .page.noindex }}
+
+{{ if .page.isSection and not .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "{{ jsonStr .site.title }}",
+  "url": "{{ relURL '/' }}"{{ if .site.description }},
+  "description": "{{ jsonStr .site.description }}"{{ end }}
+}
+</script>
+{{ else }}{{ if .page.ingredients }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Recipe",
+  "name": "{{ jsonStr .page.title }}",
+  "url": "{{ jsonStr .page.permalink }}"{{ if .page.summary }},
+  "description": "{{ jsonStr .page.summary }}"{{ end }}{{ if .page.image }},
+  "image": "{{ jsonStr .page.image }}"{{ end }}{{ if .page.dateISO }},
+  "datePublished": "{{ jsonStr .page.dateISO }}"{{ end }}{{ if .page.author }}{{ if .page.author.name }},
+  "author": { "@type": "Person", "name": "{{ jsonStr .page.author.name }}" }{{ end }}{{ end }}{{ if .page.prepTime }},
+  "prepTime": "{{ jsonStr .page.prepTime }}"{{ end }}{{ if .page.cookTime }},
+  "cookTime": "{{ jsonStr .page.cookTime }}"{{ end }}{{ if .page.totalTime }},
+  "totalTime": "{{ jsonStr .page.totalTime }}"{{ end }}{{ if .page.servings }},
+  "recipeYield": "{{ jsonStr .page.servings }}"{{ end }}{{ if .page.category }},
+  "recipeCategory": "{{ jsonStr .page.category }}"{{ end }}{{ if .page.cuisine }},
+  "recipeCuisine": "{{ jsonStr .page.cuisine }}"{{ end }},
+  "recipeIngredient": [
+    {{ for i, idx <- .page.ingredients }}{{ if idx }},
+    {{ end }}"{{ jsonStr i }}"{{ end }}
+  ],
+  "recipeInstructions": [
+    {{ for s, idx <- .page.instructions }}{{ if idx }},
+    {{ end }}{ "@type": "HowToStep", "text": "{{ jsonStr s }}" }{{ end }}
+  ]
+}
+</script>
+{{ end }}{{ end }}
+
+{{ if .page.ancestors }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{ for a, i <- .page.ancestors }}{ "@type": "ListItem", "position": {{ i + 1 }}, "name": "{{ jsonStr a.title }}", "item": "{{ jsonStr a.permalink }}" },
+    {{ end }}{ "@type": "ListItem", "position": {{ (.page.ancestors | length) + 1 }}, "name": "{{ jsonStr .page.title }}", "item": "{{ jsonStr .page.permalink }}" }
+  ]
+}
+</script>
+{{ end }}
+
+{{ end }}

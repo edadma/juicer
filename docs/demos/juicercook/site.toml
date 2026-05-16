@@ -1,0 +1,61 @@
+# Demo site for juicercook — Elder & Ash, a small home-cooking
+# website with six recipes split between breads and one-pot dinners.
+# Demonstrates Recipe JSON-LD, the recipe-card layout, and the
+# print-friendly stylesheet.
+
+title       = "Elder & Ash"
+tagline     = "A small home cooking website"
+author      = "Hanna Petrescu"
+baseURL     = "http://localhost:8080"
+description = "Reliable recipes for slow weekends — breads, big pots of stew, a couple of cookies."
+
+themeDir = "../../themes"
+theme    = "juicercook"
+
+htmlDir = ""
+sortBy  = "date"
+
+# Image variants — responsive <picture> markup on every recipe hero
+# and card. Builds webp + JPG copies at three widths.
+[images]
+enabled = true
+widths  = [480, 960, 1600]
+formats = ["webp", "original"]
+quality = 78
+
+[[topnav]]
+label = "Recipes"
+url   = "/"
+
+[[topnav]]
+label = "Breads"
+url   = "/breads/"
+
+[[topnav]]
+label = "Desserts"
+url   = "/desserts/"
+
+[[topnav]]
+label = "Tags"
+url   = "/tags/"
+
+[[links]]
+label = "Instagram"
+url   = "https://instagram.com/example"
+
+# Category chips shown above the recipe grid on the home page.
+[[juicercook.categories]]
+label = "All"
+url   = "/"
+
+[[juicercook.categories]]
+label = "Breads"
+url   = "/breads/"
+
+[[juicercook.categories]]
+label = "Mains"
+url   = "/mains/"
+
+[[juicercook.categories]]
+label = "Desserts"
+url   = "/desserts/"

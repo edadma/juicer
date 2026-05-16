@@ -1,0 +1,36 @@
+{{ // recipe-card partial — small card used on the home, section,
+   // and tag-archive pages to summarise a recipe.
+   //
+   // Reads .title, .url, .summary, .image, .imageAlt, .servings,
+   // .prepTime, .cookTime, .totalTime. Photo rendered through
+   // imageVariants when [images] is enabled — the card is small
+   // enough that the 480w variant is usually the right pick. }}
+<a class="juicercook-card" href="{{ .url }}">
+  {{ if .image }}
+  {{ cv := imageVariants .image }}
+  {{ cwebp := srcset .image 'webp' }}
+  {{ corig := srcset .image 'original' }}
+  {{ cardSizes := '(min-width: 64rem) 22rem, (min-width: 40rem) 33vw, 100vw' }}
+  <figure class="juicercook-card-figure">
+    {{ if cv.variants }}
+    <picture>
+      {{ if cwebp }}<source srcset="{{ cwebp }}" type="image/webp" sizes="{{ cardSizes }}" />{{ end }}
+      <img src="{{ cv.original }}"
+           {{ if corig }}srcset="{{ corig }}" sizes="{{ cardSizes }}"{{ end }}
+           alt="{{ if .imageAlt }}{{ .imageAlt }}{{ else }}{{ .title }}{{ end }}"
+           loading="lazy" decoding="async" />
+    </picture>
+    {{ else }}
+    <img src="{{ relURL .image }}" alt="{{ if .imageAlt }}{{ .imageAlt }}{{ else }}{{ .title }}{{ end }}" loading="lazy">
+    {{ end }}
+  </figure>
+  {{ end }}
+  <div class="juicercook-card-body">
+    <h2 class="juicercook-card-title">{{ if .title }}{{ .title }}{{ else }}Untitled{{ end }}</h2>
+    {{ if .summary }}<p class="juicercook-card-summary">{{ .summary }}</p>{{ end }}
+    <p class="juicercook-card-meta">
+      {{ if .totalTime }}<span class="juicercook-card-time">⏲ {{ .totalTime }}</span>{{ else }}{{ if .cookTime }}<span class="juicercook-card-time">⏲ {{ .cookTime }}</span>{{ end }}{{ end }}
+      {{ if .servings }}<span class="juicercook-card-yield">{{ .servings }}</span>{{ end }}
+    </p>
+  </div>
+</a>

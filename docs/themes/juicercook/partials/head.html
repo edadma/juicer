@@ -1,0 +1,41 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{{ if .page.title }}{{ if .page.title = .site.title }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ else }}<title>{{ .page.title }} — {{ .site.title }}</title>{{ end }}{{ else }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ end }}
+{{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
+
+{{ partial 'seo' . }}
+
+<script>
+  (function() {
+    try {
+      var stored = localStorage.getItem('juicercook-theme');
+      var dark = stored
+        ? stored === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    } catch (e) {}
+  })();
+</script>
+
+<link rel="stylesheet" href="{{ relURL '/juicercook.css' }}">
+
+{{ if .site.customCSS }}{{ for css <- .site.customCSS }}<link rel="stylesheet" href="{{ relURL css }}">
+{{ end }}{{ end }}
+
+{{ if .site.juicercook }}
+<style>
+  :root {
+    {{ if .site.juicercook.brand }}--brand: {{ .site.juicercook.brand }};{{ end }}
+    {{ if .site.juicercook.brandStrong }}--brand-strong: {{ .site.juicercook.brandStrong }};{{ end }}
+    {{ if .site.juicercook.brandSoft }}--brand-soft: {{ .site.juicercook.brandSoft }};{{ end }}
+    {{ if .site.juicercook.accent }}--accent: {{ .site.juicercook.accent }};{{ end }}
+    {{ if .site.juicercook.fontSans }}--font-sans: {{ .site.juicercook.fontSans }};{{ end }}
+    {{ if .site.juicercook.fontSerif }}--font-serif: {{ .site.juicercook.fontSerif }};{{ end }}
+    {{ if .site.juicercook.fontMono }}--font-mono: {{ .site.juicercook.fontMono }};{{ end }}
+  }
+  [data-theme="dark"] {
+    {{ if .site.juicercook.brandDark }}--brand: {{ .site.juicercook.brandDark }};{{ end }}
+    {{ if .site.juicercook.accentDark }}--accent: {{ .site.juicercook.accentDark }};{{ end }}
+  }
+</style>
+{{ end }}

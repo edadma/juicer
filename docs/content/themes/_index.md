@@ -1,10 +1,10 @@
 ---
 title: Themes
-summary: The nine themes that ship in the box — what each one is for and which to pick.
+summary: The ten themes that ship in the box — what each one is for and which to pick.
 weight: 40
 ---
 
-Juicer bundles nine themes in the `docs/themes/` directory of the
+Juicer bundles ten themes in the `docs/themes/` directory of the
 repository. They're all hand-rolled CSS, zero-framework, light/dark
 aware, and tuned for a specific shape of site. A clone of juicer
 comes with all of them; to use one on your own site, copy the
@@ -27,6 +27,7 @@ every bundled theme.
 | An image-first portfolio or case-study site              | [juicerportfolio](/themes/juicerportfolio/)       |
 | A photo-first gallery — the work *is* the photos         | [juicergallery](/themes/juicergallery/)           |
 | A backlink-driven wiki / Zettelkasten                    | [juicerwiki](/themes/juicerwiki/)                 |
+| A recipe site — ingredients, methods, schema.org Recipe  | [juicercook](/themes/juicercook/)                 |
 | A café, restaurant, or small-business site               | [juicercafe](/themes/juicercafe/)                 |
 | A church / ministry / faith-community site               | [juicerchurch](/themes/juicerchurch/)             |
 
