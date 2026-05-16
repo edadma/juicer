@@ -288,11 +288,28 @@ object App {
         dstRoot = dst1,
       )
 
+    // `[assets]` block in site.toml → compile Sass / bundle JS, write
+    // outputs (optionally fingerprinted) under `dst`, and produce a
+    // `logical -> URL` manifest the `asset` template builtin consumes.
+    // Runs eagerly before the render pass so every page sees a fully-
+    // populated manifest. Empty when `[assets]` is absent or disabled —
+    // no extra work, no extra files, byte-identical builds for sites
+    // that don't opt in.
+    val assetPipelineConfig = AssetPipeline.Config.parseFromToml(confdata.toMap)
+    val assetManifest: Map[String, String] =
+      AssetPipeline.run(
+        config  = assetPipelineConfig,
+        backend = newAssetBuilderBackend(),
+        srcRoot = src1,
+        dstRoot = dst1,
+        log     = m => show(m),
+      )
+
     val templateRenderer: TemplateRenderer =
       new TemplateRenderer(
         partials  = partialsLoader,
         data      = rendererData,
-        functions = TemplateBuiltin.functions ++ juicerUrlBuiltins(siteMarkdownConfig, src1, dst1, imageGen),
+        functions = TemplateBuiltin.functions ++ juicerUrlBuiltins(siteMarkdownConfig, src1, dst1, imageGen, assetManifest),
       )
     val shortcodesLoader: TemplateLoader =
       (name: String) =>
@@ -2748,10 +2765,11 @@ object App {
     * (no longer cached as a `lazy val`) so the per-site `mdConfig` — which
     * carries the `codeHighlighter` callback — flows into `markdownify`. */
   private def juicerUrlBuiltins(
-      mdConfig: io.github.edadma.markdown.MarkdownConfig,
-      srcRoot: io.github.edadma.path.Path,
-      dstRoot: io.github.edadma.path.Path,
-      imageGen: ImageVariantGenerator,
+      mdConfig:      io.github.edadma.markdown.MarkdownConfig,
+      srcRoot:       io.github.edadma.path.Path,
+      dstRoot:       io.github.edadma.path.Path,
+      imageGen:      ImageVariantGenerator,
+      assetManifest: Map[String, String],
   ): Map[String, TemplateFunction] = {
     val imageDimsCache = scala.collection.mutable.HashMap.empty[String, Option[ImageDimensions.Dims]]
 
@@ -2925,6 +2943,22 @@ object App {
         2,
         { case (con, Seq(arg: String, format: String)) =>
           imageGen.srcsetFor(arg, format.trim.toLowerCase, bundleSrcFromContext(con))
+        },
+      ),
+      // Asset-pipeline manifest lookup: `{{ asset 'foo.css' }}` returns
+      // the URL of the compiled (and optionally fingerprinted) output.
+      // Sites that haven't configured `[assets]` get the input string
+      // back unchanged, so authors can drop `asset` into templates
+      // before they wire up a pipeline without breaking the build.
+      // Missing-key lookups return the input — a typo's effect shows
+      // up as a broken `<link href="foo.css">` rather than a silent
+      // empty string, which is faster to diagnose.
+      "asset" -> TemplateFunction(
+        "asset",
+        1,
+        { case (_, Seq(name: String)) =>
+          val trimmed = name.trim
+          assetManifest.getOrElse(trimmed, trimmed)
         },
       ),
       // OpenGraph + Twitter card meta tags (Phase 2.7). Pass a page record
