@@ -195,10 +195,22 @@ object AssetPipeline {
       case _: CopyEntry    => Left("copy")  // sentinel: skip tool, use byte copy below
     }
 
+    // Three outcomes:
+    //   Tool succeeded → continue, fingerprint if requested.
+    //   Tool failed for SassEntry → degrade-by-registering: don't
+    //     write anything (SCSS source bytes are not valid CSS in
+    //     general; `@use` etc. would break), but DO put the
+    //     unfingerprinted output URL in the manifest so a theme's
+    //     static fallback at that URL still serves. Skips
+    //     fingerprinting since we have no produced bytes to hash.
+    //   Tool failed for EsbuildEntry → degrade-by-copy: JS source
+    //     is usually valid JS-without-bundle, so a verbatim copy is
+    //     a reasonable fallback (loses import resolution, keeps the
+    //     URL working). Pipeline falls through to the staging path.
+    //   CopyEntry → byte-for-byte verbatim is the whole point.
     val producedOk: Boolean = produceResult match {
       case Right(()) => true
       case Left("copy") =>
-        // CopyEntry: byte-for-byte verbatim.
         try {
           stagingPath.writeBytes(srcPath.readBytes)
           true
@@ -208,18 +220,21 @@ object AssetPipeline {
             false
         }
       case Left(reason) =>
-        // Tool failed or unavailable — degrade to verbatim copy so the
-        // URL still resolves. The backend has already logged the
-        // missing-tool advisory; we add a per-entry note so authors
-        // know which file got the fallback.
-        log(s"asset $entry skipped tool ($reason); copying source verbatim")
-        try {
-          stagingPath.writeBytes(srcPath.readBytes)
-          true
-        } catch {
-          case e: Throwable =>
-            Console.err.println(s"juicer: asset fallback copy failed (${entry.input}): ${e.getMessage}")
-            false
+        entry match {
+          case _: SassEntry =>
+            log(s"asset $entry skipped tool ($reason); registering URL ${entry.output} without writing (expects a static fallback at that path)")
+            val outUrl = if (entry.output.startsWith("/")) entry.output else "/" + entry.output
+            return Some(outUrl)
+          case _ =>
+            log(s"asset $entry skipped tool ($reason); copying source verbatim")
+            try {
+              stagingPath.writeBytes(srcPath.readBytes)
+              true
+            } catch {
+              case e: Throwable =>
+                Console.err.println(s"juicer: asset fallback copy failed (${entry.input}): ${e.getMessage}")
+                false
+            }
         }
     }
 
