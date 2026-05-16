@@ -1,0 +1,20 @@
+{{ // Episode-card partial — small horizontal card with cover art on
+   // the left, title + summary + meta on the right. Used on the home
+   // grid, season pages, and tag archives.
+   //
+   // Input: a basic page record. Reads .title, .url, .summary, .image,
+   // .dateLong, .dateISO, .duration, .audio. }}
+<article class="juicerpodcast-card">
+  <a class="juicerpodcast-card-figure" href="{{ .url }}" aria-hidden="true">
+    {{ if .image }}<img src="{{ relURL .image }}" alt="" loading="lazy">{{ else }}<div class="juicerpodcast-card-figure-placeholder">▶</div>{{ end }}
+  </a>
+  <div class="juicerpodcast-card-body">
+    <h2 class="juicerpodcast-card-title"><a href="{{ .url }}">{{ if .title }}{{ .title }}{{ else }}Untitled{{ end }}</a></h2>
+    {{ if .summary }}<p class="juicerpodcast-card-summary">{{ .summary }}</p>{{ end }}
+    <p class="juicerpodcast-card-meta">
+      {{ if .dateLong }}<time datetime="{{ .dateISO }}">{{ .dateLong }}</time>{{ end }}
+      {{ if .duration }}{{ if .dateLong }} · {{ end }}<span class="juicerpodcast-card-duration">{{ .duration }}</span>{{ end }}
+    </p>
+    {{ if .audio }}<audio class="juicerpodcast-card-audio" controls preload="none" src="{{ relURL .audio }}"></audio>{{ end }}
+  </div>
+</article>

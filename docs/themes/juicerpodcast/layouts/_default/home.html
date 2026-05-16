@@ -1,0 +1,24 @@
+<!-- Podcast home: hero block (show name + tagline + cover) + subscribe
+     strip + episode list. -->
+{{ define content }}
+  <section class="juicerpodcast-hero">
+    <div class="juicerpodcast-hero-inner">
+      {{ if .site.juicerpodcast.cover }}
+      <img class="juicerpodcast-hero-cover" src="{{ relURL .site.juicerpodcast.cover }}" alt="">
+      {{ end }}
+      <div class="juicerpodcast-hero-text">
+        {{ if .site.title }}<h1 class="juicerpodcast-hero-title">{{ .site.title }}</h1>{{ end }}
+        {{ if .site.tagline }}<p class="juicerpodcast-hero-tagline">{{ .site.tagline }}</p>{{ end }}
+        {{ if .content }}<div class="juicerpodcast-hero-blurb">{{ .content }}</div>{{ end }}
+        {{ partial 'subscribe' . }}
+      </div>
+    </div>
+  </section>
+
+  {{ if .site.posts }}
+  <section class="juicerpodcast-episodes" aria-label="Episodes">
+    <h2 class="juicerpodcast-section-h">Recent episodes</h2>
+    {{ for p <- .site.posts }}{{ partial 'episode-card' p }}{{ end }}
+  </section>
+  {{ end }}
+{{ end }}

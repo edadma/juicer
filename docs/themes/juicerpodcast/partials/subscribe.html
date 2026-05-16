@@ -1,0 +1,13 @@
+{{ // Subscribe-strip partial — renders the platform buttons configured
+   // under [[juicerpodcast.subscribe]] in site.toml. Renders nothing
+   // when no platforms are configured. }}
+{{ if .site.juicerpodcast.subscribe }}
+<section class="juicerpodcast-subscribe" aria-label="Subscribe">
+  <h2 class="juicerpodcast-subscribe-h">Subscribe</h2>
+  <ul class="juicerpodcast-subscribe-list">
+    {{ for s <- .site.juicerpodcast.subscribe }}
+    <li><a class="juicerpodcast-subscribe-link" href="{{ s.url }}">{{ s.label }}</a></li>
+    {{ end }}
+  </ul>
+</section>
+{{ end }}

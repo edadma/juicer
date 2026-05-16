@@ -1,0 +1,15 @@
+<footer class="juicerpodcast-footer">
+  <div class="juicerpodcast-footer-inner">
+    <div>
+      <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+      {{ if not .site.hideJuicerCredit }}
+      <span class="juicerpodcast-footer-credit"> · Built with <a href="https://github.com/edadma/juicer">juicer</a></span>
+      {{ end }}
+    </div>
+    {{ if .site.links }}
+    <ul class="juicerpodcast-footer-links">
+      {{ for l <- .site.links }}<li><a href="{{ l.url }}">{{ l.label }}</a></li>{{ end }}
+    </ul>
+    {{ end }}
+  </div>
+</footer>
