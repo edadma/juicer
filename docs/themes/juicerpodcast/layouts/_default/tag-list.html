@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tags — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerpodcast.css' }}">
+</head>
+<body>
+  <div class="juicerpodcast-page">
+    <header class="juicerpodcast-topbar">
+      <div class="juicerpodcast-topbar-inner">
+        <a class="juicerpodcast-brand" href="{{ relURL '/' }}">
+          <span class="juicerpodcast-brand-name">{{ .site.title }}</span>
+        </a>
+      </div>
+    </header>
+    <main class="juicerpodcast-main">
+      <article class="juicerpodcast-section">
+        <header class="juicerpodcast-section-head">
+          <h1 class="juicerpodcast-section-title">All tags</h1>
+          {{ if .terms }}<p class="juicerpodcast-section-summary">{{ length .terms }} tags</p>{{ end }}
+        </header>
+        {{ if .terms }}
+        <ul class="juicerpodcast-taglist">
+          {{ for t <- .terms }}
+          <li><a href="{{ t.url }}">{{ t.name }}</a> <span class="juicerpodcast-taglist-count">{{ t.count }}</span></li>
+          {{ end }}
+        </ul>
+        {{ end }}
+      </article>
+    </main>
+    <footer class="juicerpodcast-footer">
+      <div class="juicerpodcast-footer-inner">
+        <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{{ if .page.title }}{{ if .page.title = .site.title }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ else }}<title>{{ .page.title }} — {{ .site.title }}</title>{{ end }}{{ else }}<title>{{ .site.title }}{{ if .site.tagline }} · {{ .site.tagline }}{{ end }}</title>{{ end }}
+{{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
+
+{{ partial 'seo' . }}
+
+<script>
+  (function() {
+    try {
+      var stored = localStorage.getItem('juicerpodcast-theme');
+      var dark = stored
+        ? stored === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    } catch (e) {}
+  })();
+</script>
+
+<link rel="stylesheet" href="{{ relURL '/juicerpodcast.css' }}">
+
+{{ if .site.customCSS }}{{ for css <- .site.customCSS }}<link rel="stylesheet" href="{{ relURL css }}">
+{{ end }}{{ end }}
+
+{{ if .site.juicerpodcast }}
+<style>
+  :root {
+    {{ if .site.juicerpodcast.brand }}--brand: {{ .site.juicerpodcast.brand }};{{ end }}
+    {{ if .site.juicerpodcast.brandStrong }}--brand-strong: {{ .site.juicerpodcast.brandStrong }};{{ end }}
+    {{ if .site.juicerpodcast.brandSoft }}--brand-soft: {{ .site.juicerpodcast.brandSoft }};{{ end }}
+    {{ if .site.juicerpodcast.accent }}--accent: {{ .site.juicerpodcast.accent }};{{ end }}
+    {{ if .site.juicerpodcast.fontSans }}--font-sans: {{ .site.juicerpodcast.fontSans }};{{ end }}
+    {{ if .site.juicerpodcast.fontSerif }}--font-serif: {{ .site.juicerpodcast.fontSerif }};{{ end }}
+  }
+  [data-theme="dark"] {
+    {{ if .site.juicerpodcast.brandDark }}--brand: {{ .site.juicerpodcast.brandDark }};{{ end }}
+    {{ if .site.juicerpodcast.accentDark }}--accent: {{ .site.juicerpodcast.accentDark }};{{ end }}
+  }
+</style>
+{{ end }}

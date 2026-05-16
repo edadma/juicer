@@ -2101,6 +2101,40 @@ object App {
           sb.append("  <entry>\n")
           sb.append("    <title>").append(escapeXml(rec.get("title").collect { case s: String => s }.getOrElse(c.name))).append("</title>\n")
           sb.append("    <link href=\"").append(escapeXml(abs)).append("\"/>\n")
+          // Atom enclosure (RFC 4287 §4.2.7.2) — emitted when a page
+          // declares an `audio:` (or `enclosure:`) path in frontmatter.
+          // Feed readers and podcast platforms (Apple, Overcast, Pocket
+          // Casts) pick this up the same way they'd pick up an RSS 2.0
+          // `<enclosure>`. `audioType` / `audioLength` (or `enclosureType`
+          // / `enclosureLength`) refine the rendering — without them the
+          // link still emits with just `rel="enclosure"`.
+          val fm = frontmatterMap(c.page)
+          val enclosureRaw = fm.get("enclosure").collect { case s: String => s }
+            .orElse(fm.get("audio").collect { case s: String => s })
+          enclosureRaw.foreach { encPath =>
+            val href = {
+              if (encPath.startsWith("http://") || encPath.startsWith("https://")) encPath
+              else {
+                val base    = baseURL.base + baseURL.path
+                val baseTrim = if (base.endsWith("/")) base.dropRight(1) else base
+                val rel      = if (encPath.startsWith("/")) encPath else "/" + encPath
+                baseTrim + rel
+              }
+            }
+            def asNumberString(v: Any): Option[String] = v match {
+              case s: String => Some(s)
+              case n: Number => Some(n.toString)
+              case _         => None
+            }
+            val encType = fm.get("enclosureType").collect { case s: String => s }
+              .orElse(fm.get("audioType").collect { case s: String => s })
+            val encLength = fm.get("enclosureLength").flatMap(asNumberString)
+              .orElse(fm.get("audioLength").flatMap(asNumberString))
+            sb.append("    <link rel=\"enclosure\" href=\"").append(escapeXml(href)).append("\"")
+            encType.foreach(t => sb.append(" type=\"").append(escapeXml(t)).append("\""))
+            encLength.foreach(l => sb.append(" length=\"").append(escapeXml(l)).append("\""))
+            sb.append("/>\n")
+          }
           sb.append("    <id>").append(escapeXml(abs)).append("</id>\n")
           sb.append("    <updated>").append(escapeXml(normalizeDate(pageDate(c)))).append("</updated>\n")
           val summary = rec.get("summary").collect { case s: String => s }.getOrElse("")

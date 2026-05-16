@@ -1,0 +1,68 @@
+<!-- Episode page. Cover art on the left, meta + native HTML5 audio
+     player + show notes on the right. Falls back to a single column
+     on narrow viewports. -->
+{{ define content }}
+  <article class="juicerpodcast-episode">
+    <header class="juicerpodcast-episode-head">
+      {{ if .page.image }}
+      <figure class="juicerpodcast-episode-cover">
+        <img src="{{ relURL .page.image }}" alt="{{ if .page.imageAlt }}{{ .page.imageAlt }}{{ else }}{{ .page.title }}{{ end }}">
+      </figure>
+      {{ end }}
+
+      <div class="juicerpodcast-episode-intro">
+        <h1 class="juicerpodcast-episode-title">{{ .page.title }}</h1>
+        {{ if .page.summary }}<p class="juicerpodcast-episode-summary">{{ .page.summary }}</p>{{ end }}
+        <p class="juicerpodcast-episode-meta">
+          {{ if .page.dateLong }}<time datetime="{{ .page.dateISO }}">{{ .page.dateLong }}</time>{{ end }}
+          {{ if .page.duration }}{{ if .page.dateLong }} · {{ end }}<span class="juicerpodcast-episode-duration">{{ .page.duration }}</span>{{ end }}
+          {{ if .page.guest }}{{ if .page.dateLong or .page.duration }} · {{ end }}<span>with {{ .page.guest }}</span>{{ end }}
+        </p>
+        {{ if .page.audio }}
+        <audio class="juicerpodcast-episode-player" controls preload="metadata" src="{{ relURL .page.audio }}">
+          Your browser doesn't support the audio element. <a href="{{ relURL .page.audio }}">Download the episode</a>.
+        </audio>
+        <p class="juicerpodcast-episode-download">
+          <a href="{{ relURL .page.audio }}" download>Download episode</a>{{ if .page.audioLength }} <span>({{ .page.audioLength }} bytes){{ end }}</span>
+        </p>
+        {{ end }}
+      </div>
+    </header>
+
+    {{ if .content }}
+    <div class="juicerpodcast-episode-body">
+      <h2 class="juicerpodcast-section-h">Show notes</h2>
+      {{ .content }}
+    </div>
+    {{ end }}
+
+    {{ if .page.links }}
+    <section class="juicerpodcast-episode-links" aria-label="Mentioned in this episode">
+      <h2 class="juicerpodcast-section-h">Mentioned</h2>
+      <ul class="juicerpodcast-episode-link-list">
+        {{ for l <- .page.links }}<li><a href="{{ l.url }}">{{ l.label }}</a></li>{{ end }}
+      </ul>
+    </section>
+    {{ end }}
+
+    {{ if .page.transcript }}
+    <details class="juicerpodcast-transcript">
+      <summary>Transcript</summary>
+      <div class="juicerpodcast-transcript-body">{{ markdownify .page.transcript }}</div>
+    </details>
+    {{ end }}
+
+    {{ if .page.tags }}
+    <p class="juicerpodcast-episode-tags">
+      {{ for t, i <- .page.tags }}{{ if i }} · {{ end }}<a href="{{ relURL '/tags/' }}{{ slugify t }}/">#{{ t }}</a>{{ end }}
+    </p>
+    {{ end }}
+
+    {{ if .page.prev or .page.next }}
+    <nav class="juicerpodcast-episode-nav" aria-label="Episode navigation">
+      {{ if .page.prev }}<a class="juicerpodcast-episode-nav-prev" href="{{ .page.prev.url }}"><span>← Previous</span><span>{{ .page.prev.title }}</span></a>{{ else }}<span></span>{{ end }}
+      {{ if .page.next }}<a class="juicerpodcast-episode-nav-next" href="{{ .page.next.url }}"><span>Next →</span><span>{{ .page.next.title }}</span></a>{{ else }}<span></span>{{ end }}
+    </nav>
+    {{ end }}
+  </article>
+{{ end }}

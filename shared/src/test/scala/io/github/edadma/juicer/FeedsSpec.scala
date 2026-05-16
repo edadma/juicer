@@ -60,6 +60,64 @@ class FeedsSpec extends AnyFlatSpec with Matchers with JuicerTestSupport {
     emptySectionFeed.exists shouldBe false
   }
 
+  it should "emit a <link rel=\"enclosure\"> per entry when a page declares audio: frontmatter" in {
+    writeAt("site.toml", "title = \"Podcast\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n.\n")
+    writeAt(
+      "content/ep01.md",
+      """---
+        |title: Ep 01
+        |date: 2026-01-15
+        |audio: /audio/ep01.mp3
+        |audioType: audio/mpeg
+        |audioLength: 8421337
+        |---
+        |
+        |# Ep 01
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/ep02.md",
+      """---
+        |title: Ep 02
+        |date: 2026-02-15
+        |audio: /audio/ep02.mp3
+        |---
+        |
+        |# Ep 02
+        |""".stripMargin,
+    )
+    writeAt(
+      "content/no-audio.md",
+      """---
+        |title: A blog post
+        |date: 2026-02-20
+        |---
+        |
+        |# Plain
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "{{ .content }}")
+
+    build()
+
+    val xml = out("feed.xml")
+    // Episode with all three audio fields gets a fully-attributed enclosure
+    xml should include(
+      "<link rel=\"enclosure\" href=\"http://x/audio/ep01.mp3\" type=\"audio/mpeg\" length=\"8421337\"/>",
+    )
+    // Episode with just `audio:` gets the bare href-only form
+    xml should include("<link rel=\"enclosure\" href=\"http://x/audio/ep02.mp3\"/>")
+    // Plain blog entry without audio gets NO enclosure link
+    val noAudioIdx = xml.indexOf("<title>A blog post</title>")
+    val nextEntryIdx = {
+      val n = xml.indexOf("</entry>", noAudioIdx)
+      if (n < 0) xml.length else n
+    }
+    xml.slice(noAudioIdx, nextEntryIdx) should not include "rel=\"enclosure\""
+  }
+
   it should "respect feeds = false to disable feed emission" in {
     writeAt(
       "site.toml",

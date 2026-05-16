@@ -1,0 +1,52 @@
+# Demo site for juicerpodcast — Echo Chamber, a fictional weekly
+# show. Four episodes, with the audio enclosures wired into the
+# Atom feed via juicer's `audio:` frontmatter support.
+
+title       = "Echo Chamber"
+tagline     = "A weekly conversation with one interesting person"
+author      = "Sara Lindholm"
+baseURL     = "http://localhost:8080"
+description = "Echo Chamber is a weekly long-form interview show — one guest, one hour, no agenda."
+
+themeDir = "../../themes"
+theme    = "juicerpodcast"
+
+htmlDir = ""
+sortBy  = "date"
+
+[[topnav]]
+label = "Episodes"
+url   = "/"
+
+[[topnav]]
+label = "About"
+url   = "/about/"
+
+[[topnav]]
+label = "Tags"
+url   = "/tags/"
+
+[[links]]
+label = "Mastodon"
+url   = "https://mastodon.social/@example"
+
+# Show artwork (used on the home hero and in the podcast JSON-LD).
+[juicerpodcast]
+cover = "/img/show-cover.jpg"
+
+# Subscribe-strip buttons on the home page.
+[[juicerpodcast.subscribe]]
+label = "Apple Podcasts"
+url   = "https://podcasts.apple.com/"
+
+[[juicerpodcast.subscribe]]
+label = "Overcast"
+url   = "https://overcast.fm/"
+
+[[juicerpodcast.subscribe]]
+label = "Pocket Casts"
+url   = "https://pca.st/"
+
+[[juicerpodcast.subscribe]]
+label = "RSS"
+url   = "/feed.xml"
