@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="{{ if .page.lang }}{{ .page.lang }}{{ else }}en{{ end }}">
+<head>
+  {{ partial 'head' . }}
+</head>
+<body>
+  <div class="juicerwiki-page">
+    {{ partial 'topbar' . }}
+    <main class="juicerwiki-main">
+      {{ block content . }}{{ end }}
+    </main>
+    {{ partial 'footer' . }}
+  </div>
+  {{ partial 'search' . }}
+</body>
+</html>

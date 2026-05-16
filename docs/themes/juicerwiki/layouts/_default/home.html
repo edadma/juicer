@@ -1,0 +1,36 @@
+<!-- Wiki home: optional intro, then a tag cloud, then a list of most-
+     recent notes. The home page is meant to be a launch pad — the
+     real navigation happens by following links between notes. -->
+{{ define content }}
+  <section class="juicerwiki-home-intro">
+    <div class="juicerwiki-home-intro-inner">
+      {{ if .site.title }}<h1 class="juicerwiki-home-title">{{ .site.title }}</h1>{{ end }}
+      {{ if .site.tagline }}<p class="juicerwiki-home-tagline">{{ .site.tagline }}</p>{{ end }}
+      {{ if .content }}<div class="juicerwiki-home-blurb">{{ .content }}</div>{{ end }}
+    </div>
+  </section>
+
+  <div class="juicerwiki-home-body">
+    {{ partial 'tag-cloud' . }}
+
+    {{ if .site.posts }}
+    <section class="juicerwiki-home-recent" aria-label="Recent notes">
+      <h2 class="juicerwiki-section-h">Recent notes</h2>
+      <ol class="juicerwiki-notelist">
+        {{ for p, i <- .site.posts }}{{ if i < 30 }}
+        <li class="juicerwiki-notelist-item">
+          <h3 class="juicerwiki-notelist-title">
+            <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+          </h3>
+          <p class="juicerwiki-notelist-meta">
+            {{ if p.dateLong }}<time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time>{{ end }}
+            {{ if p.tags }}{{ if p.dateLong }} · {{ end }}<span class="juicerwiki-notelist-tags">{{ for t, ti <- p.tags }}{{ if ti }}, {{ end }}{{ t }}{{ end }}</span>{{ end }}
+          </p>
+          {{ if p.summary }}<p class="juicerwiki-notelist-summary">{{ p.summary }}</p>{{ end }}
+        </li>
+        {{ end }}{{ end }}
+      </ol>
+    </section>
+    {{ end }}
+  </div>
+{{ end }}

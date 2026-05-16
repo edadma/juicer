@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tags — {{ .site.title }}</title>
+  <link rel="stylesheet" href="{{ relURL '/juicerwiki.css' }}">
+  <!-- tag-list / tag-page / 404 bypass baseof — keep the chrome
+       inlined here. -->
+</head>
+<body>
+  <div class="juicerwiki-page">
+    <header class="juicerwiki-topbar">
+      <div class="juicerwiki-topbar-inner">
+        <a class="juicerwiki-brand" href="{{ relURL '/' }}">
+          <span class="juicerwiki-brand-name">{{ .site.title }}</span>
+          {{ if .site.tagline }}<span class="juicerwiki-brand-tagline">{{ .site.tagline }}</span>{{ end }}
+        </a>
+        <nav class="juicerwiki-nav" aria-label="Main">
+          <a href="{{ relURL '/' }}">Home</a>
+          <a href="{{ relURL '/tags/' }}">Tags</a>
+        </nav>
+      </div>
+    </header>
+    <main class="juicerwiki-main">
+      <article class="juicerwiki-note">
+        <header class="juicerwiki-note-head">
+          <h1 class="juicerwiki-note-title">All tags</h1>
+          {{ if .terms }}<p class="juicerwiki-note-meta">{{ length .terms }} tags</p>{{ end }}
+        </header>
+        {{ if .terms }}
+        <ul class="juicerwiki-taglist">
+          {{ for t <- .terms }}
+          <li class="juicerwiki-taglist-item">
+            <a href="{{ t.url }}">{{ t.name }}</a>
+            <span class="juicerwiki-taglist-count">{{ t.count }}</span>
+          </li>
+          {{ end }}
+        </ul>
+        {{ end }}
+      </article>
+    </main>
+    <footer class="juicerwiki-footer">
+      <div class="juicerwiki-footer-inner">
+        <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

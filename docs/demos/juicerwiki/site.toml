@@ -1,0 +1,31 @@
+# Demo site for the juicerwiki theme — a small Zettelkasten of
+# computing notes that link to each other. Showcases the backlinks
+# pipeline (every note shows every other note linking to it) and the
+# tag-cloud / search-modal chrome.
+#
+# Local preview:
+#   sbt 'juicerJVM/run serve -s docs/demos/juicerwiki -L'
+
+title       = "Field Notes"
+tagline     = "A reading wiki on computing"
+author      = "ed"
+baseURL     = "http://localhost:8080"
+description = "A small wiki of notes I keep coming back to — computer science, distributed systems, language design."
+
+themeDir = "../../themes"
+theme    = "juicerwiki"
+
+htmlDir = ""
+sortBy  = "date"
+
+[[topnav]]
+label = "Tags"
+url   = "/tags/"
+
+[[topnav]]
+label = "About"
+url   = "/about/"
+
+[[links]]
+label = "GitHub"
+url   = "https://github.com/example"

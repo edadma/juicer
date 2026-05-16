@@ -1,0 +1,30 @@
+<!-- Folder layout — used for any nested section (rare in a wiki, but
+     supported for the cases where someone wants a small grouping like
+     `content/projects/`). Renders the section index page as a list of
+     child notes. -->
+{{ define content }}
+  <article class="juicerwiki-note">
+    <header class="juicerwiki-note-head">
+      <h1 class="juicerwiki-note-title">{{ if .page.title }}{{ .page.title }}{{ else }}Notes{{ end }}</h1>
+      {{ if .page.summary }}<p class="juicerwiki-note-summary">{{ .page.summary }}</p>{{ end }}
+    </header>
+
+    {{ if .content }}<div class="juicerwiki-note-body">{{ .content }}</div>{{ end }}
+
+    {{ if .section.pages }}
+    <ol class="juicerwiki-notelist">
+      {{ for p <- .section.pages }}
+      <li class="juicerwiki-notelist-item">
+        <h3 class="juicerwiki-notelist-title">
+          <a href="{{ p.url }}">{{ if p.title }}{{ p.title }}{{ else }}Untitled{{ end }}</a>
+        </h3>
+        {{ if p.dateLong }}<p class="juicerwiki-notelist-meta"><time datetime="{{ p.dateISO }}">{{ p.dateLong }}</time></p>{{ end }}
+        {{ if p.summary }}<p class="juicerwiki-notelist-summary">{{ p.summary }}</p>{{ end }}
+      </li>
+      {{ end }}
+    </ol>
+    {{ end }}
+
+    {{ partial 'backlinks' . }}
+  </article>
+{{ end }}

@@ -1,0 +1,21 @@
+<!-- The note layout — body + meta + backlinks aside. This is the
+     workhorse layout in juicerwiki because the wiki is mostly flat
+     content: every note lives as `content/<slug>.md` and renders here. -->
+{{ define content }}
+  <article class="juicerwiki-note">
+    <header class="juicerwiki-note-head">
+      <h1 class="juicerwiki-note-title">{{ .page.title }}</h1>
+      {{ if .page.summary }}<p class="juicerwiki-note-summary">{{ .page.summary }}</p>{{ end }}
+      <p class="juicerwiki-note-meta">
+        {{ if .page.dateLong }}<time datetime="{{ .page.dateISO }}">{{ .page.dateLong }}</time>{{ end }}
+        {{ if .page.tags }}{{ if .page.dateLong }} · {{ end }}<span class="juicerwiki-note-tags">{{ for t, i <- .page.tags }}{{ if i }}, {{ end }}<a href="{{ relURL '/tags/' }}{{ slugify t }}/">{{ t }}</a>{{ end }}</span>{{ end }}
+      </p>
+    </header>
+
+    <div class="juicerwiki-note-body">
+      {{ .content }}
+    </div>
+
+    {{ partial 'backlinks' . }}
+  </article>
+{{ end }}

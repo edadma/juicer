@@ -1,0 +1,17 @@
+{{ // Tag cloud — every tag in the site, sized by usage count.
+   //
+   // Sizing strategy: linear interpolation between 0.85rem (least-used)
+   // and 1.5rem (most-used). Tags with count >= maxCount land at the
+   // top of the range; tags with count == 1 land at the bottom.
+   //
+   // Renders nothing when there are zero tags. }}
+{{ if .site.tags }}
+<section class="juicerwiki-tagcloud" aria-label="Tags">
+  {{ for t <- .site.tags }}
+    <a class="juicerwiki-tagcloud-tag"
+       href="{{ t.url }}"
+       data-count="{{ t.count }}"
+       style="font-size: calc(0.85rem + 0.04rem * {{ t.count }})">{{ t.name }} <span class="juicerwiki-tagcloud-count">{{ t.count }}</span></a>
+  {{ end }}
+</section>
+{{ end }}
