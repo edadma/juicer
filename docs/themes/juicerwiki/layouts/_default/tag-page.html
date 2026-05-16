@@ -4,25 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>#{{ .term.name }} — {{ .site.title }}</title>
+  {{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
+
+  <!-- tag-list / tag-page / 404 bypass baseof. The layout receives
+       `.term` (the Term record), not `.page.tag`. -->
+  <script>
+    (function() {
+      try {
+        var stored = localStorage.getItem('juicerwiki-theme');
+        var dark = stored
+          ? stored === 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      } catch (e) {}
+    })();
+  </script>
+
   <link rel="stylesheet" href="{{ relURL '/juicerwiki.css' }}">
-  <!-- tag-list / tag-page / 404 bypass baseof — keep the chrome
-       inlined here. The layout receives `.term` (the Term record),
-       not `.page.tag`. -->
+
+  {{ if .site.juicerwiki }}
+  <style>
+    :root {
+      {{ if .site.juicerwiki.brand }}--brand: {{ .site.juicerwiki.brand }};{{ end }}
+      {{ if .site.juicerwiki.brandStrong }}--brand-strong: {{ .site.juicerwiki.brandStrong }};{{ end }}
+      {{ if .site.juicerwiki.brandSoft }}--brand-soft: {{ .site.juicerwiki.brandSoft }};{{ end }}
+      {{ if .site.juicerwiki.accent }}--accent: {{ .site.juicerwiki.accent }};{{ end }}
+      {{ if .site.juicerwiki.fontSans }}--font-sans: {{ .site.juicerwiki.fontSans }};{{ end }}
+      {{ if .site.juicerwiki.fontSerif }}--font-serif: {{ .site.juicerwiki.fontSerif }};{{ end }}
+    }
+    [data-theme="dark"] {
+      {{ if .site.juicerwiki.brandDark }}--brand: {{ .site.juicerwiki.brandDark }};{{ end }}
+      {{ if .site.juicerwiki.accentDark }}--accent: {{ .site.juicerwiki.accentDark }};{{ end }}
+    }
+  </style>
+  {{ end }}
 </head>
 <body>
   <div class="juicerwiki-page">
-    <header class="juicerwiki-topbar">
-      <div class="juicerwiki-topbar-inner">
-        <a class="juicerwiki-brand" href="{{ relURL '/' }}">
-          <span class="juicerwiki-brand-name">{{ .site.title }}</span>
-          {{ if .site.tagline }}<span class="juicerwiki-brand-tagline">{{ .site.tagline }}</span>{{ end }}
-        </a>
-        <nav class="juicerwiki-nav" aria-label="Main">
-          <a href="{{ relURL '/' }}">Home</a>
-          <a href="{{ relURL '/tags/' }}">Tags</a>
-        </nav>
-      </div>
-    </header>
+    {{ partial 'topbar' . }}
     <main class="juicerwiki-main">
       <article class="juicerwiki-note">
         <header class="juicerwiki-note-head">
@@ -45,11 +64,8 @@
         {{ end }}
       </article>
     </main>
-    <footer class="juicerwiki-footer">
-      <div class="juicerwiki-footer-inner">
-        <span>© {{ .site.now.year }} {{ if .site.author }}{{ .site.author }}{{ else }}{{ .site.title }}{{ end }}</span>
-      </div>
-    </footer>
+    {{ partial 'footer' . }}
   </div>
+  {{ partial 'search' . }}
 </body>
 </html>

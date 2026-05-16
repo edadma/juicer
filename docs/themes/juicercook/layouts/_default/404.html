@@ -4,23 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Not found — {{ .site.title }}</title>
+  {{ if .site.favicon }}<link rel="icon" href="{{ relURL .site.favicon }}">{{ end }}
+
+  <script>
+    (function() {
+      try {
+        var stored = localStorage.getItem('juicercook-theme');
+        var dark = stored
+          ? stored === 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      } catch (e) {}
+    })();
+  </script>
+
   <link rel="stylesheet" href="{{ relURL '/juicercook.css' }}">
+
+  {{ if .site.juicercook }}
+  <style>
+    :root {
+      {{ if .site.juicercook.brand }}--brand: {{ .site.juicercook.brand }};{{ end }}
+      {{ if .site.juicercook.accent }}--accent: {{ .site.juicercook.accent }};{{ end }}
+    }
+    [data-theme="dark"] {
+      {{ if .site.juicercook.brandDark }}--brand: {{ .site.juicercook.brandDark }};{{ end }}
+      {{ if .site.juicercook.accentDark }}--accent: {{ .site.juicercook.accentDark }};{{ end }}
+    }
+  </style>
+  {{ end }}
 </head>
 <body>
   <div class="juicercook-page">
-    <header class="juicercook-topbar">
-      <div class="juicercook-topbar-inner">
-        <a class="juicercook-brand" href="{{ relURL '/' }}">
-          <span class="juicercook-brand-name">{{ .site.title }}</span>
-        </a>
-      </div>
-    </header>
+    {{ partial 'topbar' . }}
     <main class="juicercook-main">
       <article class="juicercook-section juicercook-404">
         <h1>Recipe not found</h1>
         <p>That dish isn't on the menu. <a href="{{ relURL '/' }}">Back to the kitchen</a>.</p>
       </article>
     </main>
+    {{ partial 'footer' . }}
   </div>
 </body>
 </html>
