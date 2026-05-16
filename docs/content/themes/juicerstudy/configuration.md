@@ -157,10 +157,9 @@ hero's CTAs:
 | Key                          | Type     | Default | What |
 |------------------------------|----------|---------|------|
 | `juicerstudy.startReading`   | bool or string | `false` | When `true`, emits a "Start reading" CTA pointing at `/start/`. Set to a path string (e.g. `"/intro/"`) to point elsewhere. |
+| `juicerstudy.repoCTA`        | bool     | `false` | When `true` *and* a top-level `repoURL` is set, emits a "View on GitHub" CTA. The two-flag pattern is intentional: `repoURL` is commonly set just to drive the topbar GitHub icon, and personal / editorial sites usually don't want a hero CTA tagging along. |
 | `juicerstudy.logo`           | path     | (none)  | Logo image shown in the hero's meta row above the title. |
 | `juicerstudy.version`        | string   | (none)  | Optional version chip shown next to the logo. |
-
-A top-level `repoURL` (the standard juicer key) adds a "View on GitHub" CTA button when set.
 
 ## Image variants
 
