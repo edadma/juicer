@@ -448,6 +448,75 @@ object App {
       case _ => Map.empty[String, Any]
     }
 
+    // ----- contentFiles + section graph (early — required by cascade) -----
+    //
+    // Hoisted above pageInstant / applyPermalinkPattern / etc. so the
+    // cascade helpers below (which need `sectionIndex`) are reachable
+    // from any def downstream. Scala's local-def forward-reference rule
+    // disallows skipping over an intervening `val`, so if cascade lived
+    // farther down it couldn't be called from helpers up here.
+
+    val contentFiles: List[ContentFile] = site.content.collect { case c: ContentFile => c }
+
+    /** Map from outdir → its `_index.md` page (if any). One section per
+      * directory; absent if the section was created implicitly via a
+      * non-`_index` child. */
+    val sectionIndex: Map[Path, ContentFile] =
+      contentFiles.collect { case c if c.name == folderContent => c.outdir -> c }.toMap
+
+    // ----- Frontmatter cascade -----
+    //
+    // A section's `_index.md` may declare a `cascade:` map in frontmatter;
+    // every descendant page inherits those keys unless it sets its own.
+    // Nearer ancestor wins over farther; the page's own frontmatter wins
+    // over all cascade. Mirrors Hugo's `cascade` shape.
+    //
+    // Implementation: per-call walk from the root down to the page's
+    // containing section, accumulating each level's cascade map. A
+    // section's own `_index.md` does NOT inherit its own cascade (the
+    // cascade applies to descendants, not to the declaring section
+    // itself), so the chain for an `_index.md` drops its own outdir.
+
+    /** Extract the `cascade:` map from a section's frontmatter. Returns
+      * empty if absent or the value isn't a map. */
+    def cascadeOfSection(section: ContentFile): Map[String, Any] =
+      frontmatterMap(section.page).get("cascade") match {
+        case Some(m: Map[?, ?]) =>
+          m.collect { case (k: String, v) => k -> v }.toMap
+        case _ => Map.empty[String, Any]
+      }
+
+    /** Ordered chain of section outdirs whose cascade applies to `c` —
+      * root first, c's own section last. Excludes c's own outdir when c
+      * IS its section's `_index.md` (a section's cascade doesn't apply
+      * to itself). */
+    def cascadeChain(c: ContentFile): List[Path] = {
+      val rel   = c.outdir.relativeTo(dst1)
+      val parts = rel.segments.toList
+      val chain = (0 to parts.length).map(i => parts.take(i).foldLeft(dst1)(_ / _)).toList
+      val isOwn = c.name == folderContent
+      if (isOwn) chain.dropRight(1) else chain
+    }
+
+    /** Resolved cascade map for `c` — merge of every ancestor section's
+      * cascade, with nearer ancestors winning. Empty when no cascade is
+      * declared anywhere on the chain. */
+    def effectiveCascadeFor(c: ContentFile): Map[String, Any] =
+      cascadeChain(c).foldLeft(Map.empty[String, Any]) { (acc, path) =>
+        sectionIndex.get(path).map(idx => acc ++ cascadeOfSection(idx)).getOrElse(acc)
+      }
+
+    /** Effective frontmatter for `c` — cascade merged with the page's
+      * own frontmatter (page wins). This is what every downstream reader
+      * should call when it has a ContentFile in hand; the raw
+      * `frontmatterMap` remains for non-cascade contexts (e.g.
+      * inspecting an arbitrary page map). */
+    def effectiveFrontmatter(c: ContentFile): Map[String, Any] = {
+      val own = frontmatterMap(c.page)
+      val cas = effectiveCascadeFor(c)
+      if (cas.isEmpty) own else cas ++ own
+    }
+
     // ----- Date formatting (Phase 1.4) -----
     //
     // `date` frontmatter is parsed by the package-level `parseDateString`
@@ -501,7 +570,7 @@ object App {
       * file's filesystem mtime. Fresh tmp paths used in tests have a
       * recent mtime, so the fallback always yields a valid timestamp. */
     def pageInstant(c: ContentFile): java.time.OffsetDateTime = {
-      val fmDate = frontmatterMap(c.page).get("date").collect { case s: String => s }
+      val fmDate = effectiveFrontmatter(c).get("date").collect { case s: String => s }
       fmDate.flatMap(parseDateString).getOrElse {
         val ms = if (c.srcPath ne null) c.srcPath.lastModified else 0L
         java.time.OffsetDateTime.ofInstant(
@@ -538,7 +607,7 @@ object App {
       */
     def applyPermalinkPattern(c: ContentFile, pattern: String, sectionN: String): List[String] = {
       val instant = pageInstant(c)
-      val frontmatter = frontmatterMap(c.page)
+      val frontmatter = effectiveFrontmatter(c)
       val title = frontmatter.get("title").collect { case s: String => s }.getOrElse(c.name)
       // Order matters: `:section` must substitute before `:s...` shorts in
       // case a future token shares a prefix. Today every token is unique
@@ -602,8 +671,6 @@ object App {
       }
     }
 
-    val contentFiles: List[ContentFile] = site.content.collect { case c: ContentFile => c }
-
     // ----- i18n (Tier 2 #10) -----
 
     /** Languages the site is published in. Empty list = single-language site
@@ -653,17 +720,11 @@ object App {
 
     // ----- Section / navigation graph -----
 
-    /** Map from outdir → its `_index.md` page (if any). One section per
-      * directory; absent if the section was created implicitly via a
-      * non-`_index` child. */
-    val sectionIndex: Map[Path, ContentFile] =
-      contentFiles.collect { case c if c.name == folderContent => c.outdir -> c }.toMap
-
     /** Frontmatter weight for sorting. Default is `Long.MaxValue / 2` so
       * pages with no `weight` cluster after explicitly weighted ones but
       * before any sentinel value an author might choose. */
     def pageWeight(c: ContentFile): Long =
-      frontmatterMap(c.page).get("weight").collect {
+      effectiveFrontmatter(c).get("weight").collect {
         case n: BigDecimal => n.toLong
         case n: Long       => n
         case n: Int        => n.toLong
@@ -837,7 +898,7 @@ object App {
       val targetUrl = relPermalinkFor(target)
       val rows = outLinksPerFile.iterator.flatMap {
         case (src, outs) if (src ne target) && outs.contains(targetUrl) =>
-          val fm      = frontmatterMap(src.page)
+          val fm      = effectiveFrontmatter(src)
           val srcUrl  = relPermalinkFor(src)
           val title   = fm.get("title").collect { case s: String => s }.getOrElse(srcUrl)
           val summary = if (src.summary eq null) "" else src.summary
@@ -856,7 +917,7 @@ object App {
       val abs   = baseURL.base + rel
       val inst  = pageInstant(c)
       val words = wordsOf(c.content)
-      val fm    = frontmatterMap(c.page)
+      val fm    = effectiveFrontmatter(c)
       val authors = resolveAuthors(fm)
       // `slug` — the URL stem, useful for in-page anchors and CSS hooks
       // when a template walks `.section.pages` and wants to namespace
@@ -1047,9 +1108,9 @@ object App {
     // Same single-axis-inverted-index machinery as tags. Pages without a
     // `series:` frontmatter just skip the augmentation entirely.
     def seriesNameOf(c: ContentFile): Option[String] =
-      frontmatterMap(c.page).get("series").collect { case s: String => s }
+      effectiveFrontmatter(c).get("series").collect { case s: String => s }
     def seriesOrderOf(c: ContentFile): Int =
-      frontmatterMap(c.page).get("seriesOrder").collect {
+      effectiveFrontmatter(c).get("seriesOrder").collect {
         case n: BigDecimal => n.toInt
         case n: Long       => n.toInt
         case n: Int        => n
@@ -1103,10 +1164,10 @@ object App {
     // dateArchives uses, for the same reason: pulling docs / about / etc.
     // into the post stream by accident is ugly.
     def hasExplicitDateFM(c: ContentFile): Boolean =
-      frontmatterMap(c.page).get("date").collect { case s: String => s }
+      effectiveFrontmatter(c).get("date").collect { case s: String => s }
         .flatMap(parseDateString).isDefined
     def isStaticFM(c: ContentFile): Boolean =
-      frontmatterMap(c.page).get("static").collect {
+      effectiveFrontmatter(c).get("static").collect {
         case true   => true
         case "true" => true
       }.getOrElse(false)
@@ -1186,7 +1247,7 @@ object App {
       val byTerm = scala.collection.mutable.LinkedHashMap
         .empty[String, (String, scala.collection.mutable.ListBuffer[ContentFile])]
       for (c <- contentFiles if c.name != folderContent) {
-        val fm = frontmatterMap(c.page)
+        val fm = effectiveFrontmatter(c)
         val terms = fm.get(field) match {
           case Some(s: String)  => List(s)
           case Some(l: List[?]) => l.collect { case s: String => s }
@@ -1229,7 +1290,7 @@ object App {
       // Map each page record to its list of resolved-author-ids.
       val byAuthorId: Map[String, List[Map[String, Any]]] = pageEntries
         .flatMap { case (c, pageMap) =>
-          val fm = frontmatterMap(c.page)
+          val fm = effectiveFrontmatter(c)
           val ids = fm.get("authors") match {
             case Some(xs: List[?]) => xs.collect { case s: String => s }
             case _ => fm.get("author") match {
@@ -1279,14 +1340,14 @@ object App {
     val siteSortBy:      String = confdoc.getString("sortBy").getOrElse("weight")
 
     def paginateSizeFor(c: ContentFile): Int =
-      frontmatterMap(c.page).get("paginate").collect {
+      effectiveFrontmatter(c).get("paginate").collect {
         case n: BigDecimal => n.toInt
         case n: Long       => n.toInt
         case n: Int        => n
       }.getOrElse(sitePaginateSize)
 
     def sortByFor(c: ContentFile): String =
-      frontmatterMap(c.page).get("sortBy").collect { case s: String => s }
+      effectiveFrontmatter(c).get("sortBy").collect { case s: String => s }
         .getOrElse(siteSortBy)
 
     /** Sort a section's children for the paginator's slice list. Pages with
@@ -1295,13 +1356,13 @@ object App {
       * `name` keeps results deterministic. */
     def sortSectionPages(cs: List[ContentFile], sortBy: String): List[ContentFile] = {
       def hasWeight(c: ContentFile): Boolean =
-        frontmatterMap(c.page).contains("weight")
+        effectiveFrontmatter(c).contains("weight")
       val (weighted, rest) = cs.partition(hasWeight)
       val weightedSorted = weighted.sortBy(c => (pageWeight(c), c.name))
       val restSorted = sortBy match {
         case "date"  => rest.sortBy(c => (-pageInstant(c).toEpochSecond, c.name))
         case "title" => rest.sortBy(c =>
-          (frontmatterMap(c.page).get("title").collect { case s: String => s }.getOrElse(c.name), c.name),
+          (effectiveFrontmatter(c).get("title").collect { case s: String => s }.getOrElse(c.name), c.name),
         )
         case _ => rest.sortBy(c => (pageWeight(c), c.name))
       }
@@ -1378,7 +1439,7 @@ object App {
       // Resolve the recurring weekday for an event. Returns `None` if the
       // event is non-recurring, or an unrecognised day name.
       def recurringDayOf(c: ContentFile, start: java.time.LocalDate): Option[java.time.DayOfWeek] = {
-        val fm = frontmatterMap(c.page)
+        val fm = effectiveFrontmatter(c)
         val isRecurring = fm.get("recurring") match {
           case Some(s: String)  => s.nonEmpty
           case Some(b: Boolean) => b
@@ -1513,7 +1574,7 @@ object App {
       }
       val acc = scala.collection.mutable.ListBuffer.empty[(java.time.OffsetDateTime, Map[String, Any])]
       for ((c, m) <- pageEntries) {
-        frontmatterMap(c.page).get("photos") match {
+        effectiveFrontmatter(c).get("photos") match {
           case Some(xs: List[?]) =>
             val inst = pageInstant(c)
             xs.foreach(x => normalizeOne(x, m, inst).foreach(acc += _))
@@ -1636,7 +1697,7 @@ object App {
       // `folderLayout` ("folder"), non-section pages via `fileLayout`
       // ("file").
       val frontmatterLayout =
-        frontmatterMap(c.page).get("layout").collect { case s: String => s }
+        effectiveFrontmatter(c).get("layout").collect { case s: String => s }
       val layout = frontmatterLayout.getOrElse(if (isSec) folderLayout else fileLayout)
       val particularTemplate = findLayout(folders, layout) match {
         case Some(TemplateFile(templatePath, _, template)) =>
@@ -1826,7 +1887,7 @@ object App {
     // copy / styling.
     val aliasLayout = findLayout(Nil, "alias")
     for ((c, pageMap) <- pageEntries) {
-      val aliasesRaw = frontmatterMap(c.page).get("aliases")
+      val aliasesRaw = effectiveFrontmatter(c).get("aliases")
       val aliases: List[String] = aliasesRaw match {
         case Some(s: String)   => List(s)
         case Some(xs: List[?]) => xs.collect { case s: String => s }
@@ -1896,7 +1957,7 @@ object App {
 
     if (dateArchivesEnabled) {
       def hasExplicitDate(c: ContentFile): Boolean =
-        frontmatterMap(c.page).get("date").collect { case s: String => s }
+        effectiveFrontmatter(c).get("date").collect { case s: String => s }
           .flatMap(parseDateString).isDefined
 
       // Pair each dated page with its parsed instant once. Working off the
@@ -2057,7 +2118,7 @@ object App {
 
     if (feedsEnabled) {
       def pageDate(c: ContentFile): String =
-        frontmatterMap(c.page).get("date").collect { case s: String => s }.getOrElse("")
+        effectiveFrontmatter(c).get("date").collect { case s: String => s }.getOrElse("")
 
       def byDateDesc(cs: List[ContentFile]): List[ContentFile] =
         cs.sortBy(c => (pageDate(c).isEmpty, -pageDate(c).hashCode, c.name))
@@ -2108,7 +2169,7 @@ object App {
           // `<enclosure>`. `audioType` / `audioLength` (or `enclosureType`
           // / `enclosureLength`) refine the rendering — without them the
           // link still emits with just `rel="enclosure"`.
-          val fm = frontmatterMap(c.page)
+          val fm = effectiveFrontmatter(c)
           val enclosureRaw = fm.get("enclosure").collect { case s: String => s }
             .orElse(fm.get("audio").collect { case s: String => s })
           enclosureRaw.foreach { encPath =>
@@ -2167,7 +2228,7 @@ object App {
       // entry list under the section's own title.
       for ((outdir, info) <- sectionInfoByOutdir if info.pages.nonEmpty && outdir != dst1) {
         val sectionTitle = info.index.flatMap { c =>
-          frontmatterMap(c.page).get("title").collect { case s: String => s }
+          effectiveFrontmatter(c).get("title").collect { case s: String => s }
         }.getOrElse(outdir.filename)
         val sectionRel = info.index.map(c => relPermalinkFor(c)).getOrElse {
           // Fallback for sections without an _index: derive from outdir.
