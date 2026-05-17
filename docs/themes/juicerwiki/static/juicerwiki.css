@@ -65,6 +65,12 @@
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+/* HTML5 [hidden] would default to `display: none` via the UA
+   stylesheet, but explicit display rules on the same element
+   override that — most visibly on .juicerwiki-search-modal which
+   sets display:flex and otherwise renders the dialog inline on
+   page load. Force the intent. */
+[hidden] { display: none !important; }
 body {
   margin: 0;
   font-family: var(--font-serif);
