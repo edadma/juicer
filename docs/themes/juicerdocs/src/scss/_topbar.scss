@@ -32,9 +32,14 @@
 }
 .juicerdocs-brand:hover { text-decoration: none; }
 
+/* Height-constrained so the brand image always fits the topbar row;
+   width follows the source's natural aspect ratio. Capped on the wide
+   side so a banner-shaped logo can't push the search/git buttons out
+   of view. */
 .juicerdocs-brand-logo {
-  width: 2rem;
   height: 2rem;
+  width: auto;
+  max-width: 8rem;
 }
 
 .juicerdocs-brand-name {
