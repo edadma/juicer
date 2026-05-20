@@ -1,9 +1,17 @@
 <header class="juicerdocs-topbar">
   <div class="juicerdocs-topbar-inner">
+    {{ // Brand image. Prefer `[juicerdocs] icon` when set — sites whose
+       // primary `logo` includes a wordmark beneath the mark (because
+       // the splash hero shows it large and proud) usually want an
+       // icon-only variant inline in the topbar, where the brand name
+       // is already rendered as text alongside. Falls back to `logo`
+       // so sites that don't set `icon` keep the previous behavior. }}
     <a href="{{ relURL '/' }}" class="juicerdocs-brand">
-      {{ if .site.juicerdocs.logo }}
+      {{ if .site.juicerdocs.icon }}
+      <img src="{{ relURL .site.juicerdocs.icon }}" alt="" class="juicerdocs-brand-logo" />
+      {{ else }}{{ if .site.juicerdocs.logo }}
       <img src="{{ relURL .site.juicerdocs.logo }}" alt="" class="juicerdocs-brand-logo" />
-      {{ end }}
+      {{ end }}{{ end }}
       <span class="juicerdocs-brand-name">{{ .site.title }}</span>
     </a>
 
