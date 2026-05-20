@@ -25,9 +25,16 @@
   gap: 1rem;
   margin-bottom: 1rem;
 }
+/* `width: auto` + `max-width` (and the symmetric height pair) lets the
+   logo render at its natural aspect ratio, capped at the layout's
+   intended box size. A square source still fills the whole 3.5rem
+   square; a non-square source stops being stretched. The splash hero
+   below overrides the cap. */
 .juicerdocs-hero-logo {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: auto;
+  max-width: 3.5rem;
+  height: auto;
+  max-height: 3.5rem;
 }
 .juicerdocs-hero-version {
   font-size: 0.875rem;
@@ -137,8 +144,19 @@
   padding-top: 5rem;
   padding-bottom: 3rem;
 }
+/* Splash hero stacks the logo above the version label, centered. */
 .juicerdocs-page-splash .juicerdocs-hero-meta {
   justify-content: center;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+/* Splash hero logo cap matches Starlight's hero-logo scale; same
+   natural-aspect treatment as the non-splash rule above. */
+.juicerdocs-page-splash .juicerdocs-hero-logo {
+  width: auto;
+  max-width: 28rem;
+  height: auto;
+  max-height: 28rem;
 }
 .juicerdocs-page-splash .juicerdocs-hero-summary {
   margin-left: auto;
