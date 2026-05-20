@@ -59,6 +59,38 @@
   });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setSidebar(false); });
 
+  // ===== Sidebar scroll position persistence =====
+  // Without this, every page navigation resets the sidebar's scroll to
+  // 0, which makes browsing a long doc tree painful — the user clicks
+  // an item near the bottom of the sidebar, the new page loads, and
+  // they have to scroll back down to find the next neighbour. Starlight,
+  // Docusaurus, etc. all preserve the scroll position; we want the same.
+  //
+  // Strategy: save `.juicerdocs-sidebar-aside`'s scrollTop to
+  // sessionStorage on every scroll (debounced), and restore it as the
+  // very first thing this script does (the script tag at the end of
+  // <body> runs after the aside is parsed, so the DOM is ready). One
+  // sessionStorage namespace means the value clears when the tab
+  // closes — a fresh session starts at the top, matching user
+  // expectations.
+  const STORAGE_KEY = "juicerdocs-sidebar-scroll";
+  const aside = document.querySelector(".juicerdocs-sidebar-aside");
+  if (aside) {
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (stored !== null) aside.scrollTop = parseInt(stored, 10) || 0;
+    } catch (e) { /* private mode / storage disabled — accept the reset */ }
+
+    let saveTimer = null;
+    aside.addEventListener("scroll", () => {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        try { sessionStorage.setItem(STORAGE_KEY, String(aside.scrollTop)); }
+        catch (e) { /* ignore */ }
+      }, 80);
+    }, { passive: true });
+  }
+
   // ===== Code block copy buttons + language badge =====
   document.querySelectorAll("pre > code").forEach((code) => {
     const pre = code.parentElement;
