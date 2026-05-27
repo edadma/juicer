@@ -396,7 +396,7 @@ url   = "https://github.com/edadma"
 
 Les pages référencent un auteur via `author: <id>` ou `authors: [<id>, ...]` dans
 leur frontmatter. Voir
-[Concepts → Fonctionnalités de blogue → Registre d'auteurs](../../concepts/blogging/#registre-d-auteurs)
+[Concepts → Fonctionnalités de blogue → Registre d'auteurs](../../concepts/blogging/#registre-dauteurs)
 pour la narration complète.
 
 ## Clés personnalisées
