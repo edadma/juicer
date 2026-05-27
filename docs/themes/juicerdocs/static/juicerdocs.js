@@ -1,9 +1,6 @@
 /*
  * juicerdocs — small client-side helpers.
  *
- *   - Theme toggle (data-theme attribute on <html>; persisted in
- *     localStorage; the <head> snippet applies it before paint so there's
- *     no white flash on dark-mode reload).
  *   - Mobile sidebar toggle (body[data-sidebar-open="true"]).
  *   - "Copy" buttons + language badges on every <pre> code block.
  *   - Mark active sidebar link based on current URL.
@@ -21,17 +18,6 @@
 
 (function () {
   "use strict";
-
-  // ===== Theme toggle (data-theme attribute) =====
-  const themeBtn = document.getElementById("juicerdocs-theme-toggle");
-  if (themeBtn) {
-    themeBtn.addEventListener("click", () => {
-      const cur  = document.documentElement.getAttribute("data-theme");
-      const next = cur === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", next);
-      try { localStorage.setItem("juicerdocs-theme", next); } catch (e) { /* private mode */ }
-    });
-  }
 
   // ===== Mobile sidebar overlay =====
   // Toggles `body[data-sidebar-open="true"]`, which the CSS uses to slide
@@ -124,26 +110,26 @@
   });
 
   // ===== Tabs widget — see {= tabs / tab =} shortcodes =====
-  // Builds a button bar from the .juicerdocs-tab-panel children of a
-  // .juicerdocs-tabs container; uses .is-active on both the button and
+  // Builds a button bar from the .juicer-tab-panel children of a
+  // .juicer-tabs container; uses .is-active on both the button and
   // the panel to express which one is current.
-  document.querySelectorAll(".juicerdocs-tabs[data-juicerdocs-tabs]").forEach((root) => {
-    const panels = Array.from(root.querySelectorAll(":scope > .juicerdocs-tab-panel"));
+  document.querySelectorAll(".juicer-tabs[data-juicer-tabs]").forEach((root) => {
+    const panels = Array.from(root.querySelectorAll(":scope > .juicer-tab-panel"));
     if (panels.length === 0) return;
     const bar = document.createElement("div");
-    bar.className = "juicerdocs-tabs-bar";
+    bar.className = "juicer-tabs-bar";
     panels.forEach((panel, i) => {
       const label = panel.dataset.tabLabel || `Tab ${i + 1}`;
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "juicerdocs-tabs-button";
+      btn.className = "juicer-tabs-button";
       if (i === 0) {
         btn.classList.add("is-active");
         panel.classList.add("is-active");
       }
       btn.textContent = label;
       btn.addEventListener("click", () => {
-        bar.querySelectorAll(".juicerdocs-tabs-button").forEach((b) => b.classList.remove("is-active"));
+        bar.querySelectorAll(".juicer-tabs-button").forEach((b) => b.classList.remove("is-active"));
         panels.forEach((p) => p.classList.remove("is-active"));
         btn.classList.add("is-active");
         panel.classList.add("is-active");
@@ -151,7 +137,7 @@
       bar.appendChild(btn);
     });
     root.insertBefore(bar, root.firstChild);
-    root.removeAttribute("data-juicerdocs-tabs");
+    root.removeAttribute("data-juicer-tabs");
   });
 
   // ===== Sidebar active-link highlight =====

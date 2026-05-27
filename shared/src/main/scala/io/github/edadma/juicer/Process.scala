@@ -52,8 +52,12 @@ object Process {
     val shortcodeTemplates = new mutable.HashMap[String, TemplateFile]
     val otherTemplates     = new ListBuffer[TemplateFile]
 
-    val themeRoots: List[Path] = themeNames
-      .map(n => if (themeDirName.isEmpty) (src / n).normalize else (src / themeDirName / n).normalize)
+    // Expand the site's theme list into the full lookup chain by walking each
+    // theme's `theme.toml` `inherits` dependencies (see `resolveThemeChain`).
+    // A theme with no `theme.toml` contributes only itself, so a bundle that
+    // declares no inheritance resolves to exactly the site's theme list.
+    val themeRoots: List[Path] = resolveThemeChain(src, themeDirName, themeNames)
+      .map(n => themeRootPath(src, themeDirName, n))
       .filter(isDir)
 
     val siteRoots = Roots(
@@ -360,6 +364,83 @@ object Process {
       shortcodeTemplates.toMap,
       otherTemplates.toList,
     )
+  }
+
+  /** Map a theme name to its root directory. With `themeDir` set (the
+    * `standard` baseline uses `themes`), a theme lives at
+    * `<src>/<themeDir>/<name>`; with `themeDir` empty (the `simple` baseline)
+    * it lives directly at `<src>/<name>`. */
+  private def themeRootPath(src: Path, themeDir: String, name: String): Path =
+    if (themeDir.isEmpty) (src / name).normalize else (src / themeDir / name).normalize
+
+  /** A theme's declared dependencies, read from its optional `theme.toml`.
+    * The v1 surface is a single `inherits` key — an array of theme names in
+    * precedence order (earlier wins), or a bare string for the common
+    * single-parent case. A theme with no `theme.toml`, or one without an
+    * `inherits` key, depends on nothing. */
+  private def themeInherits(themeRoot: Path): List[String] = {
+    import io.github.edadma.toml.{TomlParser, TomlValue}
+
+    val tf = (themeRoot / "theme.toml").normalize
+    if (!isFile(tf)) Nil
+    else
+      TomlParser.parse(tf.readText()) match {
+        case Right(doc) =>
+          doc.get("inherits") match {
+            case None                       => Nil
+            case Some(TomlValue.Str(s))     => List(s)
+            case Some(TomlValue.Arr(elems)) => elems.toList.collect { case TomlValue.Str(s) => s }
+            case Some(_)                    => problem(s"$tf: 'inherits' must be a string or array of strings")
+          }
+        case Left(err) => problem(s"could not parse $tf: $err")
+      }
+  }
+
+  /** Expand the site's theme list into the full resolved lookup chain by
+    * walking each theme's `theme.toml` `inherits` dependencies depth-first.
+    *
+    * Precedence is the rule users already know — site files beat the first
+    * theme, which beats the next, and so on — and inheritance only lengthens
+    * the chain: a theme's parents are spliced in right after it, ahead of the
+    * next sibling. Names are de-duplicated keeping the first (highest-
+    * precedence) occurrence, so a theme reached by two paths (a diamond) is
+    * resolved once, at its earliest position.
+    *
+    * A cycle (`A` inherits `B` inherits `A`) fails the build with the chain
+    * traced out. Every name appearing in an `inherits` list must resolve to a
+    * real theme directory, or the build fails. A site-level theme name that
+    * doesn't resolve is left in place and dropped by the caller's `isDir`
+    * filter — preserving the long-standing "unknown site theme is silently
+    * skipped" behaviour, so a bundle with no `theme.toml` files anywhere
+    * resolves byte-for-byte as it did before inheritance existed. */
+  private def resolveThemeChain(src: Path, themeDir: String, siteNames: List[String]): List[String] = {
+    val ordered = ListBuffer.empty[String]
+    val done    = mutable.HashSet.empty[String]
+    val onStack = mutable.HashSet.empty[String]
+
+    def visit(name: String, path: List[String], fromInherits: Boolean): Unit = {
+      if (onStack(name))
+        problem(s"theme cycle: ${(path :+ name).mkString(" → ")}")
+      if (done(name)) return
+
+      done += name
+      ordered += name
+
+      val root = themeRootPath(src, themeDir, name)
+      if (!isDir(root)) {
+        // An `inherits` entry must name a real theme; a missing site-level
+        // theme is tolerated (and dropped later) for backward compatibility.
+        if (fromInherits)
+          problem(s"theme '${path.last}' inherits unknown theme '$name' — no directory at $root")
+      } else {
+        onStack += name
+        themeInherits(root).foreach(parent => visit(parent, path :+ name, fromInherits = true))
+        onStack -= name
+      }
+    }
+
+    siteNames.foreach(visit(_, Nil, fromInherits = false))
+    ordered.toList
   }
 
   /** Insert `value` into a nested mutable map at the given path. Intermediate

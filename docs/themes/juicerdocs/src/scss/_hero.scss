@@ -196,7 +196,7 @@
   color: var(--muted);
 }
 
-.juicerdocs-btn {
+.juicer-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -209,27 +209,27 @@
   transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.05s;
   cursor: pointer;
 }
-.juicerdocs-btn:hover { text-decoration: none; }
-.juicerdocs-btn:active { transform: translateY(1px); }
-.juicerdocs-btn svg { width: 1rem; height: 1rem; }
+.juicer-btn:hover { text-decoration: none; }
+.juicer-btn:active { transform: translateY(1px); }
+.juicer-btn svg { width: 1rem; height: 1rem; }
 
-.juicerdocs-btn-primary {
+.juicer-btn-primary {
   background: var(--brand);
   color: #ffffff;
 }
-.juicerdocs-btn-primary:hover {
+.juicer-btn-primary:hover {
   background: var(--brand-strong);
   color: #ffffff;
 }
-[data-theme="dark"] .juicerdocs-btn-primary { color: #0a0a0a; }
-[data-theme="dark"] .juicerdocs-btn-primary:hover { color: #0a0a0a; }
+[data-theme="dark"] .juicer-btn-primary { color: #0a0a0a; }
+[data-theme="dark"] .juicer-btn-primary:hover { color: #0a0a0a; }
 
-.juicerdocs-btn-secondary {
+.juicer-btn-secondary {
   background: var(--surface);
   color: var(--fg);
   border-color: var(--border);
 }
-.juicerdocs-btn-secondary:hover {
+.juicer-btn-secondary:hover {
   border-color: var(--brand);
   color: var(--brand);
 }
