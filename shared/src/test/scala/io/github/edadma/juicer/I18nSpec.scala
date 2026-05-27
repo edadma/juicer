@@ -111,4 +111,95 @@ class I18nSpec extends AnyFlatSpec with Matchers with JuicerTestSupport {
 
     out("index.html") should include("[unknown_key]")
   }
+
+  it should "publish the default language at the root under defaultLanguageInRoot" in {
+    writeAt(
+      "site.toml",
+      """title = "S"
+        |baseURL = "http://x"
+        |languages = ["en", "fr"]
+        |defaultLanguage = "en"
+        |defaultLanguageInRoot = true
+        |""".stripMargin,
+    )
+    writeAt("content/en/_index.md", "---\ntitle: Home\n---\n\n.\n")
+    writeAt("content/en/install.md", "---\ntitle: Install\n---\n\n.\n")
+    writeAt("content/fr/_index.md", "---\ntitle: Accueil\n---\n\n.\n")
+    writeAt("content/fr/install.md", "---\ntitle: Installer\n---\n\n.\n")
+    writeAt("layouts/_default/folder.html", "lang={{ .page.lang }} url={{ .page.url }} title={{ .page.title }}")
+    writeAt("layouts/_default/file.html",   "lang={{ .page.lang }} url={{ .page.url }} title={{ .page.title }}")
+
+    build()
+
+    // Default language (en): no /en/ prefix, lands at the html root.
+    out("html/index.html")          should include("lang=en url=/ title=Home")
+    out("html/install/index.html")  should include("lang=en url=/install/ title=Install")
+
+    // Other languages keep their prefix.
+    out("html/fr/index.html")          should include("lang=fr url=/fr/ title=Accueil")
+    out("html/fr/install/index.html")  should include("lang=fr url=/fr/install/ title=Installer")
+  }
+
+  it should "give default-language translation links no prefix under defaultLanguageInRoot" in {
+    writeAt(
+      "site.toml",
+      """title = "S"
+        |baseURL = "http://x"
+        |languages = ["en", "fr"]
+        |defaultLanguage = "en"
+        |defaultLanguageInRoot = true
+        |""".stripMargin,
+    )
+    writeAt("content/en/_index.md", "---\ntitle: Home\n---\n\n.\n")
+    writeAt("content/en/install.md", "---\ntitle: Install\n---\n\n.\n")
+    writeAt("content/fr/_index.md", "---\ntitle: Accueil\n---\n\n.\n")
+    writeAt("content/fr/install.md", "---\ntitle: Installer\n---\n\n.\n")
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "{{ for t <- .page.translations }}[{{ t.lang }}={{ t.url }}]{{ end }}")
+
+    build()
+
+    // The French page links back to the prefix-free English URL.
+    out("html/fr/install/index.html") should include("[en=/install/]")
+    // The English page links to the prefixed French URL.
+    out("html/install/index.html")    should include("[fr=/fr/install/]")
+  }
+
+  it should "emit hreflang alternates in the sitemap for multilingual pages" in {
+    writeAt(
+      "site.toml",
+      """title = "S"
+        |baseURL = "http://x"
+        |languages = ["en", "fr"]
+        |defaultLanguage = "en"
+        |""".stripMargin,
+    )
+    writeAt("content/en/_index.md", "---\ntitle: Home\n---\n\n.\n")
+    writeAt("content/en/install.md", "---\ntitle: Install\n---\n\n.\n")
+    writeAt("content/fr/_index.md", "---\ntitle: Accueil\n---\n\n.\n")
+    writeAt("content/fr/install.md", "---\ntitle: Installer\n---\n\n.\n")
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val sm = out("sitemap.xml")
+    sm should include("""xmlns:xhtml="http://www.w3.org/1999/xhtml"""")
+    sm should include("""<xhtml:link rel="alternate" hreflang="en" href="http://x/en/install/"/>""")
+    sm should include("""<xhtml:link rel="alternate" hreflang="fr" href="http://x/fr/install/"/>""")
+  }
+
+  it should "leave the sitemap free of hreflang for single-language sites" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt("content/_index.md", "---\ntitle: Home\n---\n\n.\n")
+    writeAt("content/about.md", "---\ntitle: About\n---\n\n.\n")
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "x")
+
+    build()
+
+    val sm = out("sitemap.xml")
+    sm should not include "xhtml"
+    sm should not include "hreflang"
+  }
 }

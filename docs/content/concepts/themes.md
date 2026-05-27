@@ -39,6 +39,8 @@ theme = ["my-overrides", "juicerdocs"]
 
 Now `my-overrides/` wins over `juicerdocs/`, which wins over the site itself? No — site always wins. Order is **site > my-overrides > juicerdocs**. This is useful when you want to reuse most of `juicerdocs` but customize, say, the topbar with a tiny overlay theme of your own.
 
+A theme can also pull in other themes itself, by declaring them in its own `theme.toml` — that's how every bundled theme inherits `juicercommon`. The site-level `theme` list and each theme's declared `inherits` are resolved together into one lookup chain, first-wins throughout. [Theme inheritance](/concepts/theme-inheritance/) covers the resolution rules.
+
 [= tip =]
 Theme directories live under `themes/` because that's the `themeDir` config key's default. Set `themeDir = ""` if you want themes to live at the site root, or any other path that fits your repo layout.
 [= /tip =]
@@ -87,19 +89,31 @@ Use layouts for: the actual `<html>` skeleton and the per-page-kind structural r
 
 ## Bundled themes
 
-Seven themes ship in the juicer repo, each tuned for a different shape of
+Eleven themes ship in the juicer repo, each tuned for a different shape of
 site. Pick the closest match and override individual files from your own
 `layouts/` or `static/`:
 
 | Theme              | Where it lives                  | What it's for |
 |--------------------|---------------------------------|----------------|
-| `juicerdocs`       | `docs/themes/juicerdocs/`       | Documentation sites — sidebar nav, "On this page" rail, 16 callout shortcodes. Powers this site. |
+| `juicerdocs`       | `docs/themes/juicerdocs/`       | Documentation sites — sidebar nav, "On this page" rail, callout shortcodes. Powers this site. |
 | `juicerblog`       | `docs/themes/juicerblog/`       | Blogs — post lists with pagination, tag/category/year archives, series nav, author bylines, server-side syntax highlighting. |
 | `juicerstudy`      | `docs/themes/juicerstudy/`      | Long-form prose — essays, study notes, reading journals, lecture notes. Serif reading column, optional KaTeX math, undated by default. |
 | `juicerlanding`    | `docs/themes/juicerlanding/`    | Product / SaaS landing pages — single-page section stack (hero, features, pricing, testimonials, FAQ) driven entirely from `site.toml`. |
 | `juicerportfolio`  | `docs/themes/juicerportfolio/`  | Designer / studio portfolios — image-first project grid, per-project hero + meta sidebar + gallery. |
+| `juicergallery`    | `docs/themes/juicergallery/`    | Photo galleries — masonry/grid albums, lightbox-ready photo cards, EXIF-light captions. |
 | `juicercafe`       | `docs/themes/juicercafe/`       | Cafés, small businesses, restaurants — hours widget, menu sections, photo albums, events list. |
+| `juicercook`       | `docs/themes/juicercook/`       | Recipe sites — Recipe JSON-LD, recipe cards, ingredient/step layout, print-friendly stylesheet. |
 | `juicerchurch`     | `docs/themes/juicerchurch/`     | Churches, ministries — sermon archive, recurring-event calendar grid, ministries section, photo albums. |
+| `juicerpodcast`    | `docs/themes/juicerpodcast/`    | Podcasts — episode list, per-episode player + show notes, RSS subscribe links. |
+| `juicerwiki`       | `docs/themes/juicerwiki/`       | Personal wikis / digital gardens — backlinks, tag cloud, wiki-style search. |
+
+These eleven all inherit a twelfth, hidden theme: **`juicercommon`**, the
+shared base that holds the partials, shortcodes, and scripts every theme
+has in common (the `seo` block, the dark-mode init/toggle scripts, and the
+note/tip/warning/tabs/github/… shortcodes). You never select `juicercommon`
+directly — each theme's `theme.toml` lists it under `inherits`. See
+[Theme inheritance](/concepts/theme-inheritance/) for how that resolution
+works.
 
 Each theme has its own section under [Themes](/themes/) (linked from the
 sidebar) with a "what's in the box" overview and a configuration page

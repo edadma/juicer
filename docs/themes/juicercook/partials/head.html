@@ -5,17 +5,7 @@
 
 {{ partial 'seo' . }}
 
-<script>
-  (function() {
-    try {
-      var stored = localStorage.getItem('juicercook-theme');
-      var dark = stored
-        ? stored === 'dark'
-        : window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-    } catch (e) {}
-  })();
-</script>
+{{ partial 'dark-mode-init' . }}
 
 <link rel="stylesheet" href="{{ relURL '/juicercook.css' }}">
 

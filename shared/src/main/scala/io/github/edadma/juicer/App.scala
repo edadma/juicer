@@ -612,6 +612,54 @@ object App {
       }
     }
 
+    // ----- i18n URL helpers -----
+    //
+    // Defined above the permalink helpers because `relPermalinkFor`,
+    // `sectionUrlFor`, and the physical write path all need them, and the
+    // local-def forward-reference rule won't let those reach a `val` declared
+    // later. The richer i18n machinery that needs the content graph
+    // (`langOf`, `stemOf`, `translationsOf`) lives further down.
+
+    /** Languages the site is published in. Empty = single-language site. */
+    val langs: List[String] = conf.languages
+
+    /** Default language code — the fallback when a translation is missing,
+      * and (under `defaultLanguageInRoot`) the language served at the site
+      * root without a `/<code>/` URL prefix. */
+    val defaultLang: String = conf.defaultLanguage
+
+    /** When true, the default language publishes at `/` (no language prefix)
+      * while other languages keep their `/<code>/` prefix. */
+    val defaultLangInRoot: Boolean = conf.defaultLanguageInRoot
+
+    /** Drop a leading default-language directory segment from a URL's path
+      * segments (already past `htmlDir`). Active only under
+      * `defaultLanguageInRoot`, and only when the head segment names the
+      * default language — a no-op for other languages and single-language
+      * sites. */
+    def stripDefaultLangPrefix(segs: List[String]): List[String] =
+      if (defaultLangInRoot && segs.headOption.exists(h => h == defaultLang && langs.contains(h)))
+        segs.tail
+      else segs
+
+    /** Physical output directory for a content file. Normally its `outdir`;
+      * under `defaultLanguageInRoot` the default language's directory segment
+      * is removed so the rendered file lands where its prefix-free URL points.
+      * The internal section graph keeps keying off the original `outdir`, so
+      * only the on-disk location moves. */
+    def physicalOutdir(c: ContentFile): Path = {
+      if (!defaultLangInRoot || c.outdir == dst1) c.outdir
+      else {
+        val segs = c.outdir.relativeTo(dst1).segments.toList
+        val pos  = if (html != "") 1 else 0
+        segs.lift(pos) match {
+          case Some(l) if l == defaultLang && langs.contains(l) =>
+            segs.patch(pos, Nil, 1).foldLeft(dst1)(_ / _)
+          case _ => c.outdir
+        }
+      }
+    }
+
     // ----- Permalink-template helpers (Phase 2.6) -----
     //
     // Sit below `pageInstant` because `applyPermalinkPattern` resolves date
@@ -694,9 +742,10 @@ object App {
           val rel        = c.outdir.relativeTo(dst1)
           val allSegs    = if (c.outdir == dst1) Nil else rel.segments.toList
           val withoutHtml = if (html != "" && allSegs.nonEmpty) allSegs.drop(1) else allSegs
+          val withoutLang = stripDefaultLangPrefix(withoutHtml)
           val pathSegs   =
-            if (c.name == folderContent) withoutHtml
-            else withoutHtml :+ c.name
+            if (c.name == folderContent) withoutLang
+            else withoutLang :+ c.name
           val joined     = pathSegs.mkString("/")
           if (joined.isEmpty) basePath + "/"
           else basePath + "/" + joined + "/"
@@ -721,7 +770,7 @@ object App {
         val basePath = if (baseURL.path == "/" || baseURL.path.isEmpty) "" else baseURL.path
         val rel      = outdir.relativeTo(dst1)
         val allSegs  = if (outdir == dst1) Nil else rel.segments.toList
-        val pathSegs = if (html != "" && allSegs.nonEmpty) allSegs.drop(1) else allSegs
+        val pathSegs = stripDefaultLangPrefix(if (html != "" && allSegs.nonEmpty) allSegs.drop(1) else allSegs)
         val joined   = pathSegs.mkString("/")
         if (joined.isEmpty) basePath + "/" else basePath + "/" + joined + "/"
     }
@@ -747,14 +796,9 @@ object App {
     }
 
     // ----- i18n (Tier 2 #10) -----
-
-    /** Languages the site is published in. Empty list = single-language site
-      * (no URL prefix, no `.page.lang`, no `.page.translations`). */
-    val langs: List[String] = conf.languages
-
-    /** Default language code. Falls back to the first declared language, or
-      * `""` for single-language sites. */
-    val defaultLang: String = conf.defaultLanguage
+    //
+    // `langs`, `defaultLang`, and `defaultLangInRoot` are declared with the
+    // i18n URL helpers above; the content-graph-dependent machinery follows.
 
     /** Reverse map from `ContentFile` to its source path under `contentDir`
       * (e.g. `"en/getting-started.md"`). Looked up by reference identity to
@@ -1753,6 +1797,11 @@ object App {
 
     for ((c, pageMap) <- pageEntries) {
       val outdir  = c.outdir
+      // On-disk write location — diverges from `outdir` only under
+      // `defaultLanguageInRoot`, where the default language's prefix is
+      // stripped so the file lands where its URL points. The section graph
+      // and pagination keep keying off `outdir`.
+      val writeOutdir = physicalOutdir(c)
       val name    = c.name
       val content = c.content
       val toc     = c.toc
@@ -1833,8 +1882,8 @@ object App {
               // Section index — outdir IS the section dir. For nested sections
               // the directory may not yet exist on disk (no `static/` overlap
               // forced its creation), so make sure it does. Idempotent.
-              outdir.createDirectories()
-              (outdir / "index.html").toString
+              writeOutdir.createDirectories()
+              (writeOutdir / "index.html").toString
             } else {
               // Permalink-routed pages override the physical filesystem
               // location: the on-disk path follows the permalink pattern so
@@ -1847,7 +1896,7 @@ object App {
                   val base = if (html != "") dst1 / html else dst1
                   segs.foldLeft(base)(_ / _)
                 case None =>
-                  outdir / name
+                  writeOutdir / name
               }
               show(s"content: create directory $pagedir")
               pagedir.createDirectories()
@@ -1858,7 +1907,7 @@ object App {
             // for section pages (non-section pages are forced to total=1),
             // and section pages never permalink-route — so this path uses
             // the existing outdir-relative location unconditionally.
-            val pagedir = outdir / "page" / slice.current.toString
+            val pagedir = writeOutdir / "page" / slice.current.toString
             pagedir.createDirectories()
             (pagedir / "index.html").toString
           }
@@ -2161,15 +2210,42 @@ object App {
     // built and reachable by direct URL, but absent from the sitemap so
     // crawlers don't propose them. (`<meta name="robots" content="noindex">`
     // is the matching theme-side signal — see partials/head.html.)
-    // No <lastmod> until i18n / dated frontmatter lands; <priority> /
-    // <changefreq> are out-of-spec for most modern crawlers anyway.
+    // No <lastmod> until dated frontmatter lands; <priority> / <changefreq>
+    // are out-of-spec for most modern crawlers anyway. Multilingual sites get
+    // `xhtml:link rel="alternate" hreflang` entries per page — one per
+    // language version (including the page's own), the signal Google uses to
+    // serve the right translation. Single-language sites emit a bare <loc>.
     {
       val sb = new StringBuilder
+      // Emit one `xhtml:link` alternate; skipped when lang or href is blank.
+      def alternate(lang: String, href: String): Unit =
+        if (lang.nonEmpty && href.nonEmpty)
+          sb.append("""    <xhtml:link rel="alternate" hreflang="""")
+            .append(escapeXml(lang)).append("""" href="""")
+            .append(escapeXml(href)).append("\"/>\n")
+
+      val xhtmlNs = if (langs.nonEmpty) """ xmlns:xhtml="http://www.w3.org/1999/xhtml"""" else ""
       sb.append("""<?xml version="1.0" encoding="UTF-8"?>""").append('\n')
-      sb.append("""<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">""").append('\n')
+      sb.append(s"""<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"$xhtmlNs>""").append('\n')
       for (p <- pages if p.get("noindex") != Some(true)) {
         val abs = p("permalink").asInstanceOf[String]
-        sb.append("  <url><loc>").append(escapeXml(abs)).append("</loc></url>\n")
+        val translations = p.get("translations") match {
+          case Some(ts: List[Map[String, Any] @unchecked]) => ts
+          case _                                            => Nil
+        }
+        if (translations.isEmpty)
+          sb.append("  <url><loc>").append(escapeXml(abs)).append("</loc></url>\n")
+        else {
+          sb.append("  <url><loc>").append(escapeXml(abs)).append("</loc>\n")
+          val selfLang = p.get("lang").collect { case s: String => s }.getOrElse("")
+          alternate(selfLang, abs)
+          for (t <- translations) {
+            val tl = t.get("lang").collect { case s: String => s }.getOrElse("")
+            val tu = t.get("permalink").collect { case s: String => s }.getOrElse("")
+            alternate(tl, tu)
+          }
+          sb.append("  </url>\n")
+        }
       }
       sb.append("</urlset>\n")
       val path = dst1 / "sitemap.xml"
