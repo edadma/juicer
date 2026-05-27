@@ -84,14 +84,14 @@
 
 /* Markdown-body links — scoped via :not() so the rule doesn't bleed into
    buttons / cards / prev-next anchors, which own their own colors. */
-.juicerdocs-content a:not([class*="juicerdocs-"]) {
+.juicerdocs-content a:not([class*="juicer"]) {
   color: var(--brand);
   text-decoration: underline;
   text-decoration-color: rgb(from var(--brand) r g b / 0.4);
   text-underline-offset: 2px;
   transition: text-decoration-color 0.15s;
 }
-.juicerdocs-content a:not([class*="juicerdocs-"]):hover {
+.juicerdocs-content a:not([class*="juicer"]):hover {
   text-decoration-color: var(--brand);
 }
 
