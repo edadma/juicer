@@ -25,7 +25,7 @@ A *paragraph* with **strong** emphasis and `inline code`.
    1. Nested
 3. Continues
 
-[Link text](https://juicer.run/) and ![alt](https://placehold.co/40x40 "title").
+[Link text](https://juicer.build/) and ![alt](https://placehold.co/40x40 "title").
 ```
 
 ## GFM extras
@@ -76,7 +76,7 @@ You can drop a footnote reference[^numbers] mid-paragraph and define it elsewher
 
 ### Auto-linking
 
-Bare URLs like https://juicer.run/ are recognized and turned into clickable links without explicit `[…](…)` syntax.
+Bare URLs like https://juicer.build/ are recognized and turned into clickable links without explicit `[…](…)` syntax.
 
 ### Smart punctuation
 

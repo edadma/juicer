@@ -1,11 +1,11 @@
-# juicer.run — the docs site for juicer, built with juicer (dogfood ftw).
+# juicer.build — the docs site for juicer, built with juicer (dogfood ftw).
 #
 # Local preview:   sbt 'juicerJVM/run serve -s docs'
-# Production:      pushed to `stable`, built and deployed to juicer.run.
+# Production:      pushed to `stable`, built and deployed to juicer.build.
 
 title       = "Juicer"
 author      = "Ed Maxedon"
-baseURL     = "https://juicer.run/"
+baseURL     = "https://juicer.build/"
 description = "A cross-platform static site generator written in Scala 3. Markdown content, Hugo-style templates, sensible defaults, ships as a single sbt-launchable JAR."
 
 # Drives the topbar GitHub icon + the homepage "Star on GitHub" hero
@@ -14,6 +14,13 @@ description = "A cross-platform static site generator written in Scala 3. Markdo
 repoURL = "https://github.com/edadma/juicer"
 
 theme = "juicerdocs"
+
+# Bilingual docs (English + French). Content lives under content/<lang>/.
+# `defaultLanguageInRoot` keeps English at the site root (juicer.build/…) so
+# existing URLs and inbound links don't move; French is served under /fr/.
+languages             = ["en", "fr"]
+defaultLanguage       = "en"
+defaultLanguageInRoot = true
 
 # The page <h1> comes from frontmatter title — markdown headings start at h2.
 headingShift = 0
@@ -62,7 +69,7 @@ minify = true
 version = "v0.2.0"
 # `logo` was previously hard-coded as a fallback in the juicerdocs theme
 # templates. The theme now omits the <img>/<link> elements entirely when
-# `logo` is unset, so the juicer.run site has to declare it explicitly.
+# `logo` is unset, so the juicer.build site has to declare it explicitly.
 logo = "/juicer-logo.png"
 # `getStarted` (homepage hero CTA → /getting-started/) is ON BY DEFAULT
 # in the juicerdocs theme. Sites without a getting-started section

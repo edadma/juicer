@@ -306,3 +306,92 @@
 @media (max-width: 1023px) {
   .juicerdocs-sidebar-toggle { display: inline-flex; }
 }
+
+/* Language switcher — a <details> dropdown sitting flush-right with the
+   icon buttons. The summary shows a globe + the current language's name + a
+   caret; the menu lists every configured language with a check on the
+   current one. `flex: 0 0 auto` keeps it from collapsing when the search
+   trigger claims the flexible middle space. */
+.juicerdocs-langswitch {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* Summary is the clickable trigger. Strip the native disclosure triangle
+   (we draw our own caret) and present it like the other topbar controls. */
+.juicerdocs-langswitch-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border-radius: var(--radius-md);
+  color: var(--fg-soft);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: color 0.15s, background 0.15s;
+}
+.juicerdocs-langswitch-summary::-webkit-details-marker { display: none; }
+.juicerdocs-langswitch-summary:hover {
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+.juicerdocs-langswitch-globe { width: 1.125rem; height: 1.125rem; flex: 0 0 auto; }
+.juicerdocs-langswitch-caret {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex: 0 0 auto;
+  transition: transform 0.15s;
+}
+.juicerdocs-langswitch[open] .juicerdocs-langswitch-caret { transform: rotate(180deg); }
+
+@media (max-width: 639px) {
+  .juicerdocs-langswitch-label { display: none; }
+}
+
+/* Menu — absolutely positioned card under the summary. */
+.juicerdocs-langswitch-menu {
+  position: absolute;
+  top: calc(100% + 0.375rem);
+  right: 0;
+  z-index: 40;
+  min-width: 10rem;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+.juicerdocs-langswitch-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font-size: 0.875rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.juicerdocs-langswitch-item:hover {
+  background: var(--brand-soft);
+  color: var(--brand);
+  text-decoration: none;
+}
+.juicerdocs-langswitch-item.is-current { font-weight: 600; }
+/* The check column is always reserved so labels line up; it's invisible
+   except on the current language. */
+.juicerdocs-langswitch-check {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  visibility: hidden;
+}
+.juicerdocs-langswitch-item.is-current .juicerdocs-langswitch-check {
+  visibility: visible;
+  color: var(--brand);
+}

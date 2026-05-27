@@ -1,6 +1,6 @@
 # juicerblog
 
-A hand-coded blog theme for [juicer](https://juicer.run). Sibling to
+A hand-coded blog theme for [juicer](https://juicer.build). Sibling to
 [juicerdocs](../juicerdocs/) but tuned for prose: serif body, generous
 measure, warm-neutral palette by default.
 

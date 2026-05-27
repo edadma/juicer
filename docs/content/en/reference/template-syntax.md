@@ -23,6 +23,8 @@ Call them as expressions:
 |-----------------------------|------|
 | `{{ relURL '/path' }}`      | Site-relative URL (`baseURL.path` prefix added if non-trivial) |
 | `{{ absURL '/path' }}`      | Absolute URL (`baseURL.base + relURL`) |
+| `{{ relLangURL lang '/path' }}` | Like `relURL`, but prefixed with `lang`'s URL segment (Hugo's `relLangURL`) — see [i18n](/concepts/i18n/) |
+| `{{ absLangURL lang '/path' }}` | Like `absURL`, but prefixed with `lang`'s URL segment |
 | `{{ markdownify s }}`       | Render a markdown string to HTML |
 | `{{ emojify s }}`           | Replace `:smile:` etc. with Unicode emoji |
 | `{{ i18n lang 'key' }}`     | Look up an i18n string (falls back to default lang then literal key) |

@@ -4,7 +4,7 @@ summary: A copy-pasteable GitHub Actions workflow that builds your juicer site o
 weight: 40
 ---
 
-This recipe is the same flow [juicer.run](https://juicer.run/)
+This recipe is the same flow [juicer.build](https://juicer.build/)
 itself uses (and the same flow used by [squiggly's
 docs](https://edadma.github.io/squiggly/)). It builds your site
 with juicer inside a GitHub Actions runner and pushes the result
@@ -226,7 +226,7 @@ don't. Get this wrong and every internal link 404s. Run
 `juicer config -s docs -b <your-url>` locally to print the
 resolved `baseURL` and double-check before you push.
 
-## Custom domain (`juicer.run`-style)
+## Custom domain (`juicer.build`-style)
 
 To deploy to a domain you own — `docs.example.com`,
 `example.com`, or anything else — extend the workflow with two
@@ -351,7 +351,7 @@ prevents stacked deploys from the same ref, but cross-ref deploys
 ## See also
 
 - [DEPLOY.md](https://github.com/edadma/juicer/blob/main/DEPLOY.md) in the
-  juicer repo — the file describing juicer.run's own deploy. The shape
+  juicer repo — the file describing juicer.build's own deploy. The shape
   is identical to this page; differences are noted in DEPLOY.md.
 - [GitHub Pages docs](https://docs.github.com/en/pages) for the platform-side
   detail (HTTPS, CNAME, custom domains, request limits).
