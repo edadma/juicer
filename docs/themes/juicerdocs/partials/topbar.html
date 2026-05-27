@@ -6,7 +6,7 @@
        // icon-only variant inline in the topbar, where the brand name
        // is already rendered as text alongside. Falls back to `logo`
        // so sites that don't set `icon` keep the previous behavior. }}
-    <a href="{{ relURL '/' }}" class="juicerdocs-brand">
+    <a href="{{ relLangURL .page.lang '/' }}" class="juicerdocs-brand">
       {{ if .site.juicerdocs.icon }}
       <img src="{{ relURL .site.juicerdocs.icon }}" alt="" class="juicerdocs-brand-logo" />
       {{ else }}{{ if .site.juicerdocs.logo }}
