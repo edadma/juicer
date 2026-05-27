@@ -90,7 +90,7 @@ Si `compile` réussit mais pas `run`, le problème est la résolution des dépen
 
 **Cause.** Aucun répertoire `<src>/grammars/` n'existe, ou le fichier `*.tmLanguage.json` qu'il contient ne correspond pas à l'étiquette de langage de votre bloc. Un bloc ouvert par ` ```scala ` cherche exactement `grammars/scala.tmLanguage.json` — sensible à la casse.
 
-**Correctif.** Créez `<src>/grammars/`, déposez-y le JSON de grammaire pour chaque langage que vous utilisez. Voir [juicerblog → Configuration](/fr/themes/juicerblog/configuration/#syntax-highlighting) pour la configuration complète. Lancez avec `-v` et cherchez la ligne `highlighter: N grammar(s) loaded` — si vous ne la voyez pas, le répertoire est manquant ou vide.
+**Correctif.** Créez `<src>/grammars/`, déposez-y le JSON de grammaire pour chaque langage que vous utilisez. Voir [juicerblog → Configuration](/themes/juicerblog/configuration/#syntax-highlighting) pour la configuration complète. Lancez avec `-v` et cherchez la ligne `highlighter: N grammar(s) loaded` — si vous ne la voyez pas, le répertoire est manquant ou vide.
 
 ### Le code coloré n'a pas de couleurs
 
@@ -112,7 +112,7 @@ Si `compile` réussit mais pas `run`, le problème est la résolution des dépen
 
 **Cause.** Soit l'article a le frontmatter `static: true` (filtré de toutes les listes d'articles), soit le slug du mot-clé ne correspond pas à ce que vous avez tapé dans l'URL. Les mots-clés sont slugifiés (mis en minuscules, repliés en ASCII, les suites de caractères non alphanumériques réduites à `-`).
 
-**Correctif.** Visitez `/tags/` pour voir le slug canonique que juicer a dérivé. Si votre article a `static: true`, c'est la raison — voir [juicerblog → Configuration](/fr/themes/juicerblog/configuration/#per-page-frontmatter).
+**Correctif.** Visitez `/tags/` pour voir le slug canonique que juicer a dérivé. Si votre article a `static: true`, c'est la raison — voir [juicerblog → Configuration](/themes/juicerblog/configuration/#per-page-frontmatter).
 
 ### La page d'archive d'un auteur est vide même si l'auteur a des articles
 

@@ -806,8 +806,8 @@ chaque fonctionnalité de cette page — plus la coloration syntaxique côté se
 les signatures d'auteur, les badges de progression de série, une mince ligne de
 progression de lecture, des boutons de copie de bloc de code, et une paire de
 layouts accueil / archive. La référence complète du thème réside dans sa propre
-section : voir [juicerblog](/fr/themes/juicerblog/) pour l'aperçu et
-[juicerblog · Configuration](/fr/themes/juicerblog/configuration/) pour tous les
+section : voir [juicerblog](/themes/juicerblog/) pour l'aperçu et
+[juicerblog · Configuration](/themes/juicerblog/configuration/) pour tous les
 boutons de configuration, conventions de frontmatter, mise en place de la coloration
 syntaxique et motifs de surcharge.
 

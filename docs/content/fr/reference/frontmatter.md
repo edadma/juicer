@@ -281,10 +281,10 @@ la surface du moteur. Celles-ci sont documentées par thème :
 
 | Thème                | Ce qu'il lit en plus |
 |----------------------|----------------------|
-| [juicerblog](/fr/themes/juicerblog/configuration/#frontmatter-par-page) | `static`, `layout: home`/`archive`, `series` |
-| [juicerstudy](/fr/themes/juicerstudy/configuration/#frontmatter-par-page) | `toc`, `summary` (comme amorce), `minutes` |
-| [juicerlanding](/fr/themes/juicerlanding/configuration/#frontmatter-par-page) | `layout: home`, `summary` (comme sous-titre), `lang` |
-| [juicerportfolio](/fr/themes/juicerportfolio/configuration/#frontmatter-par-projet) | `layout: project`, `year`, `tagline`, `role`, `client`, `tools`, `category`, `hero`, `heroAlt`, `caption`, `gallery`, `link` |
+| [juicerblog](/themes/juicerblog/configuration/#per-page-frontmatter) | `static`, `layout: home`/`archive`, `series` |
+| [juicerstudy](/themes/juicerstudy/configuration/#per-page-frontmatter) | `toc`, `summary` (comme amorce), `minutes` |
+| [juicerlanding](/themes/juicerlanding/configuration/#per-page-frontmatter) | `layout: home`, `summary` (comme sous-titre), `lang` |
+| [juicerportfolio](/themes/juicerportfolio/configuration/#per-project-frontmatter) | `layout: project`, `year`, `tagline`, `role`, `client`, `tools`, `category`, `hero`, `heroAlt`, `caption`, `gallery`, `link` |
 | [juicerdocs](/fr/themes/juicerdocs/configuration/) | Clés de niveau moteur seulement — pas de frontmatter propre au thème. |
 
 ## Toute autre clé
