@@ -51,6 +51,19 @@ jobs:
           key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt', '**/project/**') }}
           restore-keys: ${{ runner.os }}-sbt-
 
+      # The juicer asset pipeline shells out to `sass` and `esbuild`. Without
+      # them on PATH it silently degrades to the committed `static/` copies and
+      # skips fingerprinting — which ships stale CSS/JS and defeats cache
+      # busting. Install both so the production build compiles SCSS fresh and
+      # emits fingerprinted assets, exactly like a local `serve`.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install asset toolchain (sass + esbuild)
+        run: npm install -g sass esbuild
+
       - name: Build docs site
         run: sbt 'juicerJVM/run build -s docs -d _site -b https://juicer.build/'
 
