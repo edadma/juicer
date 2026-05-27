@@ -1,4 +1,4 @@
-# Build & deploy juicer.run.
+# Build & deploy juicer.build.
 #
 #   Push to `stable`     → builds and deploys to GitHub Pages.
 #   PR targeting `stable` → builds (sanity check), no deploy.
@@ -52,7 +52,7 @@ jobs:
           restore-keys: ${{ runner.os }}-sbt-
 
       - name: Build docs site
-        run: sbt 'juicerJVM/run build -s docs -d _site -b https://juicer.run/'
+        run: sbt 'juicerJVM/run build -s docs -d _site -b https://juicer.build/'
 
       # Each theme's "Demo site" sidebar leaf is served from
       # `/themes/<theme>/demo/` and rendered using THAT theme (not
@@ -61,11 +61,11 @@ jobs:
       # juicerdocs has no demo-site source — the docs site itself IS the
       # demo, so its "Demo site" leaf links back to `/`.
       - name: Build per-theme demo sites
-        run: bash bin/build-demos.sh _site https://juicer.run/
+        run: bash bin/build-demos.sh _site https://juicer.build/
 
       - name: Write CNAME
         if: github.ref == 'refs/heads/stable'
-        run: echo 'juicer.run' > _site/CNAME
+        run: echo 'juicer.build' > _site/CNAME
 
       - name: Upload site artifact
         uses: actions/upload-artifact@v4

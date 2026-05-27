@@ -1,6 +1,6 @@
-# Deploying juicer.run
+# Deploying juicer.build
 
-The site at <https://juicer.run/> is built with juicer (this repo) and the
+The site at <https://juicer.build/> is built with juicer (this repo) and the
 `juicerdocs` theme (`docs/themes/juicerdocs/`), and deployed via GitHub
 Actions.
 
@@ -8,16 +8,16 @@ Actions.
 
 `.github/workflows/docs.yml` runs on every push to `stable` and:
 
-1. Builds the docs with `sbt 'juicerJVM/run build -s docs -d _site -b https://juicer.run/'`.
-2. Builds each per-theme demo with `bash bin/build-demos.sh _site https://juicer.run/` — each demo at `docs/demos/<theme>/` gets built into `_site/themes/<theme>/demo/` and overrides the placeholder `demo.md` content render at the same path. juicerdocs has no demo source (the docs site itself is the demo).
-3. Writes a `CNAME` file containing `juicer.run`.
+1. Builds the docs with `sbt 'juicerJVM/run build -s docs -d _site -b https://juicer.build/'`.
+2. Builds each per-theme demo with `bash bin/build-demos.sh _site https://juicer.build/` — each demo at `docs/demos/<theme>/` gets built into `_site/themes/<theme>/demo/` and overrides the placeholder `demo.md` content render at the same path. juicerdocs has no demo source (the docs site itself is the demo).
+3. Writes a `CNAME` file containing `juicer.build`.
 4. Uploads the site to GitHub Pages.
 
 To enable the GitHub Pages deploy:
 
 1. **Settings → Pages →** *Source* = "GitHub Actions".
-2. **Custom domain** — set to `juicer.run`. GitHub will create a `_pages-cf` health-check.
-3. **DNS** — point `juicer.run` at GitHub Pages with either:
+2. **Custom domain** — set to `juicer.build`. GitHub will create a `_pages-cf` health-check.
+3. **DNS** — point `juicer.build` at GitHub Pages with either:
    - A 4× A records: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
    - or a single CNAME to `<your-gh-username>.github.io`
 4. **HTTPS** — wait for GitHub Pages to issue a Let's Encrypt cert (a few minutes after DNS propagates), then enable "Enforce HTTPS".
@@ -34,7 +34,7 @@ For automatic preview URLs per branch, swap to **Cloudflare Pages**:
 2. Build command: `sbt 'juicerJVM/run build -s docs -d $CF_PAGES_URL'`.
 3. Output directory: `_site`.
 4. Cloudflare assigns `<branch>.<project>.pages.dev` for every branch
-   automatically; production maps to `juicer.run`.
+   automatically; production maps to `juicer.build`.
 
 ## Local preview
 

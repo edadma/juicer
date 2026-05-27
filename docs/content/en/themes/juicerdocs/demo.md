@@ -1,13 +1,13 @@
 ---
 title: Demo site
-summary: This site (juicer.run) IS the juicerdocs demo — every page you've been reading is rendered with the theme.
+summary: This site (juicer.build) IS the juicerdocs demo — every page you've been reading is rendered with the theme.
 weight: 20
 ---
 
 Unlike the other six bundled themes — each of which has its own
 demo site under `docs/demos/<theme>/` that the deploy pipeline builds
 into `/themes/<theme>/demo/` — **juicerdocs has no separate demo
-source.** This site, [juicer.run](/), is built with juicerdocs. Every
+source.** This site, [juicer.build](/), is built with juicerdocs. Every
 page you've been reading is the live theme.
 
 ## What this site demonstrates
@@ -35,7 +35,7 @@ juicerdocs feature in context. Or, if you want a quick tour:
 
 ## Use it as a template
 
-The source for juicer.run lives at `docs/` in the [juicer
+The source for juicer.build lives at `docs/` in the [juicer
 repository](https://github.com/edadma/juicer). The shape:
 
 ```

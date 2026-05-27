@@ -4,7 +4,7 @@
 # chrome renders in English with zero configuration. To translate the
 # chrome, drop an i18n/<lang>.toml into your SITE (it wins over this file
 # per key) and publish content under content/<lang>/. See i18n/fr.toml in
-# the juicer.run docs site for a worked example.
+# the juicer.build docs site for a worked example.
 
 # This language's own name, shown in the language switcher. The switcher
 # looks this up in each available language's table (`i18n t.lang 'langname'`),

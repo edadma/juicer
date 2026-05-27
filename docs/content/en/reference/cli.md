@@ -36,7 +36,7 @@ Render the site to disk. Output goes to `<src>/<publicDir>` (default
 
 ```bash
 sbt 'juicerJVM/run build -s docs'
-sbt 'juicerJVM/run build -s docs -d _site -b https://juicer.run/'
+sbt 'juicerJVM/run build -s docs -d _site -b https://juicer.build/'
 sbt 'juicerJVM/run build -s blog -D -F'
 ```
 
