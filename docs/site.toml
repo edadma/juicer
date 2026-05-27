@@ -15,6 +15,13 @@ repoURL = "https://github.com/edadma/juicer"
 
 theme = "juicerdocs"
 
+# Bilingual docs (English + French). Content lives under content/<lang>/.
+# `defaultLanguageInRoot` keeps English at the site root (juicer.run/…) so
+# existing URLs and inbound links don't move; French is served under /fr/.
+languages             = ["en", "fr"]
+defaultLanguage       = "en"
+defaultLanguageInRoot = true
+
 # The page <h1> comes from frontmatter title — markdown headings start at h2.
 headingShift = 0
 

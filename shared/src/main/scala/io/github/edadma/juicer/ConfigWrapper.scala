@@ -91,10 +91,15 @@ class ConfigWrapper(c: TomlDocument) extends Dynamic {
   }
 
   /** Default language code. Used as the fallback when a translation is
-    * missing for a content file. Falls back to the first entry of
-    * `languages` when unset, or `""` when there are no languages declared. */
+    * missing for a content file — including the `i18n` helper's lookup, which
+    * falls back to this language before giving up on a key. Falls back to the
+    * first entry of `languages` when unset; on a site that declares no
+    * `languages` at all it defaults to `"en"`, so a theme that ships an
+    * `i18n/en.toml` chrome dictionary renders in English out of the box. This
+    * default is inert for URL and navigation logic, which is all gated on a
+    * non-empty `languages` list. */
   def defaultLanguage: String =
-    c.getString("defaultLanguage").getOrElse(languages.headOption.getOrElse(""))
+    c.getString("defaultLanguage").getOrElse(languages.headOption.getOrElse("en"))
 
   /** Extra directories to skip during the site walk, expressed as paths
     * relative to the source root. Accepts a single string or an array of

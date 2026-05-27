@@ -171,16 +171,23 @@ object App {
       }
     // ----- i18n strings -----
     //
-    // Each `<src>/i18n/<lang>.toml` file becomes one entry in the
-    // `i18nStrings` map. Top-level string keys are flattened into a
-    // Map[String, String]; nested tables are not supported (yet — flat
-    // is enough for the common case of UI-string translation, and avoids
-    // surprising path syntax in templates).
-    val i18nStrings: Map[String, Map[String, String]] = {
-      val i18nDir = (src1 / "i18n").normalize
-      if (!isDir(i18nDir)) Map.empty
+    // Each `i18n/<lang>.toml` file becomes one entry in the `i18nStrings`
+    // map. Top-level string keys are flattened into a Map[String, String];
+    // nested tables are not supported (yet — flat is enough for the common
+    // case of UI-string translation, and avoids surprising path syntax in
+    // templates).
+    //
+    // Dictionaries are collected from every active theme's `<root>/i18n/`
+    // and from the site's own `<src>/i18n/`, merged with the same
+    // precedence as every other theme-overlaid resource: the site wins
+    // over any theme, and an earlier theme in the lookup chain wins over a
+    // later (inherited) one. Merge is per-language, per-key, so a theme can
+    // ship a full English chrome dictionary while a site adds only the few
+    // keys it overrides or the extra languages it publishes.
+    def readI18nDir(dir: Path): Map[String, Map[String, String]] =
+      if (!isDir(dir)) Map.empty
       else
-        list(i18nDir)
+        list(dir)
           .filter(p => isFile(p) && p.toString.endsWith(".toml"))
           .map { p =>
             val lang = p.filename.stripSuffix(".toml")
@@ -188,14 +195,33 @@ object App {
             val flat = doc.root.collect { case (k, TomlValue.Str(v)) => k -> v }.toMap
             lang -> flat
           }.toMap
+
+    def mergeI18n(
+        base: Map[String, Map[String, String]],
+        over: Map[String, Map[String, String]],
+    ): Map[String, Map[String, String]] =
+      (base.keySet ++ over.keySet).iterator.map { lang =>
+        lang -> (base.getOrElse(lang, Map.empty) ++ over.getOrElse(lang, Map.empty))
+      }.toMap
+
+    val i18nStrings: Map[String, Map[String, String]] = {
+      // Fold themes lowest-precedence-first (inherited bases before the
+      // themes that named them) so higher themes overlay them, then let the
+      // site overlay every theme.
+      val themeMerged =
+        Process.themeRootsFor(src1, conf).reverse.foldLeft(Map.empty[String, Map[String, String]]) {
+          (acc, root) => mergeI18n(acc, readI18nDir((root / "i18n").normalize))
+        }
+      mergeI18n(themeMerged, readI18nDir((src1 / "i18n").normalize))
     }
 
     val rendererData =
       Map(
-        "baseURL"     -> baseURL,
-        "link"        -> linkCallback,
-        "i18n"        -> i18nStrings,
-        "defaultLang" -> conf.defaultLanguage,
+        "baseURL"           -> baseURL,
+        "link"              -> linkCallback,
+        "i18n"              -> i18nStrings,
+        "defaultLang"       -> conf.defaultLanguage,
+        "defaultLangInRoot" -> conf.defaultLanguageInRoot,
       )
 
     show(s"base URL = ${baseURL.base}${baseURL.path}")
@@ -642,23 +668,31 @@ object App {
         segs.tail
       else segs
 
+    /** Strip a leading default-language directory segment from an output
+      * directory — the on-disk analogue of `stripDefaultLangPrefix`. Active
+      * only under `defaultLanguageInRoot`, and only when the head segment
+      * (past `htmlDir`) names the default language; a no-op otherwise and for
+      * the destination root itself. Both the rendered page and its sibling
+      * `feed.xml` go through this so they land where their prefix-free URLs
+      * point. */
+    def stripDefaultLangDir(dir: Path): Path =
+      if (!defaultLangInRoot || dir == dst1) dir
+      else {
+        val segs = dir.relativeTo(dst1).segments.toList
+        val pos  = if (html != "") 1 else 0
+        segs.lift(pos) match {
+          case Some(l) if l == defaultLang && langs.contains(l) =>
+            segs.patch(pos, Nil, 1).foldLeft(dst1)(_ / _)
+          case _ => dir
+        }
+      }
+
     /** Physical output directory for a content file. Normally its `outdir`;
       * under `defaultLanguageInRoot` the default language's directory segment
       * is removed so the rendered file lands where its prefix-free URL points.
       * The internal section graph keeps keying off the original `outdir`, so
       * only the on-disk location moves. */
-    def physicalOutdir(c: ContentFile): Path = {
-      if (!defaultLangInRoot || c.outdir == dst1) c.outdir
-      else {
-        val segs = c.outdir.relativeTo(dst1).segments.toList
-        val pos  = if (html != "") 1 else 0
-        segs.lift(pos) match {
-          case Some(l) if l == defaultLang && langs.contains(l) =>
-            segs.patch(pos, Nil, 1).foldLeft(dst1)(_ / _)
-          case _ => c.outdir
-        }
-      }
-    }
+    def physicalOutdir(c: ContentFile): Path = stripDefaultLangDir(c.outdir)
 
     // ----- Permalink-template helpers (Phase 2.6) -----
     //
@@ -1135,32 +1169,47 @@ object App {
       *
       * Falls back to a weight-sorted flat list when the site has no root
       * `_index` to start from (rare for docs sites; possible for blogs). */
-    val readingOrder: List[ContentFile] = {
-      def flatten(c: ContentFile): List[ContentFile] = {
-        if (c.name != folderContent) List(c)
-        else {
-          val info = sectionInfoByOutdir.getOrElse(
-            c.outdir, SectionInfo(Some(c), Nil, Nil),
-          )
-          c :: info.pages ::: info.subsections.flatMap(flatten)
-        }
+    def flattenReadingOrder(c: ContentFile): List[ContentFile] =
+      if (c.name != folderContent) List(c)
+      else {
+        val info = sectionInfoByOutdir.getOrElse(c.outdir, SectionInfo(Some(c), Nil, Nil))
+        c :: info.pages ::: info.subsections.flatMap(flattenReadingOrder)
       }
+
+    val readingOrder: List[ContentFile] =
       sectionIndex.get(dst1) match {
-        case Some(root) => flatten(root)
+        case Some(root) => flattenReadingOrder(root)
         case None       => pageOrder(contentFiles)
       }
-    }
 
-    /** Previous / next pages in `readingOrder`. Applies to every page
+    /** Per-language reading orders, each rooted at that language's
+      * `<lang>/_index.md`. On a multilingual site the default `readingOrder`
+      * has no single root to start from (content lives under `content/<lang>/`,
+      * not `content/`), so it degrades to a flat weight-sorted list that
+      * interleaves languages — which would make an English page's "next" point
+      * into French. Walking each language's own tree keeps prev/next within a
+      * language. */
+    val readingOrderByLang: Map[String, List[ContentFile]] =
+      if (langs.isEmpty) Map.empty
+      else
+        langs.flatMap { l =>
+          contentFiles
+            .find(c => c.name == folderContent && langOf(c) == l && !stemOf(c).contains('/'))
+            .map(root => l -> flattenReadingOrder(root))
+        }.toMap
+
+    /** Previous / next pages in reading order. Applies to every page
       * including section `_index` pages — so navigating sequentially walks
       * Home → first section's `_index` → that section's pages → next
-      * section's `_index` → its pages → … */
+      * section's `_index` → its pages → … On a multilingual site the walk is
+      * scoped to the page's own language. */
     def prevNextOf(c: ContentFile): (Option[ContentFile], Option[ContentFile]) = {
-      val idx = readingOrder.indexWhere(_ eq c)
+      val order = if (langs.isEmpty) readingOrder else readingOrderByLang.getOrElse(langOf(c), Nil)
+      val idx   = order.indexWhere(_ eq c)
       if (idx < 0) (None, None)
       else {
-        val prv = if (idx > 0)                       Some(readingOrder(idx - 1)) else None
-        val nxt = if (idx < readingOrder.length - 1) Some(readingOrder(idx + 1)) else None
+        val prv = if (idx > 0)                  Some(order(idx - 1)) else None
+        val nxt = if (idx < order.length - 1)   Some(order(idx + 1)) else None
         (prv, nxt)
       }
     }
@@ -1180,6 +1229,40 @@ object App {
       }
     }
 
+    /** URL of each language's home — the `<lang>/_index.md` page. Used as the
+      * switch target for a language that has no translation of the current
+      * page (the Starlight fallback: take the reader to that language's
+      * front door rather than hiding the option). */
+    val langHomeUrl: Map[String, String] =
+      if (langs.isEmpty) Map.empty
+      else
+        contentFiles.collect {
+          case c if c.name == folderContent && langs.contains(langOf(c)) && !stemOf(c).contains('/') =>
+            langOf(c) -> basic(c)("url").asInstanceOf[String]
+        }.toMap
+
+    /** Language-switcher data for a page: one entry per configured language,
+      * in declared order, carrying its `lang` code, the `url` to switch to,
+      * and whether it's the `current` language. The switch URL is the page's
+      * own URL for the current language, its translation's URL where one
+      * exists, and that language's home otherwise. Empty for single-language
+      * sites, so a switcher renders only when there's a choice to make. */
+    def languagesOf(c: ContentFile): List[Map[String, Any]] = {
+      if (langs.isEmpty) Nil
+      else {
+        val mine    = langOf(c)
+        val selfUrl = basic(c)("url").asInstanceOf[String]
+        val transByLang =
+          translationsOf(c).map(m => m("lang").asInstanceOf[String] -> m("url").asInstanceOf[String]).toMap
+        langs.map { l =>
+          val url =
+            if (l == mine) selfUrl
+            else transByLang.getOrElse(l, langHomeUrl.getOrElse(l, "/"))
+          Map[String, Any]("lang" -> l, "url" -> url, "current" -> (l == mine))
+        }
+      }
+    }
+
     /** Second-pass enriched record. Adds navigation cross-references whose
       * targets are basic records (one level only — `.page.parent.parent`
       * is never defined; templates walk `.page.ancestors` for the chain).
@@ -1195,6 +1278,7 @@ object App {
         "prev"         -> p.map(basic).orNull,
         "next"         -> n.map(basic).orNull,
         "translations" -> translationsOf(c),
+        "languages"    -> languagesOf(c),
       )
       if (c.name == folderContent) {
         val info = sectionInfoByOutdir(c.outdir)
@@ -1330,6 +1414,23 @@ object App {
         else baseURL.path + "/"
       pagesByPath.getOrElse(rootKey, null)
     }
+
+    // Per-language root sections — the `<lang>/_index.md` page record for
+    // each configured language. A page in language L gets `.site.root`
+    // bound to this record (see the page-render loop), so the sidebar
+    // walks the section tree for L, not the default language's. The
+    // language home is the section index (`c.name == folderContent`)
+    // sitting directly under `<lang>/` — i.e. its stem has no further
+    // path segment. Empty for single-language sites, which keep the
+    // global `rootRecord`.
+    val rootRecordByLang: Map[String, Map[String, Any]] =
+      if (langs.isEmpty) Map.empty
+      else
+        pageEntries.collect {
+          case (c, m)
+              if c.name == folderContent && langs.contains(langOf(c)) && !stemOf(c).contains('/') =>
+            langOf(c) -> m
+        }.toMap
 
     // ----- Taxonomy collection (Phase 1.1) -----
     //
@@ -1921,8 +2022,18 @@ object App {
         val bundleSrc: String =
           if (c.srcPath ne null) c.srcPath.parent.map(_.toString).getOrElse("") else ""
 
+        // Bind `.site.root` to this page's language root so a multilingual
+        // sidebar walks the current language's section tree. Single-language
+        // sites (and any page whose language has no `_index.md`) keep the
+        // global root unchanged.
+        val siteForPage =
+          rootRecordByLang.get(langOf(c)) match {
+            case Some(langRoot) => sitedata + ("root" -> langRoot)
+            case None           => sitedata
+          }
+
         val pagedata = Map(
-          "site"        -> sitedata,
+          "site"        -> siteForPage,
           "page"        -> pageMap,
           "section"     -> (sectionDataFor(c) + ("paginator" -> Paginate.sliceToMap(slice))),
           "content"     -> content,
@@ -2434,7 +2545,7 @@ object App {
         }
         val feedUrl = baseURL.base + sectionRel + "feed.xml"
         writeFeed(
-          outdir / "feed.xml",
+          stripDefaultLangDir(outdir) / "feed.xml",
           confdoc.getString("title").getOrElse("Untitled") + " · " + sectionTitle,
           feedUrl,
           byDateDesc(info.pages),
@@ -2896,6 +3007,20 @@ object App {
     def baseFromContext(con: io.github.edadma.squiggly.Context): BaseURL =
       con.renderer.data("baseURL").asInstanceOf[BaseURL]
 
+    /** Prefix a site-relative path with a language segment, matching the
+      * URLs juicer emits for that language: nothing for the empty language
+      * or for the default language under `defaultLanguageInRoot` (which
+      * lives at the root), `/<lang>` otherwise. The baseURL path is applied
+      * by the caller. */
+    def langArg(con: io.github.edadma.squiggly.Context, lang: String, arg: String): String = {
+      val defLang =
+        con.renderer.data.get("defaultLang").collect { case s: String => s }.getOrElse("")
+      val defInRoot =
+        con.renderer.data.get("defaultLangInRoot").collect { case b: Boolean => b }.getOrElse(false)
+      if (lang.isEmpty || (lang == defLang && defInRoot)) arg
+      else joinUrlPath("/" + lang, arg)
+    }
+
     Map(
       "relURL" -> TemplateFunction(
         "relURL",
@@ -2913,6 +3038,29 @@ object App {
           else {
             val base = baseFromContext(con)
             base.base + joinUrlPath(base.path, arg)
+          }
+        },
+      ),
+      // Language-aware companions of relURL / absURL (Hugo's relLangURL /
+      // absLangURL). Take the language as the first argument — typically
+      // `.page.lang` — and prefix the path with that language's URL segment
+      // so links in shared layouts point within the current language.
+      "relLangURL" -> TemplateFunction(
+        "relLangURL",
+        2,
+        { case (con, Seq(lang: String, arg: String)) =>
+          if (absoluteURL(arg)) arg
+          else joinUrlPath(baseFromContext(con).path, langArg(con, lang, arg))
+        },
+      ),
+      "absLangURL" -> TemplateFunction(
+        "absLangURL",
+        2,
+        { case (con, Seq(lang: String, arg: String)) =>
+          if (absoluteURL(arg)) arg
+          else {
+            val base = baseFromContext(con)
+            base.base + joinUrlPath(base.path, langArg(con, lang, arg))
           }
         },
       ),

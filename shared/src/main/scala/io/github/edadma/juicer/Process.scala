@@ -443,6 +443,17 @@ object Process {
     ordered.toList
   }
 
+  /** The resolved theme directories, in lookup-chain order (highest
+    * precedence first). Exposed so the render pass can reach the active
+    * themes for cross-cutting concerns computed before [[apply]] runs —
+    * e.g. loading each theme's `i18n/<lang>.toml` dictionaries. Mirrors the
+    * `themeRoots` value [[apply]] computes internally, filtering to dirs
+    * that actually exist. */
+  def themeRootsFor(src: Path, conf: ConfigWrapper): List[Path] =
+    resolveThemeChain(src, conf.themeDir, conf.themes)
+      .map(n => themeRootPath(src, conf.themeDir, n))
+      .filter(isDir)
+
   /** Insert `value` into a nested mutable map at the given path. Intermediate
     * levels are created as mutable `LinkedHashMap` when missing; if a level
     * already exists as a *value* (not a sub-map) it is replaced — a leaf
