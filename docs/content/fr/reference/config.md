@@ -46,7 +46,7 @@ La base `norme` est ici parce que la Charte de la langue française du Québec e
 | `layoutDir`     | `"layouts"`        | Racine des gabarits |
 | `partialDir`    | `"partials"`       | Racine des partials |
 | `shortcodeDir`  | `"shortcodes"`     | Racine des shortcodes |
-| `dataDir`       | `"data"`           | Racine des données structurées — les fichiers `*.toml` / `*.yaml` / `*.yml` ici sont exposés aux gabarits comme `.site.data` (voir [Données de gabarit → `.site.data`](../template-data/#sitedata)). Les thèmes peuvent aussi livrer un répertoire `data/` ; les clés du site l'emportent à la granularité du fichier feuille. |
+| `dataDir`       | `"data"`           | Racine des données structurées — les fichiers `*.toml` / `*.yaml` / `*.yml` ici sont exposés aux gabarits comme `.site.data` (voir [Données de gabarit → `.site.data`](/fr/reference/template-data/#site-data)). Les thèmes peuvent aussi livrer un répertoire `data/` ; les clés du site l'emportent à la granularité du fichier feuille. |
 | `excludeDirs`   | non défini         | Répertoires supplémentaires à sauter pendant le parcours du site. Chaîne ou tableau de chaînes ; chaque entrée est un chemin relatif à la racine source (`"node_modules"`, `"assets/raw"`). La correspondance est par répertoire exact seulement — pas un motif glob. |
 
 Le parcours saute déjà les sous-dossiers du `themeDir` actif, le parent du `themeDir` (pour que les thèmes inactifs rangés à côté ne se rendent pas), le `publicDir` configuré et le `dst` de sortie de la construction. Utilisez `excludeDirs` pour tout le reste sous la racine source qui ne fait pas partie du site — outillage rangé, dossiers de brouillon, ressources générées que vous produisez hors bande, brouillons gardés hors de `content/` :
@@ -149,7 +149,7 @@ construction).
 ### Fonctionnalités de blogue
 
 Ces clés activent les fonctionnalités de blogue documentées sous
-[Concepts → Fonctionnalités de blogue](../../concepts/blogging/). Les quatre sont
+[Concepts → Fonctionnalités de blogue](/fr/concepts/blogging/). Les quatre sont
 optionnelles ; un site de documentation qui ne les définit pas se rend inchangé.
 
 | Clé          | Défaut    | Quoi |
@@ -171,8 +171,8 @@ la même clé dans le frontmatter du `_index.md` de la section. Ainsi un site qu
 Juicer fait remonter une liste d'événements organisée (`.site.events`) et une grille
 de calendrier sur 12 mois (`.site.calendar`) pour tout site ayant une section de
 pages d'événements. Voir
-[Données de gabarit → `.site.events`](../template-data/#siteevents) et
-[`.site.calendar`](../template-data/#sitecalendar).
+[Données de gabarit → `.site.events`](/fr/reference/template-data/#site-events) et
+[`.site.calendar`](/fr/reference/template-data/#site-calendar).
 
 | Clé              | Défaut      | Quoi |
 |------------------|-------------|------|
@@ -223,7 +223,7 @@ chemin permalié existe dans l'arborescence de sortie. Ainsi un `posts/foo.md` a
 vers `<dst>/posts/foo/index.html`.
 [= /note =]
 
-Voir [Concepts → Fonctionnalités de blogue → Permaliens](../../concepts/blogging/#permaliens)
+Voir [Concepts → Fonctionnalités de blogue → Permaliens](/fr/concepts/blogging/#permaliens)
 pour la version narrative.
 
 ## `[comments]` — emplacement de configuration du fournisseur de commentaires
@@ -258,7 +258,7 @@ fournisseurs courants :
 Les thèmes conditionnent typiquement l'intégration sur `{{ if .site.comments }}` et
 sur une surcharge de frontmatter par page `comments: false` (pour que des articles
 individuels puissent renoncer aux commentaires sans désactiver la configuration du
-site). Voir [Données de gabarit → `.site.comments`](../template-data/#sitecomments)
+site). Voir [Données de gabarit → `.site.comments`](/fr/reference/template-data/#site-comments)
 pour le contrat côté gabarit.
 
 [= note =]
@@ -302,7 +302,7 @@ Scala.js livrent un backend de remplacement ; la génération complète de varia
 est aujourd'hui réservée à la JVM.
 
 Côté gabarit : voir
-[Syntaxe de gabarit → `imageVariants` et `srcset`](../template-syntax/#imagevariants-et-srcset)
+[Syntaxe de gabarit → `imageVariants` et `srcset`](/fr/reference/template-syntax/#imagevariants-et-srcset)
 pour les assistants que les thèmes appellent.
 
 ## `[assets]` — pipeline Sass / esbuild
@@ -364,7 +364,7 @@ les gabarits ne cassent pas, et une seule ligne d'avis va sur stderr. Les cibles
 Native et JS livrent des backends de remplacement ; l'exécution complète du pipeline
 est aujourd'hui réservée à la JVM.
 
-Côté gabarit : voir [Données de gabarit → builtin `asset`](../template-data/#builtin-asset).
+Côté gabarit : voir [Données de gabarit → builtin `asset`](/fr/reference/template-data/#builtin-asset).
 
 ## `[[authors]]` — registre d'auteurs
 
@@ -396,7 +396,7 @@ url   = "https://github.com/edadma"
 
 Les pages référencent un auteur via `author: <id>` ou `authors: [<id>, ...]` dans
 leur frontmatter. Voir
-[Concepts → Fonctionnalités de blogue → Registre d'auteurs](../../concepts/blogging/#registre-dauteurs)
+[Concepts → Fonctionnalités de blogue → Registre d'auteurs](/fr/concepts/blogging/#registre-d-auteurs)
 pour la narration complète.
 
 ## Clés personnalisées

@@ -27,7 +27,7 @@ shortcodes, gabarits et fichiers statiques se résolvent tous contre cette chaî
 étendue.
 
 C'est ainsi que les thèmes fournis partagent du code : chacun hérite de
-[`juicercommon`](/fr/concepts/themes/#themes-fournis), le thème de base caché
+[`juicercommon`](/fr/concepts/themes/#thèmes-fournis), le thème de base caché
 qui contient le bloc `seo`, les scripts d'initialisation/bascule du mode sombre et
 les shortcodes communs (`note`, `tip`, `warning`, `tabs`, `github`, …). Aucun
 thème ne les duplique.

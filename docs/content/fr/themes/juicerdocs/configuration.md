@@ -65,7 +65,7 @@ La valeur par défaut pointe vers le `juicer-logo.png` fourni avec le thème —
 |---------------------------|------|---------|------|
 | `juicerdocs.getStarted`   | bool | `false` | Quand vrai, le héros de la page d'accueil montre un bouton primaire « Get started » liant à `/getting-started/`. Laissez non défini pour les sites qui n'ont pas de section de démarrage. |
 
-Le héros montre aussi un bouton secondaire « Star on GitHub » quand le `repoURL` de premier niveau est défini (voir [Référence de thématisation → Clés d'habillage à l'échelle du site](/fr/reference/theming/#cles-dhabillage-a-lechelle-du-site)). Quand les **deux** sont désactivés — `getStarted` non défini et pas de `repoURL` — la rangée d'actions se replie entièrement et le héros se termine à son paragraphe de résumé (pas d'espace vide réservé).
+Le héros montre aussi un bouton secondaire « Star on GitHub » quand le `repoURL` de premier niveau est défini (voir [Référence de thématisation → Clés d'habillage à l'échelle du site](/fr/reference/theming/#clés-d-habillage-à-l-échelle-du-site)). Quand les **deux** sont désactivés — `getStarted` non défini et pas de `repoURL` — la rangée d'actions se replie entièrement et le héros se termine à son paragraphe de résumé (pas d'espace vide réservé).
 
 ### Couleurs de marque (mode clair)
 

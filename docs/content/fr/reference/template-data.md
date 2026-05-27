@@ -258,7 +258,7 @@ l'indexation positionnelle dans la plupart des gabarits.
 ### `.site.comments`
 
 Une transmission de la table `[comments]` de `site.toml` (voir
-[Config → `[comments]`](../config/#comments--emplacement-de-configuration-du-fournisseur-de-commentaires)).
+[Config → `[comments]`](/fr/reference/config/#comments-emplacement-de-configuration-du-fournisseur-de-commentaires)).
 juicer ne livre jamais de backend de commentaires — le bloc de configuration est
 opaque pour le moteur, et les partials de thème sont responsables de le lire et
 d'émettre le HTML d'intégration.
@@ -334,7 +334,7 @@ L'enregistrement enrichi de la page courante :
 | `.page.author`         | `Map?`    | Premier (ou seul) enregistrement de registre d'auteur résolu, ou `null` |
 | `.page.authors`        | `List[Map]` | Tous les enregistrements d'auteurs résolus — liste vide quand aucun |
 | `.page.backlinks`      | `List[Map]` | Enregistrements minces `{title, url, summary}` pour chaque page qui pointe *vers* celle-ci — liste vide quand rien ne pointe ici (voir ci-dessous) |
-| `.page.assets`         | `List[Map]` | Ressources de paquet de page au niveau de section de cette page — `{name, url, ext}` par fichier. Liste vide quand le paquet n'a pas de ressources (voir [Paquets de page](#paquets-de-page)) |
+| `.page.assets`         | `List[Map]` | Ressources de paquet de page au niveau de section de cette page — `{name, url, ext}` par fichier. Liste vide quand le paquet n'a pas de ressources (voir [Paquets de page](/fr/reference/template-data/#paquets-de-page)) |
 | `.page.<custom>`       | varie     | Toute clé de frontmatter |
 
 ### Forme de `.page.series`
@@ -409,7 +409,7 @@ Toujours disponible (pour les pages non-`_index`, elle décrit la section englob
 | `.section.pages`        | `List[Map]` | Pages sœurs non-`_index`, triées |
 | `.section.subsections`  | `List[Map]` | Sections enfants directes, triées |
 | `.section.index`        | `Map?`      | Enregistrement `_index` de la section |
-| `.section.assets`       | `List[Map]` | Ressources de paquet de page pour la section englobante (voir [Paquets de page](#paquets-de-page)) |
+| `.section.assets`       | `List[Map]` | Ressources de paquet de page pour la section englobante (voir [Paquets de page](/fr/reference/template-data/#paquets-de-page)) |
 | `.section.paginator`    | `Map`       | État de pagination pour la tranche courante (toujours présent — voir ci-dessous) |
 
 ### `.section.paginator`
@@ -510,7 +510,7 @@ source — la préférence de paquet ne s'active que pour les chemins nus.
 
 La fonction de gabarit `asset` résout un nom logique en l'URL de sa sortie compilée
 (et éventuellement avec empreinte). Le manifeste vient du
-[pipeline `[assets]`](/fr/reference/config/#assets--pipeline-sass--esbuild).
+[pipeline `[assets]`](/fr/reference/config/#assets-pipeline-sass-esbuild).
 
 ```handlebars
 <link rel="stylesheet" href="{{ asset 'site.css' }}">

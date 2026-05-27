@@ -51,5 +51,5 @@ Choisissez autre chose si vous voulez :
 
 Les pages ci-dessous documentent les boutons de configuration que juicerdocs lit
 depuis votre `site.toml`, plus comment personnaliser tout ce qui dépasse ce qui est
-exposé. La feuille [Site de démonstration](./demo/) est un rappel rapide que **ce
+exposé. La feuille [Site de démonstration](/fr/themes/juicerdocs/demo/) est un rappel rapide que **ce
 site est la démo** — juicer.build lui-même utilise juicerdocs.

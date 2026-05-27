@@ -78,7 +78,7 @@ content/iceland-2024/
 
 `hero.jpg` est copié dans le répertoire de sortie de la section et servi depuis `/iceland-2024/hero.jpg`. Les gabarits itèrent `.page.assets` pour rendre une galerie ou une liste de pièces jointes, et `imageVariants 'hero.jpg'` (sans barre oblique initiale) se résout relativement au lot — déplacez le lot, le balisage suit.
 
-Référence complète (forme de l'enregistrement, règles de résolution, quand NE PAS utiliser un lot) dans [Données de gabarit → Lots de page](/fr/reference/template-data/#page-bundles).
+Référence complète (forme de l'enregistrement, règles de résolution, quand NE PAS utiliser un lot) dans [Données de gabarit → Lots de page](/fr/reference/template-data/#paquets-de-page).
 
 ## Brouillons
 

@@ -139,4 +139,4 @@ thème. Chaque thème les lit.
 | `hideJuicerCredit`      | `Boolean` | `false` | Mettez `true` pour omettre la ligne de pied de page « Built with juicer ». |
 | `repoURL`               | `String`  | non défini | URL de l'hôte git. juicerdocs fait apparaître une icône GitHub dans la barre supérieure et un bouton « Star on GitHub » en page d'accueil quand défini ; les autres thèmes l'ignorent. |
 | `customCSS`             | `[String]`| non défini | Liste de chemins de feuilles de style à charger après le CSS du thème fourni — voir la couche 2 ci-dessus. |
-| `authorsPath`           | `String`  | `/authors/` | Préfixe d'URL pour le listing d'équipe + les archives par auteur. Voir [Données de gabarit → authorsPath](/fr/reference/template-data/#renommer-le-prefixe-durl--authorspath). |
+| `authorsPath`           | `String`  | `/authors/` | Préfixe d'URL pour le listing d'équipe + les archives par auteur. Voir [Données de gabarit → authorsPath](/fr/reference/template-data/#renommer-le-préfixe-d-url-authorspath). |

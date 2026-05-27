@@ -47,5 +47,5 @@ docs/
 
 Retirez l'arborescence `content/` existante, remplacez-la par la vôtre, et pointez
 `[juicerdocs] logo` vers votre logotype. La référence
-[Configuration](../configuration/) compagnon catalogue chaque clé site.toml, jeton
+[Configuration](/fr/themes/juicerdocs/configuration/) compagnon catalogue chaque clé site.toml, jeton
 de palette et bouton de frontmatter par page que le thème lit.
