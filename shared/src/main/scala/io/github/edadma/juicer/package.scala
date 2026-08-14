@@ -434,6 +434,35 @@ package object juicer {
 
   def absoluteURL(url: String): Boolean = absoluteURLRegex.matches(url)
 
+  /** Rewrite one markdown link destination for a deploy whose `baseURL` has a
+    * path component — `https://example.com/foo/` — so that `[x](/page/)`
+    * renders as `/foo/page/` rather than resolving against the apex and 404ing.
+    *
+    * Two destinations are handed back untouched, and for different reasons:
+    *
+    *   - an absolute URL, which names its own host and is nobody's to rewrite;
+    *   - a **fragment-only** destination, `[x](#section)`, which is a reference
+    *     into the document it is written in (RFC 3986 §4.4) and names no path
+    *     at all. Prefixing it produced `/#section`, a link to the site root
+    *     carrying a fragment no page there has — so a correct same-page anchor
+    *     silently sent the reader to the home page instead of to the heading
+    *     three screens down. Nothing reported it: the build is clean, the page
+    *     renders, and the link works exactly as far as being clickable.
+    *
+    * A destination relative to the current page — `../other/#part` — is still
+    * treated as root-relative, which is wrong for the same reason and is not
+    * fixed here: resolving one needs the page it was written on, and this
+    * function is handed a destination and nothing else.
+    */
+  def rewriteLinkDest(dest: String, basePath: String): String =
+    if (absoluteURL(dest) || dest.startsWith("#")) dest
+    else {
+      val prefix = if (basePath.endsWith("/")) basePath.dropRight(1) else basePath
+      val tail   = if (dest.startsWith("/")) dest else "/" + dest
+
+      prefix + tail
+    }
+
   // ===== Slug computation =====
   //
   // `slugify` (+ asciiFold + the diacritic-fold table) moved to

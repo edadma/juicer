@@ -146,6 +146,67 @@ class SubpathLinksSpec extends AnyFlatSpec with Matchers with JuicerTestSupport 
     html should not include "href=\"/reference/opcodes/\""
   }
 
+  // A fragment-only destination names no path — it is a reference into the
+  // document it was written in — so there is nothing for the base path to
+  // prefix. Prefixing it anyway produced `/#section`, which is the site root
+  // plus a fragment no page there has: the reader is silently sent to the home
+  // page instead of to the heading, and every part of the build stays green.
+  //
+  // Checked on a subpath deploy because that is where a wrong answer is easiest
+  // to mistake for a right one — `/foo/#section` looks like it has been
+  // correctly rewritten, and is just as broken as `/#section` on the apex.
+  it should "leave a same-page anchor alone" in {
+    writeAt("site.toml", Site)
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: Home
+        |---
+        |
+        |Jump to [the part](#the-part) below, or to [a page](/page/).
+        |
+        |## The part
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", MinimalLayout)
+    writeAt("layouts/_default/file.html", MinimalLayout)
+
+    build()
+
+    val html = out("index.html")
+    html should include("href=\"#the-part\"")
+    html should not include "href=\"/#the-part\""
+    html should not include "href=\"/foo/#the-part\""
+    html should include("href=\"/foo/page/\"")
+  }
+
+  it should "leave a same-page anchor alone in a markdownify'd template string" in {
+    writeAt("site.toml", Site)
+    writeAt(
+      "content/_index.md",
+      """---
+        |title: Home
+        |summary: Jump to [the part](#the-part).
+        |---
+        |
+        |## The part
+        |""".stripMargin,
+    )
+    writeAt(
+      "layouts/_default/folder.html",
+      """<p class="summary">{{ markdownify .page.summary }}</p>
+        |<body>{{ .content }}</body>
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/file.html", MinimalLayout)
+
+    build()
+
+    val html = out("index.html")
+    html should include("href=\"#the-part\"")
+    html should not include "href=\"/foo/#the-part\""
+  }
+
   it should "leave absolute http(s) URLs alone" in {
     writeAt("site.toml", Site)
     writeAt(

@@ -211,15 +211,9 @@ object BuildSupport {
         "markdownify",
         1,
         { case (con, Seq(s: String)) =>
-          val base = baseFromContext(con)
-          val callback: String => String = (url: String) =>
-            if (absoluteURL(url)) url
-            else {
-              val basePath = if (base.path.endsWith("/")) base.path.dropRight(1) else base.path
-              val tail     = if (url.startsWith("/")) url else "/" + url
-              basePath + tail
-            }
-          val raw         = parseMarkdown(s, mdConfig)
+          val base                       = baseFromContext(con)
+          val callback: String => String = (url: String) => rewriteLinkDest(url, base.path)
+          val raw                        = parseMarkdown(s, mdConfig)
           val transformed = transformLinks(raw, callback)
           io.github.edadma.markdown.renderToHTML(transformed, mdConfig).trim
         },

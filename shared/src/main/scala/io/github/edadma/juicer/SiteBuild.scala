@@ -119,13 +119,7 @@ class SiteBuild(
     }
 
     val baseURL = parseURL(baseURLstr).getOrElse(problem(s"invalid base URL: $baseURLstr"))
-    val linkCallback = (url: String) =>
-      if (absoluteURL(url)) url
-      else {
-        val basePath = if (baseURL.path.endsWith("/")) baseURL.path.dropRight(1) else baseURL.path
-        val tail     = if (url.startsWith("/")) url else "/" + url
-        basePath + tail
-      }
+    val linkCallback = (url: String) => rewriteLinkDest(url, baseURL.path)
     // ----- i18n strings -----
     //
     // Each `i18n/<lang>.toml` file becomes one entry in the `i18nStrings`
