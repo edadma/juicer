@@ -1,0 +1,149 @@
+name: Release binaries
+
+# Builds the native juicer binary and attaches it to a GitHub release, then updates the Homebrew
+# formula. Runs automatically when a release is published, and can be dispatched manually against an
+# existing tag (e.g. to add binaries to a release made by hand).
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to attach binaries to (e.g. v0.3.0)'
+        required: true
+
+# gh release upload needs write access to releases.
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.os }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Build Linux on 22.04 (glibc 2.35) so the binaries also run on older distros; newer glibc
+          # is not backward-compatible, older is forward-compatible.
+          - { runner: ubuntu-22.04,     os: linux, arch: x86_64 }
+          - { runner: ubuntu-22.04-arm, os: linux, arch: arm64  }
+          # Pin to an explicit macOS image (not macos-latest) so the binary's deployment-target floor
+          # stays low and predictable instead of drifting up whenever GitHub moves the rolling label.
+          # macOS Intel is omitted: that runner pool is so scarce the job would sit unassigned for the
+          # whole run. Intel Macs build from source.
+          - { runner: macos-14,         os: macos, arch: arm64  }
+    steps:
+      - name: Checkout juicer
+        uses: actions/checkout@v7
+
+      # Scala Native links through the host's C toolchain and binds libuv, so both must be present at
+      # link time. macOS runners have clang and libuv via Homebrew; Linux needs them installed.
+      - name: Install native toolchain (Linux)
+        if: matrix.os == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang libuv1-dev zlib1g-dev
+
+      - name: Install libuv (macOS)
+        if: matrix.os == 'macos'
+        run: brew install libuv
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Cache sbt
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.sbt
+            ~/.cache/coursier
+            ~/.ivy2/cache
+          key: ${{ runner.os }}-${{ runner.arch }}-sbt-${{ hashFiles('build.sbt', 'project/build.properties', 'project/plugins.sbt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-sbt-
+
+      - name: Build native binary (release-fast)
+        run: sbt 'set ThisBuild / nativeConfig ~= { _.withMode(scala.scalanative.build.Mode.releaseFast) }' juicerNative/nativeLink
+
+      # Asset name drops the leading "v" so it matches the artifact version
+      # (juicer-0.3.0-linux-x86_64, not juicer-v0.3.0-...).
+      - name: Resolve version
+        id: ver
+        run: |
+          TAG='${{ github.event.release.tag_name || inputs.tag }}'
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Stage binary
+        run: cp native/target/scala-*/juicer "juicer-${{ steps.ver.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}"
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ steps.ver.outputs.tag }}" "juicer-${{ steps.ver.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}" --clobber
+
+  # A release is not finished until `brew install` gives you the new version: the job above is how
+  # juicer is downloaded, but the formula is how it is installed. This renders the formula from the
+  # binaries that job just attached and pushes it to the tap. Without the tap token it still renders
+  # and prints the formula, so a release never fails for want of a secret and the result can always
+  # be copied in by hand.
+  formula:
+    name: homebrew formula
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+    steps:
+      - name: Checkout juicer
+        uses: actions/checkout@v7
+
+      - name: Resolve version
+        id: ver
+        run: |
+          TAG='${{ github.event.release.tag_name || inputs.tag }}'
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Render the formula
+        run: tools/brew-formula.sh "${{ steps.ver.outputs.version }}" -o juicer.rb
+
+      - name: Report
+        run: |
+          {
+            echo '### Homebrew formula'
+            echo
+            echo '```ruby'
+            cat juicer.rb
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # A tap is an ordinary repository, so this is a clone, a copy and a push — no Homebrew
+      # involved. TAP_TOKEN is a token with contents:write on edadma/homebrew-tap; the default
+      # GITHUB_TOKEN cannot reach another repository.
+      - name: Push to the tap
+        if: env.TAP_TOKEN != ''
+        run: |
+          git clone --depth 1 "https://x-access-token:${TAP_TOKEN}@github.com/edadma/homebrew-tap.git" tap
+          mkdir -p tap/Formula
+          cp juicer.rb tap/Formula/juicer.rb
+          cd tap
+          if git diff --quiet -- Formula/juicer.rb; then
+            echo "the tap already carries this formula — nothing to push"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add Formula/juicer.rb
+          git commit -m "juicer ${{ steps.ver.outputs.version }}"
+          git push
+
+      - name: Note a missing token
+        if: env.TAP_TOKEN == ''
+        run: |
+          echo "::warning::TAP_TOKEN is not set, so the formula was rendered but not pushed to edadma/homebrew-tap. It is in this run's summary; copy it to Formula/juicer.rb there."

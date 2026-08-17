@@ -40,15 +40,32 @@ ready-to-preview demo site at `docs/demos/<theme>/` — see the
 `themes/<theme>/` section in the docs for the live URL and a
 description of what it exercises.
 
-## Install (use juicer as a library)
+## Install
 
-```scala
-libraryDependencies += "io.github.edadma" %%% "juicer" % "0.2.0"
+juicer is a tool, so it installs as one:
+
+```sh
+brew tap edadma/tap
+brew trust edadma/tap
+brew install edadma/tap/juicer
 ```
 
-The CLI is the typical way to use it; the library API exposes
-`io.github.edadma.juicer.App.build(...)` and `App.run(args)` for callers
-that want to embed it in another build pipeline.
+macOS on Apple silicon, and Linux on x86_64 and arm64; every release also
+attaches the plain binary for each. `sass` and `esbuild` come with it —
+juicer shells out to them for the asset pipeline rather than vendoring
+either, so a site gets the current version of both.
+
+Other platforms build from source:
+
+```sh
+sbt juicerNative/nativeLink        # a standalone binary
+sbt 'juicerJVM/run build -s <site>'  # or straight from the build
+```
+
+The library API — `io.github.edadma.juicer.App.build(...)` and
+`App.run(args)` — is there for embedding juicer in another pipeline, but the
+artifact is not published to Maven Central: nobody consumes a site generator
+as a dependency, so a source dependency is the way to reach it.
 
 ## Project layout
 
