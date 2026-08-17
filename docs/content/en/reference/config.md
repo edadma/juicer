@@ -357,7 +357,8 @@ which templates look up as `{{ asset 'site.css' }}`.
 
 **Tool installation.** Juicer shells out to `sass` (the dart-sass /
 npm package; the Ruby `sass` gem also works for the small flag subset
-juicer uses) and `esbuild`. Install with `brew install sass esbuild` /
+juicer uses) and `esbuild`. Install with
+`brew install dart-sass esbuild` /
 `npm install -g sass esbuild` / your platform's equivalent. When a
 tool isn't on PATH the build still succeeds: that entry degrades to a
 verbatim copy of its source, the URL still resolves so templates

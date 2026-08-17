@@ -47,8 +47,19 @@ tap is an ordinary git repository.
   binary shows it as the only non-system library.
 - **sass** and **esbuild** are shelled out to by the asset pipeline, and are deliberately not
   vendored: `AssetBuilderBackend.scala` explains that an author should get the current versions of
-  both rather than whatever juicer was built against. A site with no SCSS and no JS to bundle never
-  invokes them, but the formula depends on both so that a site which does have them just works.
+  both rather than whatever juicer was built against.
+
+  **Neither is a dependency of this formula, and adding one would be a mistake.** What the formula
+  ships is the Scala Native binary, where `newAssetBuilderBackend()` is
+  `AssetBuilderBackend.Unavailable` — the pipeline never invokes either tool and SCSS and JS entries
+  degrade to verbatim copies. Depending on them installs two tools the shipped binary cannot use.
+
+  It is also actively harmful for `sass`: there is no `sass` in homebrew-core, so `depends_on "sass"`
+  resolves to `sass/sass/sass`, which depends on `dart-lang/dart/dart`. Homebrew trusts only
+  homebrew-core and homebrew-cask by default, so an install of juicer failed outright with *"Refusing
+  to load formula dart-lang/dart/dart from untrusted tap"* — and trusting the taps then builds a Dart
+  SDK. The core formula that provides the `sass` executable is **`dart-sass`** (bottled, no Dart SDK),
+  and that is the one to name here if the pipeline is ever promoted to Native.
 
 ## The test block
 

@@ -52,7 +52,7 @@ private object JvmAssetBuilderBackend extends AssetBuilderBackend {
     probe(
       "sass",
       "juicer: `sass` not found on PATH — Sass compilation disabled for this build. " +
-        "Install with `brew install sass` / `npm install -g sass`, " +
+        "Install with `brew install dart-sass` / `npm install -g sass`, " +
         "or set `[assets] sass.enabled = false` in site.toml to silence this message.",
       () => sassProbed,
       b => sassProbed = b,

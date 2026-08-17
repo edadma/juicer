@@ -356,7 +356,7 @@ gabarits recherchent comme `{{ asset 'site.css' }}`.
 
 **Installation des outils.** Juicer appelle `sass` (le paquet npm dart-sass ; la gem
 Ruby `sass` fonctionne aussi pour le petit sous-ensemble d'options que juicer
-utilise) et `esbuild`. Installez avec `brew install sass esbuild` /
+utilise) et `esbuild`. Installez avec `brew install dart-sass esbuild` /
 `npm install -g sass esbuild` / l'équivalent de votre plateforme. Quand un outil
 n'est pas dans le PATH, la construction réussit quand même : cette entrée se
 dégrade en une copie telle quelle de sa source, l'URL se résout toujours pour que

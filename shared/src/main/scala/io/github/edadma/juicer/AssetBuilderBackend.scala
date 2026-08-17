@@ -28,7 +28,7 @@ import io.github.edadma.path.Path
   *     dart-sass on the classpath, no Scala-Native split.
   *
   *   - The two CLIs are widely available on every package manager
-  *     (`brew install sass esbuild`, `apt install`, `npm install -g`).
+  *     (`brew install dart-sass esbuild`, `apt install`, `npm install -g`).
   */
 trait AssetBuilderBackend {
 

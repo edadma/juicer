@@ -14,12 +14,16 @@ class Juicer < Formula
   version "REPLACE_VERSION"
   license "ISC"
 
-  # libuv is linked into the binary; sass and esbuild are shelled out to by the asset pipeline, and
-  # are deliberately not vendored so a site gets the current versions of both (see
-  # AssetBuilderBackend.scala). A site with no SCSS and no JS to bundle never invokes them.
+  # libuv is linked into the binary and is the only thing it needs.
+  #
+  # The asset pipeline's `sass` and `esbuild` are NOT dependencies, even though the pipeline shells
+  # out to them: what this formula ships is the Scala Native binary, and on Native
+  # newAssetBuilderBackend() is AssetBuilderBackend.Unavailable, so neither tool is ever invoked
+  # (SCSS and JS entries degrade to verbatim copies). Depending on them would install two tools the
+  # binary cannot use — and `sass` is not a core formula, so it would drag the untrusted sass/sass
+  # and dart-lang/dart taps and a Dart SDK build into every `brew install juicer`. If the pipeline
+  # is ever promoted to Native, `depends_on "dart-sass"` is the core formula that provides `sass`.
   depends_on "libuv"
-  depends_on "esbuild"
-  depends_on "sass"
 
   on_macos do
     on_arm do
