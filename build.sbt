@@ -69,6 +69,23 @@ lazy val juicer = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     ),
     publishMavenStyle      := true,
     Test / publishArtifact := false,
+    // The version the CLI banner prints comes from `ThisBuild / version`, not from a literal in
+    // Main.scala. It was a literal until 0.3.0, whose binary announced itself as v0.2.0 — nothing in
+    // the release flow reads the banner, so a stale one survives every check and is found by
+    // whoever installs the release. Generating it leaves one place to bump.
+    Compile / sourceGenerators += Def.task {
+      val f = (Compile / sourceManaged).value / "io" / "github" / "edadma" / "juicer" / "BuildVersion.scala"
+
+      IO.write(
+        f,
+        s"""|package io.github.edadma.juicer
+            |
+            |/** Generated from `ThisBuild / version` in build.sbt. Do not edit. */
+            |val BuildVersion: String = "${version.value}"
+            |""".stripMargin,
+      )
+      Seq(f)
+    }.taskValue,
   )
   .jvmSettings(
     libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.1.0" % "provided",

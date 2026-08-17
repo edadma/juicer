@@ -45,7 +45,7 @@ import scopt.OParser
 
     OParser.sequence(
       programName("juicer"),
-      head("Juicer Site Generator", "v0.2.0"),
+      head(cliBanner),
       note(section("General Options")),
       opt[String]('b', "baseurl")
         .valueName("<URL>")

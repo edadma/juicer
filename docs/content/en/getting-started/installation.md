@@ -1,43 +1,62 @@
 ---
 title: Installation
-summary: Add juicer as an sbt dependency or check out the repo and run from source.
+summary: Install juicer with Homebrew, grab a release binary, or build it from source.
 weight: 10
 ---
 
-## From source (recommended for now)
+## Homebrew (recommended)
 
-Juicer is published from a single repo at <https://github.com/edadma/juicer>. Until binary releases are wired up, the simplest path is to clone and run with sbt.
+juicer is a tool, so it installs as one:
+
+```bash
+brew tap edadma/tap
+brew trust edadma/tap
+brew install edadma/tap/juicer
+```
+
+`brew trust` is Homebrew's gate on third-party taps — it trusts only its own core and cask by default, and refuses to read a formula from any other tap until you say so.
+
+Check what you got:
+
+```bash
+juicer --version
+```
+
+## A release binary
+
+Every release attaches a plain executable for macOS on Apple silicon and Linux on x86_64 and arm64. Download it from the [releases page](https://github.com/edadma/juicer/releases), make it executable, and put it on your `PATH`:
+
+```bash
+chmod +x juicer-*
+mv juicer-* /usr/local/bin/juicer
+```
+
+`libuv` is the only shared library it needs — `brew install libuv`, or `apt install libuv1` on Debian and Ubuntu.
+
+## From source
+
+Any other platform builds from the repo:
 
 ```bash
 git clone https://github.com/edadma/juicer.git
 cd juicer
-sbt 'juicerJVM/run --help'
+sbt juicerNative/nativeLink
 ```
 
-You'll see the usage banner. If sbt prints anything other than the help output, see [Troubleshooting](/getting-started/troubleshooting/).
+That leaves a standalone binary under `native/target/scala-<ver>/`. To skip the binary and run straight from the build, `sbt 'juicerJVM/run --help'`. If sbt prints anything other than the help output, see [Troubleshooting](/getting-started/troubleshooting/).
 
-## sbt dependency (library use)
+Building needs **Scala 3.8.3** (juicer is Scala-3 only; no Scala 2 backport is planned), **sbt 1.12.x**, **JVM 17+**, and, for the native binary, **Clang**.
 
-Juicer is mostly an *application* — the CLI does what most users need — but the build pipeline is exposed as a library too. Add it to your `build.sbt`:
+## Using juicer as a library
 
-```scala
-libraryDependencies += "io.github.edadma" %%% "juicer" % "0.2.0"
-```
-
-The `%%%` form picks the right artifact for whichever Scala platform you're on (`juicerJVM`, `juicerJS`, `juicerNative`).
-
-## Requirements
-
-- **Scala 3.8.3** — juicer is Scala-3 only. No Scala 2 backport planned.
-- **sbt 1.12.x** — earlier versions might work; not tested.
-- **JVM 17+** — for the JVM target. Scala.js needs Node 20+; Scala Native needs Clang.
+The build pipeline is reachable as an API — `io.github.edadma.juicer.App.build(...)` and `App.run(args)` — but **juicer is not published to Maven Central**, deliberately: nobody consumes a site generator as a build dependency. Reach it as a source dependency on the repo if you need to embed it.
 
 ## Verifying the install
 
-The smoke test is `juicer build` against the `docs/demos/minimal` directory in the repo:
+The smoke test is a build of the smallest site in the repo:
 
 ```bash
-sbt 'juicerJVM/run build -s docs/demos/minimal'
+juicer build -s docs/demos/minimal
 ls docs/demos/minimal/public
 ```
 

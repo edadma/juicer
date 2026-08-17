@@ -10,6 +10,13 @@ import scala.util.matching.Regex
 
 package object juicer {
 
+  /** What the CLI announces itself as. The version half comes from
+    * `BuildVersion`, which build.sbt generates from `ThisBuild / version`,
+    * so the binary cannot report a version the build did not set — 0.3.0
+    * shipped a binary saying `v0.2.0` back when this was a literal in
+    * Main.scala. */
+  def cliBanner: String = s"Juicer Site Generator v$BuildVersion"
+
   // ===== Filesystem helpers (delegate to path.Path / cross_platform) =====
 
   def isFile(p: Path): Boolean    = p.exists && p.isFile && p.isReadable

@@ -51,9 +51,13 @@ brew install edadma/tap/juicer
 ```
 
 macOS on Apple silicon, and Linux on x86_64 and arm64; every release also
-attaches the plain binary for each. `sass` and `esbuild` come with it —
-juicer shells out to them for the asset pipeline rather than vendoring
-either, so a site gets the current version of both.
+attaches the plain binary for each. `libuv` is the only dependency.
+
+The asset pipeline shells out to `sass` and `esbuild` rather than vendoring
+either, so a site gets the current version of both — but that pipeline runs
+on the JVM only, and what installs here is the Scala Native binary, which
+copies SCSS and JS through unchanged. Neither tool is worth installing for
+juicer's sake alone.
 
 Other platforms build from source:
 
@@ -104,8 +108,8 @@ rendered into the page's layout via **squiggly**.
 ## CLI
 
 ```
-Juicer Site Generator v0.2.0
-Usage: juicer [options] [command]
+Juicer Site Generator v0.3.0
+Usage: juicer [build|config|theme|serve] [options]
 
   -b, --baseurl <URL>     base site URL (overrides site.toml)
   -c, --config <name>     base site configuration (default 'standard';
