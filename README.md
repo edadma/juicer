@@ -108,7 +108,7 @@ rendered into the page's layout via **squiggly**.
 ## CLI
 
 ```
-Juicer Site Generator v0.3.0
+Juicer Site Generator v0.3.1
 Usage: juicer [build|config|theme|serve] [options]
 
   -b, --baseurl <URL>     base site URL (overrides site.toml)
