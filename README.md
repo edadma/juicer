@@ -2,7 +2,6 @@
 
 # juicer
 
-![Maven Central](https://img.shields.io/maven-central/v/io.github.edadma/juicer_3)
 ![GitHub last commit](https://img.shields.io/github/last-commit/edadma/juicer)
 ![GitHub](https://img.shields.io/github/license/edadma/juicer)
 ![Scala Version](https://img.shields.io/badge/Scala-3.8.3-blue.svg)
@@ -111,45 +110,57 @@ rendered into the page's layout via **squiggly**.
 Juicer Site Generator v0.3.1
 Usage: juicer [build|config|theme|serve] [options]
 
-  -b, --baseurl <URL>     base site URL (overrides site.toml)
-  -c, --config <name>     base site configuration (default 'standard';
-                          others: 'simple', 'norme')
-  -h, --help              prints this usage text
-  -v, --verbose           verbose output
-      --version           prints the version
+━━━━━ General Options ━━━━━
+  -b, --baseurl <URL>      base site URL
+  -c, --config <name>      base site configuration (default is 'standard')
+  -h, --help               prints this usage text
+  -v, --verbose            verbose output
+  --version                prints the version
 
-Commands:
-  build                          build the site
-    -s, --source <path>            site source directory (default ./)
-    -d, --dest <path>              destination directory (default ./public)
-    -D, --drafts                   include draft pages (frontmatter `draft: true`)
-    -F, --future                   include future-dated pages
-
-  config                         show the resolved build configuration
-    -s, --source <path>            site source directory
-
-  theme add <git-url>            install a theme into <src>/<themeDir>/
-    -s, --source <path>            site source directory
-    -n, --name <name>              install under this theme name
-    -r, --ref <branch|tag|sha>     branch, tag, or commit to check out
-        --force                    overwrite an existing theme directory
-
-  serve                          build the site, then serve it on localhost
-    -s, --source <path>            site source directory
-    -d, --dest <path>              destination directory
-        --host <host>              host to bind (default 'localhost')
-    -p, --port <port>              port to listen on (default 8080)
-    -D, --drafts                   include draft pages
-    -F, --future                   include future-dated pages
-    -L, --live-reload              rebuild on source changes and reload
-                                   browser tabs (SSE-driven)
+━━━━━ Commands ━━━━━━━━━━━━
+Command: build [options]
+  Build the site
+  -d, --dest <path>        destination directory path
+  -s, --source <path>      site sources directory path
+  -D, --drafts             include draft pages (frontmatter `draft: true`)
+  -F, --future             include future-dated pages (date frontmatter past `now`)
+Command: config [options]
+  Show build configuration
+  -s, --source <path>      site sources directory path
+Command: theme [add|upgrade] <args>...
+  Theme management
+Command: theme add [options] <git-url>
+    Install a theme from a git URL into <src>/<themeDir>/
+  -s, --source <path>      site sources directory path
+  -n, --name <name>        install under this theme name (default: derived from URL or --subdir)
+  -r, --ref <branch|tag|sha>
+                           branch, tag, or commit to check out (default: repo HEAD)
+  --subdir <path>          install only this subdirectory of the cloned repo as the theme
+  --force                  overwrite an existing theme directory
+  <git-url>                HTTPS or SSH git URL of the theme repo
+Command: theme upgrade [options] [<name>]
+    Re-fetch installed themes from their recorded source
+  -s, --source <path>      site sources directory path
+  -r, --ref <branch|tag|sha>
+                           override the recorded ref for this upgrade only
+  <name>                   theme to upgrade (default: every theme with .juicer-theme.toml metadata)
+Command: serve [options]
+  Build and serve the site
+  -d, --dest <path>        destination directory path
+  -s, --source <path>      site sources directory path
+  --host <host>            host to bind to (default 'localhost')
+  -p, --port <port>        port to listen on (default 8080)
+  -D, --drafts             include draft pages (frontmatter `draft: true`)
+  -F, --future             include future-dated pages (date frontmatter past `now`)
+  -L, --live-reload        rebuild on source changes and reload browser tabs
 ```
 
-Every command — `build`, `config`, `theme`, `serve` — runs on JVM,
-Scala.js (Node), and Scala Native. The `serve` command is built on
-[microserve](https://github.com/edadma/microserve), which provides a
-single static-file server / live-reload abstraction across all three
-runtimes.
+Every command — `build`, `config`, `theme`, `serve` — runs on the JVM and
+on Scala Native, which is what the released binary is. The `serve` command
+is built on [microserve](https://github.com/edadma/microserve), which
+provides a single static-file server / live-reload abstraction across every
+runtime; live reload is long-polled rather than SSE, so a multi-page site
+can't exhaust the browser's per-host connection pool.
 
 ## Site config
 
@@ -216,24 +227,35 @@ exposed as `args[i]` and named args as `key`.
 
 ## Cross-platform
 
-`build.sbt` cross-builds for JVM, Scala.js, and Scala Native. JVM is the
-primary target right now; Scala.js and Scala Native compile from the same
-sources and run the full integration suite. There are no JVM-only
-features — `serve` and its live-reload watcher both use
-[microserve](https://github.com/edadma/microserve), which abstracts over
-`java.nio` (JVM), Node `net`/`fs.watch` (JS), and libuv (Native) behind
-a shared Scala API.
+`build.sbt` cross-builds for JVM, Scala.js, and Scala Native from one set of
+sources. JVM is where development happens and Scala Native is what ships;
+both run the full integration suite. **The Scala.js target does not link at
+the moment** — the syntax highlighter's per-block timeout guard uses
+`java.lang.Thread`, which Scala.js has no implementation of.
+
+There are no JVM-only *features* — `serve` and its live-reload watcher both
+use [microserve](https://github.com/edadma/microserve), which abstracts over
+`java.nio` (JVM), Node `net`/`fs.watch` (JS), and libuv (Native) behind a
+shared Scala API. What is JVM-only is the shelling-out: the Sass/esbuild
+asset pipeline and the image-variant encoder run real commands on the JVM
+and degrade to a verbatim copy elsewhere, so a site built by the released
+binary still resolves every asset URL.
 
 ## Tests
 
 ```bash
 sbt juicerJVM/test
-sbt juicerJS/test
 sbt juicerNative/test
 ```
 
-The integration test suite (`JuicerBuildSpec`) builds small sites under a
-temp directory and asserts the rendered HTML structure end-to-end.
+`sbt juicerJS/test` is the third of these and cannot run while the JS target
+fails to link (see **Cross-platform** above).
+
+Almost every test is an end-to-end build: the suite writes a small site into
+a temp directory, runs the real build pipeline over it, and asserts the
+rendered HTML. Suites are named for the feature they cover
+(`PermalinksSpec`, `TaxonomiesSpec`, `I18nSpec`, ...); `JuicerBuildSpec` is
+the original catch-all.
 
 ## License
 
