@@ -1,0 +1,234 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "sysl",
+  "scopeName": "source.sysl",
+  "fileTypes": ["sysl"],
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#quotedIdent" },
+    { "include": "#string" },
+    { "include": "#char" },
+    { "include": "#number" },
+    { "include": "#attribute" },
+    { "include": "#declaration" },
+    { "include": "#keyword" },
+    { "include": "#type" },
+    { "include": "#constant" },
+    { "include": "#call" },
+    { "include": "#operator" }
+  ],
+  "repository": {
+    "comment": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.sysl",
+          "match": "//.*$"
+        }
+      ]
+    },
+
+    "quotedIdent": {
+      "patterns": [
+        {
+          "comment": "A backtick-quoted identifier is a NAME, so it is scoped as a variable rather than as a string — a reader should see `match` as the name it is and not as text. It sits above every other rule because what is inside it is a name whatever it looks like: a reserved word, an operator, a quote.",
+          "name": "variable.other.quoted.sysl",
+          "match": "`[^`\\n]+`"
+        }
+      ]
+    },
+
+    "string": {
+      "patterns": [
+        {
+          "comment": "Interpolated strings: s\"…\", f\"…\" with printf specifiers, raw\"…\", and the C string c\"…\".",
+          "name": "string.quoted.double.interpolated.sysl",
+          "begin": "\\b(s|f|raw|c)(\")",
+          "beginCaptures": {
+            "1": { "name": "keyword.other.string-prefix.sysl" },
+            "2": { "name": "punctuation.definition.string.begin.sysl" }
+          },
+          "end": "\"",
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.sysl" } },
+          "patterns": [
+            {
+              "comment": "An embedded expression, plus the printf specifier an f-string may write after it.",
+              "name": "meta.embedded.expression.sysl",
+              "begin": "\\$\\{",
+              "beginCaptures": { "0": { "name": "punctuation.section.embedded.begin.sysl" } },
+              "end": "\\}(%[-+ #0]*[0-9]*(?:\\.[0-9]+)?[a-zA-Z])?",
+              "endCaptures": {
+                "0": { "name": "punctuation.section.embedded.end.sysl" },
+                "1": { "name": "constant.other.placeholder.sysl" }
+              },
+              "patterns": [{ "include": "$self" }]
+            },
+            { "include": "#escape" }
+          ]
+        },
+        {
+          "name": "string.quoted.double.sysl",
+          "begin": "\"",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.sysl" } },
+          "end": "\"",
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.sysl" } },
+          "patterns": [{ "include": "#escape" }]
+        }
+      ]
+    },
+
+    "escape": {
+      "name": "constant.character.escape.sysl",
+      "match": "\\\\(u\\{[0-9A-Fa-f]+\\}|u[0-9A-Fa-f]{4}|x[0-9A-Fa-f]{2}|[0abefnrtv\\\\'\"$])"
+    },
+
+    "char": {
+      "comment": "A char literal is one Unicode scalar value.",
+      "name": "string.quoted.single.sysl",
+      "match": "'(\\\\(u\\{[0-9A-Fa-f]+\\}|u[0-9A-Fa-f]{4}|x[0-9A-Fa-f]{2}|[0abefnrtv\\\\'\"])|[^'\\\\])'"
+    },
+
+    "number": {
+      "patterns": [
+        {
+          "comment": "Floats, with an optional fN width suffix.",
+          "name": "constant.numeric.float.sysl",
+          "match": "\\b[0-9][0-9_]*(\\.[0-9][0-9_]*)([eE][-+]?[0-9_]+)?(f(32|64))?\\b|\\b[0-9][0-9_]*[eE][-+]?[0-9_]+(f(32|64))?\\b"
+        },
+        {
+          "name": "constant.numeric.hex.sysl",
+          "match": "\\b0[xX][0-9A-Fa-f_]+((i|u)(8|16|32|64|size))?\\b"
+        },
+        {
+          "name": "constant.numeric.octal.sysl",
+          "match": "\\b0[oO][0-7_]+((i|u)(8|16|32|64|size))?\\b"
+        },
+        {
+          "name": "constant.numeric.binary.sysl",
+          "match": "\\b0[bB][01_]+((i|u)(8|16|32|64|size))?\\b"
+        },
+        {
+          "comment": "Integers, with an optional iN / uN / usize / isize width suffix.",
+          "name": "constant.numeric.integer.sysl",
+          "match": "\\b[0-9][0-9_]*((i|u)(8|16|32|64|size)|f(32|64))?\\b"
+        }
+      ]
+    },
+
+    "attribute": {
+      "comment": "An annotation above a declaration (@test, @test(should_trap), @tailrec) and a directive at the margin (#if). Two sigils because they are two kinds of thing; a pattern's infix '@' is not matched here, since this anchors to the start of a line.",
+      "match": "^\\s*([@#])([a-zA-Z_][a-zA-Z0-9_]*)",
+      "captures": {
+        "1": { "name": "punctuation.definition.annotation.sysl" },
+        "2": { "name": "entity.name.function.decorator.sysl" }
+      }
+    },
+
+    "declaration": {
+      "patterns": [
+        {
+          "comment": "struct / enum / trait / impl / module, and the name each one introduces.",
+          "match": "\\b(struct|enum|trait|impl|module)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.sysl" },
+            "2": { "name": "entity.name.type.sysl" }
+          }
+        },
+        {
+          "comment": "`end <name>`, the optional marker naming the declaration it closes.",
+          "match": "^\\s*(end)\\b(\\s+[A-Za-z_][A-Za-z0-9_]*)?",
+          "captures": {
+            "1": { "name": "keyword.declaration.sysl" },
+            "2": { "name": "entity.name.type.sysl" }
+          }
+        },
+        {
+          "comment": "A function declaration: a name at the head of a line, then a parameter list.",
+          "match": "^\\s*(?:(private|extern)\\s+)*([a-zA-Z_][a-zA-Z0-9_]*)(?=\\s*(\\[[^\\]]*\\])?\\s*\\()",
+          "captures": {
+            "1": { "name": "storage.modifier.sysl" },
+            "2": { "name": "entity.name.function.sysl" }
+          }
+        }
+      ]
+    },
+
+    "keyword": {
+      "patterns": [
+        {
+          "comment": "Reserved words that steer control flow.",
+          "name": "keyword.control.sysl",
+          "match": "\\b(if|then|elif|else|while|loop|do|for|in|break|continue|match|return|defer)\\b"
+        },
+        {
+          "comment": "Reserved words that bind or declare. `ref` is here rather than with the modifiers because it is a declaration and never a type — there is no `ref T` to qualify.",
+          "name": "keyword.declaration.sysl",
+          "match": "\\b(var|val|ref|const|struct|enum|trait|impl|extern|module|import|type)\\b"
+        },
+        {
+          "comment": "Modifiers and the contract vocabulary. The capability words are deliberately absent: they are annotations now (@no_alloc, @requires(...)), styled by the annotation rule above, and 'alloc', 'no' and 'requires' are ordinary identifiers a program may use for its own.",
+          "name": "storage.modifier.sysl",
+          "match": "\\b(private|override|static|weak|require|ensure|as)\\b"
+        },
+        {
+          "comment": "Soft keywords — special only where the grammar expects one, an ordinary identifier elsewhere.",
+          "name": "keyword.other.sysl",
+          "match": "\\b(is|not|invariant|new|within|where|with|opaque|deriving)\\b"
+        },
+        {
+          "comment": "Compile-time operators over a type.",
+          "name": "keyword.operator.word.sysl",
+          "match": "\\b(sizeof|alignof|offsetof)\\b"
+        },
+        {
+          "name": "variable.language.self.sysl",
+          "match": "\\bself\\b"
+        }
+      ]
+    },
+
+    "type": {
+      "patterns": [
+        {
+          "comment": "Predeclared scalars. These are identifiers the analyzer resolves, not reserved words, which is what lets the open iN / uN / fN families need no lexical support.",
+          "name": "support.type.primitive.sysl",
+          "match": "\\b(bool|char|string|unit|usize|isize|int|short|long|byte|ushort|uint|ulong|real|never|va_list|[iu](8|16|32|64)|f(32|64))\\b"
+        },
+        {
+          "comment": "A capitalised name is a type by convention.",
+          "name": "entity.name.type.sysl",
+          "match": "\\b[A-Z][A-Za-z0-9_]*\\b"
+        }
+      ]
+    },
+
+    "constant": {
+      "patterns": [
+        {
+          "name": "constant.language.sysl",
+          "match": "\\b(true|false|null)\\b"
+        },
+        {
+          "comment": "A reserved identifier. The __NAME__ *shape* belongs to the language, so the shape is what is matched rather than the built-ins that currently occupy it — a later release adding one needs no change here.",
+          "name": "constant.language.builtin.sysl",
+          "match": "\\b__[A-Z_]*__\\b"
+        }
+      ]
+    },
+
+    "call": {
+      "comment": "A name applied to arguments, after declarations have had their chance at the line.",
+      "match": "\\b([a-z_][a-zA-Z0-9_]*)(?=\\s*(\\[[^\\]]*\\])?\\s*\\()",
+      "captures": { "1": { "name": "entity.name.function.call.sysl" } }
+    },
+
+    "operator": {
+      "comment": "Only the memory-mode sigils are scoped, and deliberately so. Which of `T` / `&T` / `*T` a type is in is the thing a reader of sysl most needs to see, and a renderer that also colours every `=` and `+` buries it. Arithmetic and comparison are left to the body colour.",
+      "patterns": [
+        {
+          "name": "keyword.operator.sigil.sysl",
+          "match": "(?<![A-Za-z0-9_)\\]])[&*](?=[A-Za-z_\\[(])"
+        }
+      ]
+    }
+  }
+}

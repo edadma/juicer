@@ -1,0 +1,59 @@
+# Demo site for the juicerapi theme — generated API reference pages.
+#
+# Every page under content/ is written the way a doc generator emits it, and
+# that is the point of the demo: it is the FORMAT SPECIFICATION as much as it
+# is a showcase. The theme styles four shapes and nothing else —
+#
+#   ## Kind group      an <h2> per group: Functions, Types, Traits, Constants
+#   ### `symbol`       an <h3> per declaration
+#   ```lang …```       the fenced block directly under it is the signature
+#   | Parameter | …    a pipe table for the parameters
+#
+# — plus `## Index` at the top, whose links become pills. A generator that
+# emits those shapes gets the whole theme; one that does not still renders as
+# ordinary Markdown, because that is all any of it is.
+#
+# THE PAGES CARRY NO HTML AND NO CLASSES ON PURPOSE. The same file has to read
+# well in a GitHub repo with no theme, no hosting and no juicer — that is what
+# makes generated docs work for a package nobody has built a site for. So the
+# theme hooks structure and slugified heading ids, never markup the generator
+# would have to inject.
+#
+# The examples are sysl, because that is the language this was built for, and
+# grammars/ carries its TextMate grammar so the signatures highlight.
+#
+# Local preview:
+#   sbt 'juicerJVM/run serve -s docs/demos/juicerapi -L'
+
+title       = "Bristle"
+tagline     = "API reference"
+description = "Generated API reference for Bristle, a small text and buffer library — a demo of the juicerapi theme."
+baseURL     = "http://localhost:8080"
+
+themeDir = "../../themes"
+theme    = "juicerapi"
+
+htmlDir = ""
+
+# The generated pages are read twice — here, and in the repository the package
+# lives in — so their anchors have to mean the same thing in both. "github" is
+# the slug algorithm that makes `### starts_with` answer `#starts_with` rather
+# than `#starts-with`, which is what every link in the per-page index depends on.
+slugStyle = "github"
+
+[[topnav]]
+label = "API"
+url   = "/"
+
+[juicerdocs]
+# juicerapi defines no palette of its own — it reads juicerdocs' tokens, so
+# this one line restyles the API pages and the guides together. Swapping it
+# for the default magenta is the quickest way to see that the theme really is
+# layered rather than a second look-and-feel.
+brand       = "#0d7490"
+brandStrong = "#0e6a80"
+brandSoft   = "#dff2f7"
+accent      = "#7c3aed"
+brandDark       = "#22d3ee"
+brandStrongDark = "#67e8f9"
+brandSoftDark   = "rgba(34,211,238,0.16)"

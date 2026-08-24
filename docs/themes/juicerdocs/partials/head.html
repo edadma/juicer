@@ -18,6 +18,12 @@
 
 <link rel="stylesheet" href="{{ relURL (asset 'juicerdocs.css') }}" />
 
+<!-- Hook for a theme layered on top of juicerdocs — juicerapi uses it to add
+     its own stylesheet. The default in juicercommon is empty; an inheriting
+     theme ships its own copy. Loaded after this theme's CSS and before the
+     site's, so the three cascade as site > layered theme > juicerdocs. -->
+{{ partial 'head-extra' . }}
+
 <!-- Site-supplied stylesheets, loaded AFTER the bundled theme CSS so
      they can override anything. Drop your file in static/site.css and
      set `customCSS = ["site.css"]` in site.toml; the list takes any

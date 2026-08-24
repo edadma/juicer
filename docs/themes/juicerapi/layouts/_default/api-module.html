@@ -1,0 +1,80 @@
+{{ // api-module — one generated module's API reference.
+   //
+   // Reached by `layout: api-module` in the page's frontmatter, never as a
+   // default, so a site can carry this theme and hand-written pages together
+   // without either noticing the other.
+   //
+   // The BODY is the generator's Markdown, rendered untouched. Everything this
+   // template adds is the header: the module's name, what it is, what it asks
+   // of the host, and the one line somebody needs in order to use it. The
+   // symbol navigation is the inherited right-rail page TOC — the generator
+   // emits one heading per declaration, so that rail is already a symbol list
+   // grouped by kind, and a second mechanism would only be able to disagree
+   // with it.
+   //
+   // Frontmatter this reads, all optional except `title`:
+   //   module      — the dotted module path, e.g. `sysl.text`
+   //   summary     — the one-sentence lead, markdownified
+   //   package     — the package a module outside the standard library came from
+   //   coordinate  — that package's dependency coordinate
+   //   requires    — the capability clause, e.g. `{}` for a module needing nothing
+   //   since       — the version the module first appeared in }}
+{{ define main }}
+<article class="juicerapi juicerapi-module">
+
+  <header class="juicerapi-modhead">
+    <p class="juicerapi-kicker">Module</p>
+
+    <h1 class="juicerapi-modname">
+      <code>{{ if .page.module then .page.module else .page.title }}</code>
+    </h1>
+
+    {{ if .page.summary }}
+    <div class="juicerapi-lead">{{ markdownify .page.summary }}</div>
+    {{ end }}
+
+    {{ if .page.module }}
+    {{ // The line somebody copies. It is the point of the page for a reader
+       // who already knows what they want and arrived from search. }}
+    <div class="juicerapi-import">
+      <span class="juicerapi-import-label">Import</span>
+      <code class="juicerapi-import-code">import {{ .page.module }}</code>
+    </div>
+    {{ end }}
+
+    {{ if .page.package or .page.coordinate or .page.requires or .page.since }}
+    <dl class="juicerapi-meta">
+      {{ if .page.package }}
+      <div class="juicerapi-meta-row">
+        <dt>Package</dt>
+        <dd><code>{{ .page.package }}</code></dd>
+      </div>
+      {{ end }}
+      {{ if .page.coordinate }}
+      <div class="juicerapi-meta-row">
+        <dt>Coordinate</dt>
+        <dd><code>{{ .page.coordinate }}</code></dd>
+      </div>
+      {{ end }}
+      {{ if .page.requires }}
+      <div class="juicerapi-meta-row">
+        <dt>Requires</dt>
+        <dd><code>{{ .page.requires }}</code></dd>
+      </div>
+      {{ end }}
+      {{ if .page.since }}
+      <div class="juicerapi-meta-row">
+        <dt>Since</dt>
+        <dd>{{ .page.since }}</dd>
+      </div>
+      {{ end }}
+    </dl>
+    {{ end }}
+  </header>
+
+  <div class="juicerapi-body">
+    {{ .content }}
+  </div>
+
+</article>
+{{ end }}

@@ -1,0 +1,17 @@
+# juicerapi — generated API reference pages, layered on juicerdocs.
+#
+# This theme does NOT stand on its own and is not a second docs theme. It
+# inherits juicerdocs, so the topbar, sidebar, search, footer, palette and
+# typography are the same objects rather than a matching set — an API section
+# and a hand-written guide on one site have to look like one site, and two
+# independent themes is precisely how that fails.
+#
+# What it adds is furniture for one page shape: a module header, a symbol
+# index, dense signature blocks and parameter tables.
+#
+# It overrides NO default layout. Its templates are `api-module.html` and
+# `api-index.html`, reached by `layout:` frontmatter on the generated pages,
+# so adding this theme to a site changes nothing about the pages already there.
+#
+# Chain: site files > juicerapi > juicerdocs > juicercommon.
+inherits = ["juicerdocs"]

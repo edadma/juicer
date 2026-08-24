@@ -1,0 +1,13 @@
+{{ // head-extra — the hook a layered theme uses to add its own <head> content.
+   //
+   // juicerdocs calls this from `head.html`, immediately after its own
+   // stylesheet and before `customCSS`, so a theme inheriting juicerdocs can
+   // add a stylesheet, a font or a meta tag without shipping a copy of the
+   // whole hundred-line head partial — which is the thing that makes two
+   // layered themes drift apart.
+   //
+   // This default is deliberately empty. Override it by shipping
+   // `partials/head-extra.html` in the inheriting theme, or in the site's own
+   // `partials/`, which wins over both.
+   //
+   // Precedence: site files > inheriting theme > juicerdocs > juicercommon. }}

@@ -89,7 +89,7 @@ Use layouts for: the actual `<html>` skeleton and the per-page-kind structural r
 
 ## Bundled themes
 
-Eleven themes ship in the juicer repo, each tuned for a different shape of
+Twelve themes ship in the juicer repo, each tuned for a different shape of
 site. Pick the closest match and override individual files from your own
 `layouts/` or `static/`:
 
@@ -106,14 +106,24 @@ site. Pick the closest match and override individual files from your own
 | `juicerchurch`     | `docs/themes/juicerchurch/`     | Churches, ministries — sermon archive, recurring-event calendar grid, ministries section, photo albums. |
 | `juicerpodcast`    | `docs/themes/juicerpodcast/`    | Podcasts — episode list, per-episode player + show notes, RSS subscribe links. |
 | `juicerwiki`       | `docs/themes/juicerwiki/`       | Personal wikis / digital gardens — backlinks, tag cloud, wiki-style search. |
+| `juicerapi`        | `docs/themes/juicerapi/`        | Generated API reference — module headers, symbol indexes, signature blocks, parameter tables. Layered on `juicerdocs` rather than standing alone. |
 
-These eleven all inherit a twelfth, hidden theme: **`juicercommon`**, the
+These twelve all inherit a thirteenth, hidden theme: **`juicercommon`**, the
 shared base that holds the partials, shortcodes, and scripts every theme
 has in common (the `seo` block, the dark-mode init/toggle scripts, and the
 note/tip/warning/tabs/github/… shortcodes). You never select `juicercommon`
 directly — each theme's `theme.toml` lists it under `inherits`. See
 [Theme inheritance](/concepts/theme-inheritance/) for how that resolution
 works.
+
+**`juicerapi` is the one that inherits at two levels**, and it is worth knowing
+because it is a pattern to copy rather than an oddity. Its `theme.toml` names
+`juicerdocs`, which names `juicercommon`, so the chain resolves three deep — and
+juicerapi ships no palette, fonts or spacing of its own, only furniture for one
+page shape. That is how to add a *section* to a site without adding a second look
+to it: inherit the theme already in use and override the little that differs. A
+theme that reimplements the chrome instead is how two parts of one site end up
+looking unrelated.
 
 Each theme has its own section under [Themes](/themes/) (linked from the
 sidebar) with a "what's in the box" overview and a configuration page

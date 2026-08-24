@@ -1,0 +1,37 @@
+{{ // api-index — the front door of a generated API section.
+   //
+   // Reached by `layout: api-index` in frontmatter. Renders the generator's
+   // Markdown body, which carries the module list, and puts a header on it.
+   //
+   // The module list is deliberately the BODY rather than something this
+   // template walks out of the section graph. The generated Markdown has to
+   // stand on its own when GitHub renders it with no theme at all — that is
+   // the whole reason the generator emits Markdown — so a list only this
+   // template could produce would be a list missing from the artifact people
+   // actually read in the repo.
+   //
+   // Frontmatter: title, summary, and the optional `version` of whatever was
+   // documented. }}
+{{ define main }}
+<article class="juicerapi juicerapi-index">
+
+  <header class="juicerapi-idxhead">
+    <p class="juicerapi-kicker">API reference</p>
+
+    <h1>{{ .page.title }}</h1>
+
+    {{ if .page.summary }}
+    <div class="juicerapi-lead">{{ markdownify .page.summary }}</div>
+    {{ end }}
+
+    {{ if .page.version }}
+    <p class="juicerapi-version">Generated from <code>{{ .page.version }}</code>.</p>
+    {{ end }}
+  </header>
+
+  <div class="juicerapi-body">
+    {{ .content }}
+  </div>
+
+</article>
+{{ end }}

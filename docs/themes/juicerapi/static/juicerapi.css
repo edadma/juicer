@@ -1,0 +1,371 @@
+@charset "UTF-8";
+/* ============================================================
+ * juicerapi — API reference furniture, layered on juicerdocs.
+ *
+ * This file defines NO colours, fonts, spacing scale or dark-mode palette of
+ * its own. Every value below is one of juicerdocs' custom properties, so the
+ * API pages inherit a palette change or a `[juicerdocs] brand = …` override in
+ * site.toml automatically, and cannot drift out of step with the guides they
+ * sit beside. If you find yourself reaching for a literal colour here, the
+ * token is missing from juicerdocs and belongs there.
+ *
+ * Loaded after juicerdocs.css via the `head-extra` partial hook.
+ *
+ * Almost all of it styles GENERATED MARKDOWN rather than markup this theme
+ * writes: the generator emits one `<h2>` per kind group, one `<h3>` per
+ * declaration, a fenced signature block under each, and a pipe table for the
+ * parameters. Those four shapes are the contract. They are also all plain
+ * Markdown on purpose — the same file has to read well on GitHub with no
+ * stylesheet at all, which is why there are no wrapper divs to hook and the
+ * selectors below are structural.
+ * ============================================================ */
+/* ============================================================
+ * 1. Module header
+ * ============================================================ */
+.juicerdocs-content .juicerapi-modhead,
+.juicerdocs-content .juicerapi-idxhead {
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.juicerdocs-content .juicerapi-kicker {
+  margin: 0 0 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+
+/* The module name is the page's identity, so it is set in the mono face —
+   it is a thing you type, not a title you read. */
+.juicerdocs-content .juicerapi-modname {
+  margin: 0;
+  line-height: 1.15;
+  font-size: clamp(1.6rem, 1.1rem + 2vw, 2.2rem);
+}
+
+.juicerdocs-content .juicerapi-modname code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: inherit;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.juicerdocs-content .juicerapi-lead {
+  margin-top: 0.75rem;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--fg-soft);
+}
+
+.juicerdocs-content .juicerapi-lead p {
+  margin: 0;
+}
+
+/* ----- the import line ----- */
+/* Set apart from the prose because it is the one thing a reader who arrived
+   from search wants to copy. */
+.juicerdocs-content .juicerapi-import {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  border-radius: var(--radius-md);
+}
+
+.juicerdocs-content .juicerapi-import-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.juicerdocs-content .juicerapi-import-code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--fg);
+  user-select: all;
+}
+
+/* ----- the metadata strip ----- */
+.juicerdocs-content .juicerapi-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 1.25rem 0 0;
+}
+
+.juicerdocs-content .juicerapi-meta-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.juicerdocs-content .juicerapi-meta dt {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.juicerdocs-content .juicerapi-meta dd {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--fg-soft);
+}
+
+.juicerdocs-content .juicerapi-version {
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ============================================================
+ * 2. Kind groups — the generator's <h2>
+ * ============================================================ */
+/* "Functions", "Types", "Traits", "Constants". Rendered as a section label
+   rather than a heading so that the symbols under it stay the visual unit —
+   on a page of sixty declarations the groups are signposts, not chapters. */
+.juicerdocs-content .juicerapi-body h2 {
+  margin: 3.5rem 0 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--brand-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-strong);
+}
+
+.juicerdocs-content .juicerapi-body > h2:first-child {
+  margin-top: 0;
+}
+
+/* ============================================================
+ * 3. Symbol entries — the generator's <h3>
+ * ============================================================ */
+/* There is no wrapper element around an entry, and there deliberately is not
+   one: the Markdown has to stay Markdown. So the separation between entries is
+   drawn on the heading that starts each, and the first entry of a group drops
+   the rule because the group's own underline is already there. */
+.juicerdocs-content .juicerapi-body h3 {
+  margin: 2.5rem 0 0;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-soft);
+  font-size: 1.15rem;
+  font-weight: 600;
+  scroll-margin-top: calc(var(--topbar-h) + 1rem);
+}
+
+.juicerdocs-content .juicerapi-body h2 + h3 {
+  margin-top: 1.75rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.juicerdocs-content .juicerapi-body h3 code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: inherit;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+/* ----- the signature block ----- */
+/* The fenced block immediately under a symbol heading is that symbol's
+   signature, and it is the densest, most-read thing on the page. Tightened
+   against the ordinary code block, given the brand rail so the eye can find
+   the next one while scrolling, and stripped of the language label — every
+   one of them is sysl and sixty repetitions of the word is noise. */
+.juicerdocs-content .juicerapi-body h3 + pre {
+  margin: 0.85rem 0 1.1rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--brand);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.juicerdocs-content .juicerapi-body h3 + pre[data-language]::before {
+  content: none;
+}
+
+.juicerdocs-content .juicerapi-body h3 + pre[data-language] {
+  padding-top: 0.7rem;
+}
+
+/* ----- parameter and field tables ----- */
+.juicerdocs-content .juicerapi-body table {
+  margin: 1rem 0 1.25rem;
+  font-size: 0.9rem;
+}
+
+.juicerdocs-content .juicerapi-body th {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.juicerdocs-content .juicerapi-body td {
+  padding: 0.5rem 0.75rem;
+}
+
+/* The first column of a parameter table is always a name, the second always a
+   type, so both are set in the mono face and kept from wrapping. */
+.juicerdocs-content .juicerapi-body td:first-child,
+.juicerdocs-content .juicerapi-body td:nth-child(2) {
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.juicerdocs-content .juicerapi-body td:first-child {
+  color: var(--fg);
+}
+
+.juicerdocs-content .juicerapi-body td:nth-child(2) {
+  color: var(--accent);
+}
+
+/* Rows are quiet here — a parameter table is read one row at a time, and the
+   zebra striping juicerdocs uses for data tables fights the entry rules. */
+.juicerdocs-content .juicerapi-body tbody tr:nth-child(even) {
+  background: none;
+}
+
+/* ============================================================
+ * 4. The symbol index
+ * ============================================================ */
+/* The generator opens each module page with `## Index` and a run of ordinary
+   links. Turning them into pills gives a dense, scannable block at the top of
+   a long page — and it degrades to a plain list of links on GitHub, which is
+   exactly what it is.
+ *
+ * Hooked on `h2#index` rather than on a class, because there is no class to
+ * hook: the body is plain Markdown, and the attribute syntax that could add
+ * one (`## Index {.foo}`) renders as literal braces on GitHub. Auto heading
+ * ids give `## Index` the id `index` under juicer AND under GitHub, so the
+ * selector rides on the same slug the anchor links already depend on.
+ *
+ * Both the paragraph and the list form are matched — which one the generator
+ * emits is its business, and a theme that only styled one would break the day
+ * it changed its mind. */
+.juicerdocs-content .juicerapi-body h2#index + p,
+.juicerdocs-content .juicerapi-body h2#index + ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.9rem 0 1.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.juicerdocs-content .juicerapi-body h2#index + ul li {
+  margin: 0;
+}
+
+.juicerdocs-content .juicerapi-body h2#index + p a,
+.juicerdocs-content .juicerapi-body h2#index + ul a {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-decoration: none;
+  color: var(--fg-soft);
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.juicerdocs-content .juicerapi-body h2#index + p a code,
+.juicerdocs-content .juicerapi-body h2#index + ul a code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+  color: inherit;
+}
+
+.juicerdocs-content .juicerapi-body h2#index + p a:hover,
+.juicerdocs-content .juicerapi-body h2#index + ul a:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand-strong);
+}
+
+/* The separators between pills are for GitHub's benefit — a bare run of links
+   needs them to read as a list there. Inside a flex row they are noise. */
+.juicerdocs-content .juicerapi-body h2#index + p {
+  font-size: 0;
+}
+
+.juicerdocs-content .juicerapi-body h2#index + p a {
+  font-size: 0.8rem;
+}
+
+/* ============================================================
+ * 5. Markers
+ * ============================================================ */
+/* `**Returns**`, `**Parameters**` and friends open their paragraph, so the
+   generator's label paragraphs are reachable without a class. */
+.juicerdocs-content .juicerapi-body p > strong:first-child {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Deprecation and "this module has no prose" are both said with a GitHub-style
+   callout — `> [!WARNING]` and `> [!NOTE]` — rather than a class this theme
+   would have to invent. juicerdocs already styles callouts, GitHub renders
+   them natively, and a generator that reached for a `<div>` would produce a
+   file that reads worse in the repo than in the browser. That is backwards:
+   the repo copy is the one decision 2 exists to protect.
+ *
+ * Only the spacing needs saying — a callout sitting directly under a signature
+ * is tighter than one in running prose. */
+.juicerdocs-content .juicerapi-body h3 + pre + blockquote {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+}
+
+/* ============================================================
+ * 6. Narrow screens
+ * ============================================================ */
+@media (max-width: 40rem) {
+  .juicerdocs-content .juicerapi-meta {
+    gap: 0.4rem 1.25rem;
+  }
+  .juicerdocs-content .juicerapi-body h3 {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+  }
+  /* A signature is the one thing that must not be reflowed, so it scrolls
+     inside its own block rather than wrapping mid-type. */
+  .juicerdocs-content .juicerapi-body h3 + pre {
+    overflow-x: auto;
+    font-size: 0.82rem;
+  }
+}
