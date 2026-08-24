@@ -53,7 +53,7 @@ doubling reallocations into one.
 ### `push`
 
 ```sysl
-push(self, b: u8) -> Result[(), Full]
+push(self, b: u8) -> Result[unit, Full]
 ```
 
 Appends one byte, growing the buffer if it is full.
@@ -63,13 +63,13 @@ Appends one byte, growing the buffer if it is full.
 | `self` | `&Buf` | the buffer to append to |
 | `b` | `u8` | the byte to append |
 
-**Returns** `Result[(), Full]` — `Ok(())`, or `Err(Full)` when the allocator
+**Returns** `Result[unit, Full]` — `Ok(())`, or `Err(Full)` when the allocator
 refused. A refused push leaves the buffer exactly as it was.
 
 ### `extend`
 
 ```sysl
-extend(self, bytes: []const u8) -> Result[(), Full]
+extend(self, bytes: []const u8) -> Result[unit, Full]
 ```
 
 > [!WARNING]
@@ -83,7 +83,7 @@ Appends every byte of `bytes`, growing once rather than once per byte.
 | `self` | `&Buf` | the buffer to append to |
 | `bytes` | `[]const u8` | the bytes to append |
 
-**Returns** `Result[(), Full]` — `Ok(())`, or `Err(Full)` when the allocator
+**Returns** `Result[unit, Full]` — `Ok(())`, or `Err(Full)` when the allocator
 refused part-way.
 
 ### `as_slice`
@@ -147,6 +147,7 @@ none is a length prefix stored with the data.
 
 ```sysl
 struct Full
+end Full
 ```
 
 The allocator refused to grow the buffer.

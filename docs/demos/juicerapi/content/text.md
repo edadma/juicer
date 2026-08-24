@@ -141,8 +141,8 @@ members answer `None` instead.
 
 ```sysl
 enum Utf8Error
-    Truncated(usize)
-    Invalid(usize)
+    Truncated(at: usize)
+    Invalid(at: usize)
 ```
 
 What went wrong while decoding, and where.
@@ -152,8 +152,8 @@ can report the position without walking the input a second time.
 
 | Variant | Payload | Description |
 |---|---|---|
-| `Truncated` | `usize` | the input ended part-way through a character |
-| `Invalid` | `usize` | the byte at this offset can begin no character |
+| `Truncated` | `at: usize` | the input ended part-way through a character |
+| `Invalid` | `at: usize` | the byte at this offset can begin no character |
 
 ## Traits
 
@@ -162,7 +162,7 @@ can report the position without walking the input a second time.
 ```sysl
 trait Scan
     type Item
-    next(self) -> Option[Self.Item]
+    next(self) -> Option[Self::Item]
 ```
 
 What a thing that yields items one at a time has to provide.
@@ -176,4 +176,4 @@ trait covers a cursor over bytes and a cursor over lines.
 | Member | Signature | Description |
 |---|---|---|
 | `Item` | associated type | what each step yields |
-| `next` | `(self) -> Option[Self.Item]` | the next item, or `None` at the end |
+| `next` | `(self) -> Option[Self::Item]` | the next item, or `None` at the end |
