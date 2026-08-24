@@ -127,10 +127,53 @@ package object juicer {
     * hook. Pass `None` (default) for plain `<pre><code>` rendering, or wire
     * a [[loadHighlighters]] map through it for build-time syntax highlighting.
     */
+  /** GitHub's heading-slug algorithm, selected by `slugStyle = "github"` in
+    * site.toml.
+    *
+    * The markdown library's default collapses every run of non-alphanumerics to
+    * one hyphen, so `starts_with` becomes `starts-with` and `Buf[T]` becomes
+    * `buf-t`. GitHub instead KEEPS underscores and DROPS punctuation without
+    * leaving anything in its place: `starts_with` stays `starts_with`, and
+    * `Buf[T]` becomes `buft`.
+    *
+    * The difference is invisible for prose headings and decisive for generated
+    * API reference, where every second heading is a snake_case name and the same
+    * Markdown file is read twice — once as a page on the site, once in the
+    * repository on GitHub. Anchors that disagree between the two renderings
+    * leave one of them full of dead links, and it is the repository copy that
+    * has no sidebar or search to fall back on.
+    *
+    * The rule as GitHub applies it: lowercase; delete anything that is not a
+    * letter, digit, space, hyphen or underscore; turn spaces into hyphens.
+    * Nothing is collapsed and nothing is trimmed — `a  b` really does become
+    * `a--b` there, and agreeing with that matters more than tidiness does.
+    *
+    * NOT the default, because changing an existing site's slugs breaks every
+    * in-page link anyone has shared. Opt in per site. */
+  def githubSlugify(text: String): String = {
+    val sb = new StringBuilder
+
+    for (ch <- text.toLowerCase)
+      if (ch.isLetterOrDigit || ch == '-' || ch == '_') sb += ch
+      else if (ch == ' ') sb += '-'
+
+    sb.toString
+  }
+
+  /** Pick the slug function for a `slugStyle` config value. Anything other than
+    * `"github"` — including the default `"juicer"` — keeps the markdown
+    * library's own, so an unrecognised value degrades to today's behaviour
+    * rather than to no ids at all. */
+  def slugifyFor(slugStyle: String): String => String =
+    if (slugStyle == "github") githubSlugify
+    else io.github.edadma.markdown.MarkdownConfig.defaultSlugify
+
   def buildMarkdownConfig(
       codeHighlighter: Option[(String, String) => Option[String]] = None,
+      slugStyle:       String = "juicer",
   ): io.github.edadma.markdown.MarkdownConfig =
     io.github.edadma.markdown.MarkdownConfig.default.copy(
+      slugify           = slugifyFor(slugStyle),
       autoHeadingIds    = true,
       tables            = true,
       strikethrough     = true,

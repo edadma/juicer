@@ -65,9 +65,21 @@ class SiteBuild(
     val highlighters  = loadHighlighters(grammarsDir)
     if (highlighters.nonEmpty)
       show(s"highlighter: ${highlighters.size} grammar(s) loaded from $grammarsDir (${highlighters.keys.mkString(", ")})")
-    val siteMarkdownConfig = buildMarkdownConfig(buildCodeHighlighter(highlighters))
-
     val confdoc      = App.config(src1, baseConfig)
+
+    // `slugStyle` decides the auto heading id algorithm: "juicer" (the default,
+    // and what every site built before 0.4.0 got) or "github". A generated API
+    // reference wants "github", because the same Markdown is read both here and
+    // in the repository and its anchors have to mean the same thing in both.
+    // See `githubSlugify`. Read off `confdoc` rather than the `conf` wrapper
+    // below because the markdown config has to exist before the template
+    // builtins that close over it.
+    val siteMarkdownConfig =
+      buildMarkdownConfig(
+        buildCodeHighlighter(highlighters),
+        slugStyle = confdoc.getString("slugStyle").getOrElse("juicer"),
+      )
+
     val baseURLstr   = baseurl.orElse(confdoc.getString("baseURL")).getOrElse("http://localhost:8080")
     val confdata: VectorMap[String, Any] = {
       val base = tomlObject(confdoc)
@@ -331,11 +343,38 @@ class SiteBuild(
     // and link destinations are pre-transformed at the AST level so the
     // output blends into a layout that already provides an outer `<h1>` for
     // the page title.
-    for (case c @ ContentFile(_, name, _, _, _, _, _, _) <- site.content) {
+    //
+    // `headingShift` may be overridden per page in frontmatter. The site-wide
+    // default assumes the layout supplies the `<h1>` and the author's `#` is
+    // therefore a subsection of it; a page whose body is GENERATED does not fit
+    // that assumption — its `##` groups are already meant to be `<h2>`, and its
+    // headings have to land at the same levels here as they do when the same
+    // file is read in the repository.
+    //
+    // Read off the page's OWN frontmatter rather than through
+    // `effectiveFrontmatter`, which needs the section graph and is built much
+    // further down this pipeline. A cascade cannot set this, and that is the
+    // right trade: it is a property of how one file was authored.
+    def pageHeadingShift(page: Any): Int =
+      (page match {
+        case m: Map[?, ?] => m.collect { case (k: String, v) => k -> v }.toMap.get("headingShift")
+        case _            => None
+      }).collect {
+        // BigDecimal first — it is what the YAML frontmatter parser actually
+        // hands back for a bare `headingShift: 0`, and matching only Int/Long
+        // silently fell through to the site value. `paginate` above reads the
+        // same three shapes for the same reason.
+        case n: BigDecimal => n.toInt
+        case n: Long       => n.toInt
+        case n: Int        => n
+        case s: String     => s.toIntOption.getOrElse(conf.int.headingShift)
+      }.getOrElse(conf.int.headingShift)
+
+    for (case c @ ContentFile(_, name, page, _, _, _, _, _) <- site.content) {
       show(s"parse markdown file $name")
 
       val raw = parseMarkdown(preprocessor.process(c.source), siteMarkdownConfig)
-      val doc = transformLinks(shiftHeadings(raw, by = conf.int.headingShift), linkCallback)
+      val doc = transformLinks(dedupeHeadingIds(shiftHeadings(raw, by = pageHeadingShift(page))), linkCallback)
 
       outLinksPerFile(c) = collectLinkTargets(raw)
       c.toc = buildToc(doc)

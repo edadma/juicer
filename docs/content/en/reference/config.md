@@ -70,8 +70,56 @@ excludeDirs = ["node_modules", "scratch", "assets/raw"]
 | Key            | Default | What |
 |----------------|---------|------|
 | `stripPrefix`  | `true`  | Strip leading numeric prefixes from filenames in URLs (`01-foo.md` → `foo`) |
-| `headingShift` | `2`     | Add this much to every markdown heading level. The default `2` exists because layouts typically emit an outer `<h1>{{ .page.title }}</h1>` and most theme CSS expects body markdown to start at `<h2>`. Set to `0` when a theme renders the page heading from the markdown body itself. |
+| `headingShift` | `2`     | Add this much to every markdown heading level. The default `2` exists because layouts typically emit an outer `<h1>{{ .page.title }}</h1>` and most theme CSS expects body markdown to start at `<h2>`. Set to `0` when a theme renders the page heading from the markdown body itself. **Overridable per page** — see below. |
+| `slugStyle`    | `"juicer"` | The auto heading id algorithm. `"juicer"` collapses each run of non-alphanumerics to one hyphen (`starts_with` → `#starts-with`); `"github"` keeps underscores and drops punctuation outright (`starts_with` → `#starts_with`, `Buf[T]` → `#buft`), matching what GitHub generates for the same file. See below. |
 | `feeds`        | `true`  | Emit Atom and RSS feed files alongside the rendered HTML. Set `false` for sites that don't want feeds (single-page landings, internal wikis). |
+
+#### `headingShift` per page
+
+A page may override the site value in its own frontmatter:
+
+```yaml
+---
+title: bristle.text
+headingShift: 0
+---
+```
+
+The site-wide value assumes a layout supplies the `<h1>`, so an author's `#` is
+a subsection of the page title. A page whose body is **generated** does not fit
+that assumption — its `##` groups are already meant to be `<h2>`, and they have
+to land at the same levels as when the same file is read somewhere with no
+layout at all.
+
+A cascade cannot set it, deliberately: it is a property of how one file was
+authored, not of where it sits in the tree. A value that is not a number falls
+back to the site setting rather than failing the build.
+
+#### `slugStyle`, and when to change it
+
+Leave it alone for an ordinary site. **Changing it rewrites the anchor of every
+heading containing punctuation**, so every in-page link anyone has shared stops
+resolving — which is why `"juicer"` stays the default even though `"github"` is
+the more widely compatible algorithm.
+
+Reach for `"github"` when the same Markdown is read in two places: a site built
+by juicer *and* a repository browsed on GitHub. Generated API reference is the
+case it was added for — those headings are snake_case symbol names, and a symbol
+index linking to its own headings has to be right in both renderings, or one of
+them is a page of dead links.
+
+| Heading | `"juicer"` | `"github"` |
+|---|---|---|
+| `starts_with` | `#starts-with` | `#starts_with` |
+| `Buf[T]` | `#buf-t` | `#buft` |
+| `sysl.text` | `#sysl-text` | `#sysltext` |
+| `Reading These Pages` | `#reading-these-pages` | `#reading-these-pages` |
+
+**Repeated headings get a numeric suffix under both styles** — the first
+`## buf` keeps `#buf` and a later `## Buf` becomes `#buf-1`, which is what
+GitHub does. That part is not configurable: two elements sharing an `id` is
+invalid HTML and leaves the second unreachable, so it was a defect rather than
+a behaviour worth preserving.
 
 ### Navigation — `nav`
 

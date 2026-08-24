@@ -82,7 +82,7 @@ jobs:
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Stage binary
-        run: cp native/target/scala-*/juicer "juicer-${{ steps.ver.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}"
+        run: cp cli/native/target/scala-*/juicer "juicer-${{ steps.ver.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}"
 
       - name: Upload to release
         env:

@@ -459,6 +459,64 @@ object BuildSupport {
     Document(doc.children.map(shiftBlock))
   }
 
+  /** Give a repeated heading id a numeric suffix, the way GitHub does: the
+    * first `## Buf` keeps `buf`, the second becomes `buf-1`, the third `buf-2`.
+    *
+    * Two headings with the same text produce the same slug, and two elements
+    * sharing an `id` is invalid HTML — the second is unreachable, so `#buf`
+    * scrolls to the first whatever the author meant. That is a pre-existing
+    * defect rather than behaviour anybody depends on, which is why this runs
+    * for every site rather than only under `slugStyle = "github"`.
+    *
+    * It matters most for generated API reference, where a type and the function
+    * that constructs it conventionally share a name — sysl's `buf()` and `Buf`,
+    * `map()` and `Map`. GitHub renders such a file with `buf` and `buf-1`, so
+    * matching it is what keeps ONE set of links correct in both places.
+    *
+    * Ids are assigned at PARSE time and carried on the AST, so this is an
+    * ordinary transform beside [[shiftHeadings]] — and being a pass over one
+    * document, it needs no state that could leak between pages.
+    *
+    * An EXPLICIT id (`## Heading {#anchor}`) is deduped too: it occupies the
+    * same namespace, and letting a collision through there would make the
+    * author's stated anchor the one that breaks. */
+  private[juicer] def dedupeHeadingIds(doc: Document): Document = {
+    val seen = scala.collection.mutable.HashMap.empty[String, Int]
+
+    def unique(id: String): String =
+      seen.get(id) match {
+        case None =>
+          seen(id) = 0
+          id
+        case Some(n) =>
+          // Walk forward until an unused suffix turns up — a document carrying
+          // `buf` twice AND a literal `buf-1` must not hand out `buf-1` twice.
+          var next = n + 1
+          var cand = s"$id-$next"
+
+          while (seen.contains(cand)) {
+            next += 1
+            cand = s"$id-$next"
+          }
+
+          seen(id) = next
+          seen(cand) = 0
+          cand
+      }
+
+    def walk(b: io.github.edadma.markdown.Block): io.github.edadma.markdown.Block = b match {
+      case h: MdHeading =>
+        h.attrs.flatMap(_.id) match {
+          case Some(id) => h.copy(attrs = h.attrs.map(a => a.copy(id = Some(unique(id)))))
+          case None     => h
+        }
+      case io.github.edadma.markdown.BlockQuote(c) => io.github.edadma.markdown.BlockQuote(c.map(walk))
+      case other                                   => other
+    }
+
+    Document(doc.children.map(walk))
+  }
+
   /** Collect every internal link destination referenced in `doc`.
     * Used to build the backlinks inverted index. Returns site-relative
     * targets only — absolute URLs (`http://`, `mailto:`, `tel:`, …)
