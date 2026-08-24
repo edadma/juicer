@@ -67,7 +67,7 @@ package object juicer {
     case TomlValue.LocalTime(t)      => t.toString
   }
 
-  /** Convert a [[TomlDocument]]'s root to a sorted `VectorMap[String, Any]`,
+  /** Convert a `toml.TomlDocument`'s root to a sorted `VectorMap[String, Any]`,
     * suitable for passing into squiggly's renderer.
     */
   def tomlObject(doc: TomlDocument): VectorMap[String, Any] =
@@ -343,13 +343,13 @@ package object juicer {
       }
     }
 
-  /** Parse markdown text into a [[Document]] AST using the default (no-
+  /** Parse markdown text into a `markdown.Document` AST using the default (no-
     * highlighting) config. Call sites that need highlighting use the
     * two-argument overload below with their per-site config. */
   def parseMarkdown(s: String): Document =
     io.github.edadma.markdown.parseDocumentContent(s, markdownConfig)
 
-  /** Parse markdown text into a [[Document]] AST using a caller-supplied
+  /** Parse markdown text into a `markdown.Document` AST using a caller-supplied
     * config — typically the per-build [[buildMarkdownConfig]] result so
     * fenced code blocks get highlighted. */
   def parseMarkdown(s: String, config: io.github.edadma.markdown.MarkdownConfig): Document =
@@ -399,7 +399,7 @@ package object juicer {
     }
   }
 
-  /** Convenience: build a TOC directly from a [[Document]]. */
+  /** Convenience: build a TOC directly from a `markdown.Document`. */
   def buildToc(doc: Document): TOC = buildToc(doc.headings)
 
   // ===== Data file parsing (TOML / YAML → any-data) =====

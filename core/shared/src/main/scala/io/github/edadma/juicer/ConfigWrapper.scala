@@ -5,11 +5,11 @@ import io.github.edadma.toml.{TomlDocument, TomlValue}
 
 import scala.language.dynamics
 
-/** Dynamic-typed convenience wrapper around a [[TomlDocument]] with type-safe
+/** Dynamic-typed convenience wrapper around a `toml.TomlDocument` with type-safe
   * accessors via `.int`, `.double`, `.boolean`, `.path`, `.paths`, `.list`.
   *
   * Example: `conf.contentDir` returns the value of the `contentDir` key as a
-  * `String`; `conf.path.contentDir` returns it as a [[Path]]; `conf.boolean.stripPrefix`
+  * `String`; `conf.path.contentDir` returns it as a `path.Path`; `conf.boolean.stripPrefix`
   * returns it as a `Boolean`. Everything goes through `TomlDocument.get` /
   * `getString` / `getLong` / etc. — see `io.github.edadma.toml.TomlDocument`.
   */

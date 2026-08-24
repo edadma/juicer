@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
   * not a production web server.
   *
   * With `liveReload = true`:
-  *   - microserve's [[FsWatcher]] registers `watchRoot` recursively and
+  *   - microserve's `FsWatcher` registers `watchRoot` recursively and
   *     triggers a rebuild on change (debounced ~150 ms via the runtime's
   *     timer, not `Thread.sleep` so JS/Native stay non-blocking).
   *   - HTML responses get a `<script>` injected before `</body>` that

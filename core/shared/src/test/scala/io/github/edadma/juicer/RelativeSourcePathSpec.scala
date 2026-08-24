@@ -13,7 +13,7 @@ import org.scalatest.matchers.should.Matchers
   * doesn't re-normalize after prepending the cwd. Inside [[Process]] the
   * exclude set was computed with another `.normalize` *after* concatenation
   * (which DID fold), so the walked-dir set and the exclude set never
-  * compared equal under [[Path]]'s structural equality — vendored themes
+  * compared equal under `path.Path`'s structural equality — vendored themes
   * leaked into the site's "other templates" pass and the first one tried
   * to write `dst/themes/<name>/layouts/_default/404.html`, failing with
   * NoSuchFileException because the parent dirs didn't exist.

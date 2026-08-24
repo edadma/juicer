@@ -14,7 +14,7 @@ import java.io.{ByteArrayOutputStream, IOException}
   * for the rest of the build, the pipeline degrades to a verbatim
   * copy of the source (so the asset URL still resolves), and a single
   * advisory line goes to stderr — the build keeps going. This mirrors
-  * [[ImageEncoderBackendImpl]]'s "missing magick" handling.
+  * `ImageEncoderBackendImpl`'s "missing magick" handling.
   *
   * Why two separate probes (sass / esbuild) rather than one: a site
   * may want SCSS but not JS bundling, or vice versa; punishing both
