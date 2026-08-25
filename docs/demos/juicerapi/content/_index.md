@@ -1,6 +1,7 @@
 ---
 title: Bristle
 headingShift: 0
+slugStyle: github
 layout: api-index
 summary: A small library for text and byte buffers. Two modules, no allocator on the text side.
 version: 0.4.0

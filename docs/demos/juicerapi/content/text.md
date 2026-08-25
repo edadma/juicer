@@ -1,6 +1,7 @@
 ---
 title: bristle.text
 headingShift: 0
+slugStyle: github
 layout: api-module
 module: bristle.text
 summary: Searching, splitting and trimming over UTF-8 strings. Every function here answers a slice of its argument rather than a copy, so the module needs no allocator.

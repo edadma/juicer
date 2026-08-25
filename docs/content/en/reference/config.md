@@ -71,7 +71,7 @@ excludeDirs = ["node_modules", "scratch", "assets/raw"]
 |----------------|---------|------|
 | `stripPrefix`  | `true`  | Strip leading numeric prefixes from filenames in URLs (`01-foo.md` → `foo`) |
 | `headingShift` | `2`     | Add this much to every markdown heading level. The default `2` exists because layouts typically emit an outer `<h1>{{ .page.title }}</h1>` and most theme CSS expects body markdown to start at `<h2>`. Set to `0` when a theme renders the page heading from the markdown body itself. **Overridable per page** — see below. |
-| `slugStyle`    | `"juicer"` | The auto heading id algorithm. `"juicer"` collapses each run of non-alphanumerics to one hyphen (`starts_with` → `#starts-with`); `"github"` keeps underscores and drops punctuation outright (`starts_with` → `#starts_with`, `Buf[T]` → `#buft`), matching what GitHub generates for the same file. See below. |
+| `slugStyle`    | `"juicer"` | The auto heading id algorithm. `"juicer"` collapses each run of non-alphanumerics to one hyphen (`starts_with` → `#starts-with`); `"github"` keeps underscores and drops punctuation outright (`starts_with` → `#starts_with`, `Buf[T]` → `#buft`), matching what GitHub generates for the same file. **Overridable per page** — see below. |
 | `feeds`        | `true`  | Emit Atom and RSS feed files alongside the rendered HTML. Set `false` for sites that don't want feeds (single-page landings, internal wikis). |
 
 #### `headingShift` per page
@@ -120,6 +120,31 @@ them is a page of dead links.
 GitHub does. That part is not configurable: two elements sharing an `id` is
 invalid HTML and leaves the second unreachable, so it was a defect rather than
 a behaviour worth preserving.
+
+#### `slugStyle` per page
+
+The paragraph above is the reason this override exists. A site of any age cannot
+turn `"github"` on wholesale — the anchors it rewrites are links people have
+already shared — and yet one generated section on that site needs it. So a page
+may say so for itself:
+
+```yaml
+---
+title: sysl.text
+slugStyle: github
+---
+```
+
+Anchors are a per-page property: nothing outside a page's own headings is named
+by them, and a page's table of contents is built from those same headings. So
+the override is coherent in a way that a per-page `baseURL` would not be, and it
+is what lets generated reference sit beside hand-written prose without moving
+the prose.
+
+It reads the page's own frontmatter, exactly as `headingShift` does — a cascade
+cannot set it, and a value that is not a string falls back to the site setting
+rather than failing the build. An unrecognised style falls back to `"juicer"`,
+so a typo costs the anchors their style and never costs the page its ids.
 
 ### Navigation — `nav`
 

@@ -73,12 +73,12 @@ class SiteBuild(
     // in the repository and its anchors have to mean the same thing in both.
     // See `githubSlugify`. Read off `confdoc` rather than the `conf` wrapper
     // below because the markdown config has to exist before the template
-    // builtins that close over it.
+    // builtins that close over it. A page may override it in frontmatter —
+    // see `pageMarkdownConfig` in the markdown render pass.
+    val siteSlugStyle = confdoc.getString("slugStyle").getOrElse("juicer")
+
     val siteMarkdownConfig =
-      buildMarkdownConfig(
-        buildCodeHighlighter(highlighters),
-        slugStyle = confdoc.getString("slugStyle").getOrElse("juicer"),
-      )
+      buildMarkdownConfig(buildCodeHighlighter(highlighters), slugStyle = siteSlugStyle)
 
     val baseURLstr   = baseurl.orElse(confdoc.getString("baseURL")).getOrElse("http://localhost:8080")
     val confdata: VectorMap[String, Any] = {
@@ -370,16 +370,47 @@ class SiteBuild(
         case s: String     => s.toIntOption.getOrElse(conf.int.headingShift)
       }.getOrElse(conf.int.headingShift)
 
+    // `slugStyle` is overridable per page for the same reason and by the same
+    // route. A generated API page links to its own headings, so its anchors
+    // have to be the ones GitHub computes for the same file; the site-wide
+    // switch cannot be used to give it them, because turning `"github"` on for
+    // a whole site rewrites the anchor of every existing heading that carries
+    // punctuation, and those are links people have already shared.
+    //
+    // Anchors are a per-page property — nothing outside a page's own headings
+    // is named by them — so this override is coherent in a way that a per-page
+    // change to, say, `baseURL` would not be.
+    val markdownConfigs =
+      scala.collection.mutable.HashMap[String, io.github.edadma.markdown.MarkdownConfig](
+        siteSlugStyle -> siteMarkdownConfig,
+      )
+
+    def pageMarkdownConfig(page: Any): io.github.edadma.markdown.MarkdownConfig = {
+      val style = (page match {
+        case m: Map[?, ?] => m.collect { case (k: String, v) => k -> v }.toMap.get("slugStyle")
+        case _            => None
+      }).collect { case s: String => s }.getOrElse(siteSlugStyle)
+
+      // One config per distinct style rather than one per page: building it
+      // re-reads every markdown extension flag, and a site has at most a
+      // couple of styles in play.
+      markdownConfigs.getOrElseUpdate(
+        style,
+        buildMarkdownConfig(buildCodeHighlighter(highlighters), slugStyle = style),
+      )
+    }
+
     for (case c @ ContentFile(_, name, page, _, _, _, _, _) <- site.content) {
       show(s"parse markdown file $name")
 
-      val raw = parseMarkdown(preprocessor.process(c.source), siteMarkdownConfig)
-      val doc = transformLinks(dedupeHeadingIds(shiftHeadings(raw, by = pageHeadingShift(page))), linkCallback)
+      val mdConfig = pageMarkdownConfig(page)
+      val raw      = parseMarkdown(preprocessor.process(c.source), mdConfig)
+      val doc      = transformLinks(dedupeHeadingIds(shiftHeadings(raw, by = pageHeadingShift(page))), linkCallback)
 
       outLinksPerFile(c) = collectLinkTargets(raw)
       c.toc = buildToc(doc)
-      c.content = io.github.edadma.markdown.renderToHTML(doc, siteMarkdownConfig).trim
-      c.summary = computeSummary(c, doc, preprocessor, linkCallback, siteMarkdownConfig)
+      c.content = io.github.edadma.markdown.renderToHTML(doc, mdConfig).trim
+      c.summary = computeSummary(c, doc, preprocessor, linkCallback, mdConfig)
     }
 
     trait TOCItem

@@ -1,6 +1,7 @@
 ---
 title: bristle.buf
 headingShift: 0
+slugStyle: github
 layout: api-module
 module: bristle.buf
 summary: A growable byte buffer with an explicit capacity, for building output without a copy per append.

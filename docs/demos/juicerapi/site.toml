@@ -39,7 +39,12 @@ htmlDir = ""
 # lives in — so their anchors have to mean the same thing in both. "github" is
 # the slug algorithm that makes `### starts_with` answer `#starts_with` rather
 # than `#starts-with`, which is what every link in the per-page index depends on.
-slugStyle = "github"
+#
+# It is set in each generated page's FRONTMATTER rather than here, on purpose:
+# this demo is what a generator should emit, and a generator's pages nearly
+# always land on a site that already has hand-written prose on it. Setting the
+# site key would rewrite the anchors of every one of those existing headings
+# that carries punctuation, and they are links people have already shared.
 
 [[topnav]]
 label = "API"

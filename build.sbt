@@ -7,7 +7,7 @@ ThisBuild / scalaVersion           := "3.8.3"
 ThisBuild / organization           := "io.github.edadma"
 ThisBuild / organizationName       := "edadma"
 ThisBuild / organizationHomepage   := Some(url("https://github.com/edadma"))
-ThisBuild / version                := "0.4.0"
+ThisBuild / version                := "0.4.1"
 ThisBuild / description            := "A cross-platform Scala 3 static site generator (Hugo-style) using markdown + squiggly templates"
 ThisBuild / sonatypeCredentialHost := sonatypeCentralHost
 

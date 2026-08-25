@@ -66,7 +66,7 @@ output = "/juicerdocs.js"
 minify = true
 
 [juicerdocs]
-version = "v0.4.0"
+version = "v0.4.1"
 # `logo` was previously hard-coded as a fallback in the juicerdocs theme
 # templates. The theme now omits the <img>/<link> elements entirely when
 # `logo` is unset, so the juicer.build site has to declare it explicitly.

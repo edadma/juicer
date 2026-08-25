@@ -75,14 +75,18 @@ because that is all any of it ever was.
 Both are documented in [Configuration](./configuration/), but they are the two
 that decide whether the pages are *correct* rather than merely styled:
 
-- **`slugStyle = "github"`** in `site.toml`. Generated API headings are
-  snake_case names, and juicer's default slug turns `starts_with` into
-  `starts-with` while GitHub keeps `starts_with`. The same file is read in both
-  places, so without this one of the two renderings has a page of dead links.
-- **`headingShift: 0`** in each generated page's frontmatter. The site-wide
-  default assumes a layout supplies the `<h1>` and an author's `#` sits beneath
-  it. A generated body's `##` is already meant to be an `<h2>` — and has to land
-  at the same level here as it does in the repo.
+Both go in each generated page's frontmatter, which is where the demo sets them:
+
+- **`slugStyle: github`**. Generated API headings are snake_case names, and
+  juicer's default slug turns `starts_with` into `starts-with` while GitHub keeps
+  `starts_with`. The same file is read in both places, so without this one of the
+  two renderings has a page of dead links. There is a site key of the same name,
+  and on a site that already has hand-written prose it is the wrong one to
+  reach for — it would rewrite the anchors those pages were published with.
+- **`headingShift: 0`**. The site-wide default assumes a layout supplies the
+  `<h1>` and an author's `#` sits beneath it. A generated body's `##` is already
+  meant to be an `<h2>` — and has to land at the same level here as it does in
+  the repo.
 
 ## When to pick something else
 
