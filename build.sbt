@@ -7,7 +7,7 @@ ThisBuild / scalaVersion           := "3.8.3"
 ThisBuild / organization           := "io.github.edadma"
 ThisBuild / organizationName       := "edadma"
 ThisBuild / organizationHomepage   := Some(url("https://github.com/edadma"))
-ThisBuild / version                := "0.4.3"
+ThisBuild / version                := "0.4.4"
 ThisBuild / description            := "A cross-platform Scala 3 static site generator (Hugo-style) using markdown + squiggly templates"
 ThisBuild / sonatypeCredentialHost := sonatypeCentralHost
 
@@ -67,15 +67,15 @@ lazy val juicerCore = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "com.lihaoyi"            %%% "pprint"                   % "0.9.0"  % "test",
       "org.scala-lang.modules" %%% "scala-parser-combinators" % "2.4.0",
       "org.virtuslab"          %%% "scala-yaml"               % "0.3.1",
-      "io.github.edadma"       %%% "char_reader"              % "0.1.27",
-      "io.github.edadma"       %%% "cross_platform"           % "0.1.6",
-      "io.github.edadma"       %%% "path"                     % "0.0.5",
-      "io.github.edadma"       %%% "toml"                     % "0.1.0",
-      "io.github.edadma"       %%% "markdown"                 % "0.4.7",
-      "io.github.edadma"       %%% "squiggly"                 % "0.3.0",
-      "io.github.edadma"       %%% "emoji"                    % "0.1.2",
-      "io.github.edadma"       %%% "highlighter"              % "0.0.11",
-      "io.github.edadma"       %%% "microserve"               % "0.5.3",
+      "io.github.edadma"       %%% "char_reader"              % "0.1.30",
+      "io.github.edadma"       %%% "cross_platform"           % "0.1.9",
+      "io.github.edadma"       %%% "path"                     % "0.0.9",
+      "io.github.edadma"       %%% "toml"                     % "0.2.1",
+      "io.github.edadma"       %%% "markdown"                 % "0.4.8",
+      "io.github.edadma"       %%% "squiggly"                 % "0.3.1",
+      "io.github.edadma"       %%% "emoji"                    % "0.1.3",
+      "io.github.edadma"       %%% "highlighter"              % "0.0.12",
+      "io.github.edadma"       %%% "microserve"               % "0.5.4",
     ),
     publishMavenStyle      := true,
     Test / publishArtifact := false,
