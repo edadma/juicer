@@ -43,7 +43,8 @@ sbt 'juicerJVM/run serve -s docs -L'
 ```
 
 The `-L` flag enables live-reload — edits under `docs/` rebuild automatically
-and connected browser tabs reload via SSE. See [Live reload](docs/content/getting-started/quickstart.md).
+and connected browser tabs reload. Reload is long-polled rather than SSE,
+for the reason `serve.scala`'s scaladoc gives. See [Live reload](docs/content/getting-started/quickstart.md).
 
 ### Local preview WITH demo sites
 

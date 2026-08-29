@@ -24,7 +24,7 @@ The home page uses `layout: home` to opt into the cover-grid; each gallery detai
 sbt 'juicerJVM/run serve -s docs/demos/juicergallery -L'
 ```
 
-The `-L` flag enables live reload — touch any markdown file under `docs/demos/juicergallery/content/` and the open browser tabs reload via SSE.
+The `-L` flag enables live reload — touch any markdown file under `docs/demos/juicergallery/content/` and the open browser tabs reload automatically.
 
 ## Use it as a template
 

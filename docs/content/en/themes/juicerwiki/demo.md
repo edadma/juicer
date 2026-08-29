@@ -21,7 +21,7 @@ This page is the placeholder for the live juicerwiki demo. When the docs site is
 sbt 'juicerJVM/run serve -s docs/demos/juicerwiki -L'
 ```
 
-The `-L` flag enables live reload — touch any markdown file under `docs/demos/juicerwiki/content/` and the open browser tabs reload via SSE.
+The `-L` flag enables live reload — touch any markdown file under `docs/demos/juicerwiki/content/` and the open browser tabs reload automatically.
 
 ## Use it as a template
 

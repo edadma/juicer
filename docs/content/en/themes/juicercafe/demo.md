@@ -38,8 +38,7 @@ sbt 'juicerJVM/run serve -s docs/demos/juicercafe -L'
 ```
 
 The `-L` flag enables live reload — touch any markdown file under
-`docs/demos/juicercafe/content/` and the open browser tabs reload via
-SSE.
+`docs/demos/juicercafe/content/` and the open browser tabs reload automatically.
 
 ## Use it as a template
 

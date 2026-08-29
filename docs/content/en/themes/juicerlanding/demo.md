@@ -41,7 +41,7 @@ sbt 'juicerJVM/run serve -s docs/demos/juicerlanding -L'
 
 The `-L` flag enables live reload — touch any markdown file under
 `docs/demos/juicerlanding/content/` (or change `site.toml`) and the
-open browser tabs reload via SSE.
+open browser tabs reload automatically.
 
 ## Use it as a template
 
