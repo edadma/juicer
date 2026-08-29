@@ -355,7 +355,7 @@ package object juicer {
   def parseMarkdown(s: String, config: io.github.edadma.markdown.MarkdownConfig): Document =
     io.github.edadma.markdown.parseDocumentContent(s, config)
 
-  /** Render a list of inline nodes to HTML (delegates to markdown 0.4.2's
+  /** Render a list of inline nodes to HTML (delegates to markdown's
     * public `renderInlines`).
     */
   def renderInlinesHtml(inlines: List[Inline]): String =
