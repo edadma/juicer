@@ -1,0 +1,66 @@
+name: Native link
+
+# Linking the Native binary is the one thing no other workflow does before a release: docs.yml
+# builds on the JVM, and release-binaries.yml only links once a release has been published — which
+# is far too late, since a link failure there leaves a half-attached release. A Scala Native version
+# skew is invisible to `test` and to any JVM build: it appears only when the C toolchain links the
+# generated .ll against nativelib's own objects. So link on every push, on the platform that is
+# strictest about it.
+#
+# Linux is the platform worth spending the minutes on. Its ld refuses a TLS/non-TLS mismatch outright
+# (`TLS definition ... mismatches non-TLS reference`), while Mach-O quietly accepts the same skew —
+# so a green macOS link is not evidence that the binary is sound. juicer 0.4.2 shipped exactly that
+# way: macOS linked, both Linux jobs failed, and the release went out with one binary of three.
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  link:
+    name: linux x86_64
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout juicer
+        uses: actions/checkout@v7
+
+      # Scala Native links through the host's C toolchain and binds libuv, so both must be present.
+      - name: Install native toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang libuv1-dev zlib1g-dev
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Cache sbt
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.sbt
+            ~/.cache/coursier
+            ~/.ivy2/cache
+          key: ${{ runner.os }}-${{ runner.arch }}-sbt-${{ hashFiles('build.sbt', 'project/build.properties', 'project/plugins.sbt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-sbt-
+
+      # Debug mode, not release-fast: this is checking that the thing links, and debug does that in a
+      # fraction of the time. A version skew fails identically in either mode.
+      - name: Link the native binary
+        run: sbt juicerNative/nativeLink
+
+      # Linking is necessary but not sufficient — a binary that links and then dies on startup is
+      # still a broken release. `minimal` is the theme-less demo site, so it exercises the generator
+      # end to end without needing the sass/esbuild shell-outs the Native target stubs out.
+      - name: Build a site with it
+        run: |
+          BIN=$(echo cli/native/target/scala-*/juicer)
+          "$BIN" --version
+          "$BIN" build --source docs/demos/minimal --dest /tmp/native-link-check
+          test -s /tmp/native-link-check/index.html
+          echo "built $(find /tmp/native-link-check -type f | wc -l) files"
