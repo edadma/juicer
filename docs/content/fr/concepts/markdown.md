@@ -82,6 +82,31 @@ Les URL nues comme https://juicer.build/ sont reconnues et transformées en lien
 
 Les guillemets droits deviennent courbes : "hello" devient « hello », et `--` / `---` deviennent des tirets demi-cadratin/cadratin — comme ceci.
 
+## Liens entre les pages
+
+Un lien relatif se résout par rapport au répertoire du fichier où il est écrit, et
+un lien qui aboutit sur un autre fichier de contenu devient l'URL de ce fichier
+sur le site. Écrivez `[Patterns](patterns.md)` dans `content/reference/types.md`
+et il se rend en `/reference/patterns/` ; `../library/http.md` se rend en
+`/library/http/`. Un fragment suit : `patterns.md#guards` devient
+`/reference/patterns/#guards`.
+
+C'est tout l'intérêt d'écrire les liens ainsi : le même fichier est correct lu
+dans le dépôt, où le lien ouvre le fichier voisin, et lu sur le site, où il ouvre
+la page rendue.
+
+Un lien vers le fichier d'index d'un répertoire — `_index.md`, ou ce que nomme
+`folderContent`, par exemple `README.md` — se résout vers l'URL de la section
+elle-même plutôt que vers une page en dessous, tout comme un lien vers le
+répertoire lui-même (`../library/`).
+
+Le reste est laissé tel quel : un lien absolu au site `/library/` prend le
+préfixe de chemin de `baseURL` et rien de plus, un `https://…` externe et un
+`mailto:` n'appartiennent à personne, et `#ancre` seul reste une référence dans
+la page où il est écrit. Un lien relatif vers autre chose qu'une page — une image
+à côté du fichier, un téléchargement — se résout vers le chemin où ce fichier est
+publié.
+
 ## Encadrés (admonitions)
 
 Les encadrés de style GFM — `> [!NOTE]` / `> [!TIP]` / `> [!WARNING]` / `> [!IMPORTANT]` / `> [!CAUTION]` — se rendent comme des blocs stylés. Source markdown :

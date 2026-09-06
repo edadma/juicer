@@ -82,6 +82,28 @@ Bare URLs like https://juicer.build/ are recognized and turned into clickable li
 
 Straight quotes get curly: "hello" becomes "hello", and `--` / `---` become en/em dashes — like that.
 
+## Links between pages
+
+A relative link resolves against the directory of the file it is written in, and
+a link that lands on another content file becomes that file's URL on the site.
+Write `[Patterns](patterns.md)` in `content/reference/types.md` and it renders as
+`/reference/patterns/`; `../library/http.md` renders as `/library/http/`. A
+fragment comes along — `patterns.md#guards` becomes `/reference/patterns/#guards`.
+
+That is the point of writing links this way: the same file is correct read in the
+repository, where the link opens the sibling file, and read on the site, where it
+opens the rendered page.
+
+A link to a directory's index file — `_index.md`, or whatever `folderContent`
+names, such as `README.md` — resolves to the section's own URL rather than to a
+page below it, and so does a link to the directory itself (`../library/`).
+
+Everything else is left as it stands: a site-absolute `/library/` picks up the
+`baseURL` path prefix and nothing more, an external `https://…` and a `mailto:`
+are nobody's to rewrite, and `#anchor` on its own stays a reference into the page
+it was written in. A relative link to something that is not a page — an image
+beside the file, a download — resolves to the path that file is published at.
+
 ## Callouts (admonitions)
 
 GFM-style callouts — `> [!NOTE]` / `> [!TIP]` / `> [!WARNING]` / `> [!IMPORTANT]` / `> [!CAUTION]` — render as styled blocks. Markdown source:

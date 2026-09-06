@@ -499,10 +499,12 @@ package object juicer {
     *     three screens down. Nothing reported it: the build is clean, the page
     *     renders, and the link works exactly as far as being clickable.
     *
-    * A destination relative to the current page — `../other/#part` — is still
-    * treated as root-relative, which is wrong for the same reason and is not
-    * fixed here: resolving one needs the page it was written on, and this
-    * function is handed a destination and nothing else.
+    * This function is handed a destination and nothing else, so it treats a
+    * page-relative destination as root-relative. That is only correct where
+    * there is no page to resolve against — `markdownify` on a template string,
+    * and the `link` builtin. Content files go through
+    * `SiteBuild`'s per-page resolver instead, which knows the source file the
+    * link was written in; see [[splitLinkSuffix]] and [[resolveRelativePath]].
     */
   def rewriteLinkDest(dest: String, basePath: String): String =
     if (absoluteURL(dest) || dest.startsWith("#")) dest
@@ -512,6 +514,55 @@ package object juicer {
 
       prefix + tail
     }
+
+  /** True for a destination that names a scheme other than `http(s)://` —
+    * `mailto:`, `tel:`, `data:`, `javascript:` — and is therefore nobody's to
+    * resolve. The conservative test is a `:` before the first `/`, the same
+    * one `collectLinkTargets` uses.
+    */
+  def schemeRelative(dest: String): Boolean = {
+    val slash = dest.indexOf('/')
+    val colon = dest.indexOf(':')
+
+    colon >= 0 && (slash < 0 || colon < slash)
+  }
+
+  /** Split a link destination into its path part and everything from the
+    * first `#` or `?` onward. `patterns.md#anchor` becomes
+    * `("patterns.md", "#anchor")`; a destination with neither yields an empty
+    * suffix. The suffix is carried through resolution verbatim so a fragment
+    * survives the rewrite.
+    */
+  def splitLinkSuffix(dest: String): (String, String) = {
+    val cut = dest.indexWhere(ch => ch == '#' || ch == '?')
+
+    if (cut < 0) (dest, "") else (dest.take(cut), dest.drop(cut))
+  }
+
+  /** Resolve a relative path against the directory it was written in, the way
+    * a browser (and every markdown reader) resolves one: `.` is dropped, `..`
+    * pops a segment, and the result is a `/`-joined path with no leading or
+    * trailing slash.
+    *
+    * `baseDir` is the directory part of the source page's path under
+    * `contentDir` — `"reference"` for `reference/types.md`, `""` for a page at
+    * the content root. A `..` that would climb above the content root is
+    * clamped there rather than escaping it.
+    */
+  def resolveRelativePath(baseDir: String, rel: String): String = {
+    val segs = new scala.collection.mutable.ListBuffer[String]
+
+    if (baseDir.nonEmpty) segs ++= baseDir.split('/').filter(_.nonEmpty)
+
+    for (s <- rel.split('/'))
+      s match {
+        case "" | "." => ()
+        case ".."     => if (segs.nonEmpty) segs.remove(segs.length - 1)
+        case seg      => segs += seg
+      }
+
+    segs.mkString("/")
+  }
 
   // ===== Slug computation =====
   //

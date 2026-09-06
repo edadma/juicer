@@ -1,6 +1,6 @@
 package io.github.edadma.juicer
 
-import io.github.edadma.markdown.{Document, Inline, Heading => MdHeading, Link, Paragraph}
+import io.github.edadma.markdown.{Document, Inline, Heading => MdHeading, Link, MarkdownConfig, Paragraph}
 import io.github.edadma.path.Path
 import io.github.edadma.squiggly.{BaseURL, Slug, TemplateAST, TemplateBuiltin, TemplateFunction, TemplateLoader, TemplateRenderer}
 import io.github.edadma.toml.{TomlDocument, TomlValue}
@@ -338,11 +338,18 @@ class SiteBuild(
     val outLinksPerFile: scala.collection.mutable.HashMap[ContentFile, Set[String]] =
       scala.collection.mutable.HashMap.empty
 
-    // Markdown render pass: parse each content file's source, build the TOC,
-    // produce the rendered HTML body, and compute a summary. Heading levels
-    // and link destinations are pre-transformed at the AST level so the
-    // output blends into a layout that already provides an outer `<h1>` for
-    // the page title.
+    // Markdown parse pass: parse each content file's source and build its
+    // TOC. Heading levels are pre-transformed at the AST level so the output
+    // blends into a layout that already provides an outer `<h1>` for the page
+    // title.
+    //
+    // Link rewriting, HTML rendering and the summary happen in a SECOND pass
+    // further down (`parsedDocs`), because resolving a page-relative link
+    // needs every page's final URL and `relPermalinkFor` is not reachable
+    // until the section graph and the frontmatter cascade exist. The TOC is
+    // built here as well as there: `mktocFromContent` reads `c.toc` before
+    // the second pass runs, and rebuilding it afterwards is what gives a link
+    // inside a heading the same rewritten href in the TOC as in the body.
     //
     // `headingShift` may be overridden per page in frontmatter. The site-wide
     // default assumes the layout supplies the `<h1>` and the author's `#` is
@@ -400,17 +407,22 @@ class SiteBuild(
       )
     }
 
+    /** Each content file's parsed AST and the markdown config it was parsed
+      * with, in site order, carried from the parse pass to the render pass.
+      * A `List` rather than a `Map` on purpose: `ContentFile` is a case class
+      * with `var` fields, so its hash changes the moment the render pass
+      * assigns `content`, and a keyed lookup would stop finding it. */
+    val parsedDocs = new ListBuffer[(ContentFile, io.github.edadma.markdown.Document, MarkdownConfig)]
+
     for (case c @ ContentFile(_, name, page, _, _, _, _, _) <- site.content) {
       show(s"parse markdown file $name")
 
       val mdConfig = pageMarkdownConfig(page)
       val raw      = parseMarkdown(preprocessor.process(c.source), mdConfig)
-      val doc      = transformLinks(dedupeHeadingIds(shiftHeadings(raw, by = pageHeadingShift(page))), linkCallback)
+      val doc      = dedupeHeadingIds(shiftHeadings(raw, by = pageHeadingShift(page)))
 
-      outLinksPerFile(c) = collectLinkTargets(raw)
       c.toc = buildToc(doc)
-      c.content = io.github.edadma.markdown.renderToHTML(doc, mdConfig).trim
-      c.summary = computeSummary(c, doc, preprocessor, linkCallback, mdConfig)
+      parsedDocs += ((c, doc, mdConfig))
     }
 
     trait TOCItem
@@ -891,6 +903,123 @@ class SiteBuild(
       * `.page.translations`. */
     val byStem: Map[String, List[ContentFile]] =
       if (langs.isEmpty) Map.empty else contentFiles.groupBy(stemOf)
+
+    // ----- Markdown link resolution + render pass -----
+    //
+    // A relative markdown link resolves against the directory of the SOURCE
+    // page it was written in, and a link that lands on another content file
+    // becomes that file's rendered URL. `[Patterns](patterns.md)` written in
+    // `reference/types.md` is therefore `/reference/patterns/`, and
+    // `../library/http.md` is `/library/http/` — which is what makes one
+    // markdown file correct both in the repository and on the site.
+    //
+    // It used to be absolutized against the SITE ROOT with the extension
+    // left on, so that link rendered as `/patterns.md`: a 404 on every page
+    // below the root, silently, since the build has no opinion about where a
+    // link points.
+
+    /** Directory part of a content file's source path under `contentDir` —
+      * `"reference"` for `reference/types.md`, `""` for a page at the content
+      * root. This is the base a relative link written on that page resolves
+      * against. */
+    def sourceDirOf(c: ContentFile): String = {
+      val sp    = sourcePathOf(c)
+      val slash = sp.lastIndexOf('/')
+
+      if (slash < 0) "" else sp.substring(0, slash)
+    }
+
+    /** Source directory under `contentDir` → the outdir every page in it
+      * renders into. Used to give a link to a NON-page file (a bundle image,
+      * a download) the URL its directory actually publishes at, since
+      * directory names are slugged on the way out and the source path is not
+      * a URL. */
+    val outdirBySourceDir: Map[String, Path] =
+      contentFiles.map(c => sourceDirOf(c) -> c.outdir).toMap
+
+    /** The `baseURL` path prefix, in the form `relPermalinkFor` uses — empty
+      * for an apex deploy, `/foo` for `https://example.com/foo/`. */
+    val linkBasePath: String =
+      if (baseURL.path == "/" || baseURL.path.isEmpty) "" else baseURL.path.stripSuffix("/")
+
+    /** Resolve one markdown link destination written on page `c`.
+      *
+      * Left untouched: an absolute URL, a scheme-relative `//host/…`, a
+      * `mailto:`-style scheme, and a fragment-only `#anchor` (a reference
+      * into the document it was written in).
+      *
+      * A site-absolute `/x/` keeps today's behaviour — it is already a URL,
+      * and only picks up the `baseURL` path prefix.
+      *
+      * Everything else is relative, and resolves in three steps: the path is
+      * resolved against `sourceDirOf(c)`; a `#fragment` or `?query` suffix is
+      * carried through verbatim; and the result is looked up as a content
+      * file, then as a content directory, then as an ordinary path.
+      */
+    def resolveLinkOn(c: ContentFile): String => String = {
+      // Hoisted out of the returned function: `sourcePathOf` is a linear
+      // scan, and the result is needed once per link on the page.
+      val baseDir = sourceDirOf(c)
+
+      (dest: String) =>
+        val trimmed = dest.trim
+
+        if (trimmed.isEmpty || absoluteURL(trimmed) || trimmed.startsWith("#") || trimmed.startsWith("//"))
+          dest
+        else if (schemeRelative(trimmed)) dest
+        else if (trimmed.startsWith("/")) linkBasePath + trimmed
+        else {
+          val (pathPart, suffix) = splitLinkSuffix(trimmed)
+
+          if (pathPart.isEmpty) dest
+          else {
+            val resolved = resolveRelativePath(baseDir, pathPart)
+
+            site.map.get(resolved) match {
+              // The target is a page — its rendered URL, with permalink
+              // templates, `folderContent` index and language prefix all
+              // included. A directory's index file (`_index.md`, or
+              // `README.md` on a site whose `folderContent` names it)
+              // therefore resolves to the section URL rather than to a page
+              // under it.
+              case Some(target) => relPermalinkFor(target) + suffix
+              case None         =>
+                outdirBySourceDir.get(resolved.stripSuffix("/")) match {
+                  // The target is a content directory — `../library/`.
+                  case Some(outdir) => sectionUrlFor(outdir) + suffix
+                  case None         =>
+                    // Not a page: a bundle image, a download, anything else.
+                    // Resolve it as a path, through its directory's published
+                    // URL where that directory holds pages — bundle assets are
+                    // copied to the section's outdir, so an image beside a page
+                    // lives at the SECTION's URL, not at the page's.
+                    val slash        = resolved.lastIndexOf('/')
+                    val (dir, fname) =
+                      if (slash < 0) ("", resolved)
+                      else (resolved.substring(0, slash), resolved.substring(slash + 1))
+
+                    outdirBySourceDir.get(dir) match {
+                      case Some(outdir) => sectionUrlFor(outdir) + fname + suffix
+                      case None         => linkBasePath + "/" + resolved + suffix
+                    }
+                }
+            }
+          }
+        }
+    }
+
+    for ((c, doc0, mdConfig) <- parsedDocs) {
+      val callback = resolveLinkOn(c)
+      val doc      = transformLinks(doc0, callback)
+
+      // Collected from the RESOLVED document so a relative `patterns.md`
+      // counts as a backlink to `/reference/patterns/` exactly as a
+      // site-absolute link to the same page does.
+      outLinksPerFile(c) = collectLinkTargets(doc)
+      c.toc = buildToc(doc)
+      c.content = io.github.edadma.markdown.renderToHTML(doc, mdConfig).trim
+      c.summary = computeSummary(c, doc, preprocessor, callback, mdConfig)
+    }
 
     // ----- Section / navigation graph -----
 
