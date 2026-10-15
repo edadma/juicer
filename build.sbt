@@ -7,7 +7,7 @@ ThisBuild / scalaVersion           := "3.8.4"
 ThisBuild / organization           := "io.github.edadma"
 ThisBuild / organizationName       := "edadma"
 ThisBuild / organizationHomepage   := Some(url("https://github.com/edadma"))
-ThisBuild / version                := "0.4.6"
+ThisBuild / version                := "0.4.7"
 ThisBuild / description            := "A cross-platform Scala 3 static site generator (Hugo-style) using markdown + squiggly templates"
 ThisBuild / sonatypeCredentialHost := sonatypeCentralHost
 
@@ -74,7 +74,7 @@ lazy val juicerCore = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "io.github.edadma"       %%% "markdown"                 % "0.4.9",
       "io.github.edadma"       %%% "squiggly"                 % "0.3.2",
       "io.github.edadma"       %%% "emoji"                    % "0.1.4",
-      "io.github.edadma"       %%% "highlighter"              % "0.0.13",
+      "io.github.edadma"       %%% "highlighter"              % "0.0.14",
       "io.github.edadma"       %%% "microserve"               % "0.5.5",
     ),
     publishMavenStyle      := true,

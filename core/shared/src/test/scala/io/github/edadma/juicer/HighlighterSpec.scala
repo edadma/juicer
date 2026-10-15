@@ -135,4 +135,39 @@ class HighlighterSpec extends AnyFlatSpec with Matchers with JuicerTestSupport {
     val post = out("post/index.html")
     post should include("class=\"hl-keyword\"")
   }
+
+  it should "colour a string's quotes as the string, not as punctuation" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "grammars/scala.tmLanguage.json",
+      """{
+        |  "scopeName": "source.scala",
+        |  "patterns": [
+        |    { "match": "\\b(val)\\b", "name": "keyword.control.scala" },
+        |    { "begin": "\"", "end": "\"", "name": "string.quoted.double.scala",
+        |      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.scala" } },
+        |      "endCaptures":   { "0": { "name": "punctuation.definition.string.end.scala" } } }
+        |  ]
+        |}""".stripMargin,
+    )
+    writeAt(
+      "content/post.md",
+      """---
+        |title: Quotes
+        |---
+        |
+        |```scala
+        |val s = "hi"
+        |```
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "{{ .content }}")
+
+    build()
+
+    val post = out("post/index.html")
+    post should include("hl-string")
+    post should not include "hl-punctuation"
+  }
 }
