@@ -170,4 +170,34 @@ class HighlighterSpec extends AnyFlatSpec with Matchers with JuicerTestSupport {
     post should include("hl-string")
     post should not include "hl-punctuation"
   }
+
+  it should "read \\w as Unicode, so an accented identifier is one token" in {
+    writeAt("site.toml", "title = \"S\"\nbaseURL = \"http://x\"\n")
+    writeAt(
+      "grammars/scala.tmLanguage.json",
+      """{
+        |  "scopeName": "source.scala",
+        |  "patterns": [
+        |    { "match": "\\w+", "name": "keyword.control.scala" }
+        |  ]
+        |}""".stripMargin,
+    )
+    writeAt(
+      "content/post.md",
+      """---
+        |title: Unicode
+        |---
+        |
+        |```scala
+        |naïve
+        |```
+        |""".stripMargin,
+    )
+    writeAt("layouts/_default/folder.html", "x")
+    writeAt("layouts/_default/file.html", "{{ .content }}")
+
+    build()
+
+    out("post/index.html") should include("<span class=\"hl-keyword\">naïve</span>")
+  }
 }

@@ -107,7 +107,7 @@ rendered into the page's layout via **squiggly**.
 ## CLI
 
 ```
-Juicer Site Generator v0.4.7
+Juicer Site Generator v0.4.8
 Usage: juicer [build|config|theme|serve] [options]
 
 ━━━━━ General Options ━━━━━
